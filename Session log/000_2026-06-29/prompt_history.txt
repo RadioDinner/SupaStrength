@@ -1,0 +1,2 @@
+--- 2026-06-29 18:01 ---
+Add the instructions above to the repository, consider this session 000. Commit to main for the remainder of this session.
