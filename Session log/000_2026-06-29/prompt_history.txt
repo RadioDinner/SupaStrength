@@ -45,3 +45,16 @@ F1.11 I want an audit log of sorts.
 #6 build the bones, we'll finish the feature later. 
 #7 scope it and we'll do the best we can. Any chance we could pull down data from Google Fit? 
 #8 for now reminders could just be text on the screen after the workout saying "you haven't updated your measurements in 2 weeks, do that now?"
+
+--- 2026-06-29 18:21 ---
+Q-B I want to be able to decide per workout completed. So shoulder I want to increase by 1 rep each set until I reach X amount of reps, then start adding sets.
+O-5 I want this be (a) weight shared per exercise
+O-4 I want to be able to set the target in the app. So if I am targeting a 150lb over head press, I want the overhead press workout that starts at say, 50lbs, to increase 5lbs every time until I reach target
+O-6 Failure is triggered by settings in each workout. 
+O-7 confirm
+O-8 Use the sensible (2) ramp
+O-9 add the same options to save changes to the workout. Same as rests
+O-10 use an estimated 1RM for strength estimation. I also want to see strength standards
+O-11 Add this as a setting when I (the user) can decide, to prefer round up or down. And if lets say we're supposed to go from 45lb bar to 50lb but I only have 2 5lb plates, I can't increase to 50lb. I'd have to go to 55lbs but if the user selects round up, maybe I could add a "gap workout". For example, If I rounded up to 55lbs, I'd do that same workout twice. I'd do the 55lb on both workout A and B
+
+On foundations. I want the online version first, then offline version, then the android app. I have 2.5lb plates but I want the generator to support 1.25 micro plates.

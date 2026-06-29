@@ -1,11 +1,7 @@
 # SupaStrength — Product & Technical Spec (living document)
 
 Status: **PLANNING** (no code yet). This doc is the source of truth for design
-decisions. Each item is tagged:
-
-- ✅ **LOCKED** — decided, build to this.
-- 🟡 **PROPOSED** — my recommendation, pending user confirmation.
-- ❓ **OPEN** — needs a user decision before it can be built.
+decisions. Tags: ✅ **LOCKED** · 🟡 **PROPOSED** (pending confirm) · ❓ **OPEN**.
 
 Last updated: session 000 (2026-06-29).
 
@@ -13,236 +9,214 @@ Last updated: session 000 (2026-06-29).
 
 ## 1. Vision
 
-A personalized workout tracker. Web app first (used on phone in mobile view),
-native Android later. Single primary user (the owner). The headline feature is
+Personalized workout tracker. **Web app first** (used on phone in mobile view),
+offline support second, native Android third. Single primary user. Headline =
 a **highly flexible progressive-overload engine** with a routine scheduler that
 mixes a cycling sequence of workouts (StrongLifts A/B…) with always-on workouts
 (e.g. a "shoulder blowup" every session).
 
-Priority order (user's): (1) custom workouts + progression engine,
-(2) plate calculator, (3) equipment/plate inventory, (4) muscle & frequency
-tracking, (5) strength / weakest-area analysis, (6) form-video capture
-(scaffold only), (7) external data sync, (8) progress photos + measurement
-reminders.
+Priority: (1) workouts + progression engine, (2) plate calculator,
+(3) equipment/plate inventory, (4) muscle & frequency tracking, (5) strength /
+weakest-area, (6) form-video capture (scaffold only), (7) external sync,
+(8) progress photos + measurement reminders.
 
 ---
 
 ## 2. Foundations
 
-- 🟡 **Stack.** Supabase (Postgres + Auth + Storage + Row-Level Security) +
-  Next.js (React) built as an installable **PWA**. One codebase serves
-  mobile-web now; Android later via Capacitor wrap rather than a rewrite.
-- 🟡 **Single user, real auth.** Build for one user but on Supabase Auth + RLS
-  so multi-user/coach-sharing is possible later without re-architecting.
-- ✅ **Units: lbs.** (No kg toggle for v1. Smallest plate increment ❓ — see open
-  questions; load-bearing for rounding.)
-- ❓ **Offline-first?** BIGGEST open architectural fork. Gym signal is bad. If
-  required → local-first data with background sync. If not → simple online
-  CRUD. Unanswered.
-- ❓ **Phone OS** (iPhone vs Android) — affects camera capture (#6) and any
-  future push. Reminders for v1 are on-screen only (no push), per user.
+- ✅ **Build phasing:** Phase 1 = **online web** (responsive, PWA-capable).
+  Phase 2 = **offline** (local-first + background sync). Phase 3 = **Android**
+  (Capacitor wrap). Phase 1 must not architect *out* Phase 2 — data access goes
+  through a clean layer that a local store can back later.
+- 🟡 **Stack:** Supabase (Postgres + Auth + Storage + RLS) + Next.js (React) PWA.
+- 🟡 **Single user, real auth** (Supabase Auth + RLS) so multi-user is possible
+  later without a rewrite.
+- ✅ **Units: lbs** (no kg toggle v1).
+- ✅ **Plates:** user owns down to **2.5 lb** plates; generator must also support
+  **1.25 lb micro-plates** (so +2.5 lb total increments become possible if added).
+- ❓ **Phone OS** (iPhone vs Android) — not blocking online web v1; confirm
+  before building form-video (#6).
 
 ---
 
-## 3. Domain model (the core)
+## 3. Domain model (the spine)
 
-Four distinct layers (🟡 pending confirmation of naming/shape):
+Four layers:
 
-1. **Exercise** — a library definition (e.g. "Barbell Back Squat"). Carries:
-   default bar/equipment, primary/secondary muscles, movement type, loading
-   style. Seeded from a large open exercise dataset (#4).
-2. **Workout** — a reusable template / a "day" (e.g. "Workout A",
-   "Shoulder Blowup"). An ordered list of **workout-entries**, each =
-   `{exercise, sets, reps/rep-scheme, rest, progression rule, failure rule,
-   warmup policy}`.
-3. **Routine** — the **schedule**. Composed of one or more **rotations**
-   (independent tracks). Each rotation is an ordered list of workouts that
-   advances one step each time a session is completed.
-   - Example (user's): Rotation 1 = `[A, B]` (cycles A→B→A…); Rotation 2 =
-     `[Shoulder Blowup]` (length 1, so it's "always on").
-   - A **gym day** = the current head of *every* rotation combined. Monday =
-     A + Shoulder Blowup; Wednesday = B + Shoulder Blowup.
+1. **Exercise** — library definition (e.g. "Barbell Back Squat"): default
+   bar/equipment, primary/secondary muscles, movement type, loading style.
+   Seeded from a large open dataset.
+2. **Workout** — reusable template / a "day" (e.g. "Workout A", "Shoulder
+   Blowup"): ordered list of **workout-entries**, each =
+   `{exercise, sets, rep-scheme, rest, progression pipeline, failure rule,
+   warmup policy, last_set_amrap?}`.
+3. **Routine** — the **schedule**, composed of one or more **rotations**
+   (independent tracks). Each rotation = ordered list of workouts that advances
+   one step per completed session.
+   - Rotation 1 = `[A, B]` (cycles A→B→A…); Rotation 2 = `[Shoulder Blowup]`
+     (length 1 → always on).
+   - A **gym day** = current head of *every* rotation, combined.
    - Completing a session advances *every* rotation's pointer by one.
-4. **Session (log)** — an **immutable** record of what was actually performed
-   on a date (real weight/reps per set, rest taken, notes).
+4. **Session (log)** — **immutable** record of what was performed on a date.
 
-### Scheduling model
-
+### Scheduling
 - ✅ **Pointer-based, not calendar-based.** "Next time in the gym → next set of
-  workouts." No catch-up, no missed-day debt.
-- 🟡 Optional calendar/target-days overlay for guidance & reminders only —
-  never forces catch-up.
+  workouts." No catch-up / missed-day debt.
+- 🟡 Optional calendar/target-days overlay for guidance & reminders only.
 
 ### Progression state
-
-- 🟡 Tracked **per (routine, exercise)**: one running working-weight + rep
-  targets + failure counters per exercise, **shared across every workout in the
-  routine that contains that exercise**. (User's example: squat in both A and B
-  climbs as one continuous line — +5 each time it's performed regardless of
-  which workout it appeared in.)
-- ❓ Edge case: same exercise configured differently in A vs B (e.g. squat 5×5
-  heavy in A, 3×8 in B). Does weight stay shared while rep-scheme differs per
-  entry? (See open questions.)
+- ✅ **Working weight is shared per (routine, exercise)** — one continuous line
+  across every workout in the routine that uses that exercise (squat in A and B
+  climbs as one line). [O-5a]
+- ✅ Rep-scheme / rep targets can differ per workout-entry while weight stays
+  shared.
+- ✅ Progression *advances per completed workout* (so a workout done every
+  session — shoulders — progresses every session). [Q-B]
 
 ---
 
-## 4. Progression engine (✅ requirements, 🟡 exact rule encoding)
+## 4. Progression engine — the unified model ✅
 
-All rules must be **data-driven and editable in-app — never code changes.**
-Configurable **per exercise** within a routine, with a routine-level default.
+**Everything is data-driven and editable in-app. No code changes ever.**
+Configured **per exercise** in a routine, with a routine-level default.
 
-### Progression rule types (per exercise)
+### Progression = an ordered **pipeline of steps**
 
-- Add fixed **weight** (e.g. +5 lb) every time the exercise is performed.
-- Add fixed weight **every N performances** (frequency counter, e.g. bench +5
-  every 2nd time). Counter scoped per (routine, exercise).
-- **% of last lift** — next = last × (1 + p%).
-- **% of target** — relative to a configured goal/target weight. ❓ exact
-  definition (see open questions).
-- Add a **rep to every set**.
-- Add a **rep to the last set** only.
-- Take the **last set to failure (AMRAP)**.
-- All weight outputs pass through **plate/equipment-aware rounding** (§6).
-- ❓ Stacking / double-progression: reps-then-weight (work a rep range, when top
-  hit add weight and reset reps). Needs explicit rep-range + trigger encoding.
+After a *qualifying* completion of an exercise, the engine applies the current
+step. When a step's **cap** is reached, it transitions per **on-cap**.
 
-### Rep-scheme support (per workout-entry)
+A **step** =
+```
+{
+  dimension:  weight | reps | sets
+  applies_to: all_sets | last_set        # for the reps dimension
+  mode:       fixed | pct_of_last | pct_of_target   # weight only
+  amount:     e.g. +5 lb · +1 rep · +1 set · +2.5%
+  every_n:    apply on every Nth completion (default 1)
+  cap:        none | target_weight=V | rep_count=V | set_count=V
+  on_cap:     stop | next_step | loop     # next_step/loop may reset a dimension
+  reset:      none | reps_to_base | sets_to_base
+}
+```
 
-- ✅ All three available when building a workout: (a) straight sets/fixed reps,
-  (b) double progression (rep range), (c) %-of-1RM / RPE.
+All weight outputs pass through **plate/equipment-aware rounding** (§6).
 
-### Failure handling (per exercise, editable in-app)
+**Everything you described encodes as a pipeline:**
 
-- ✅ Configurable outcomes on a failed session:
-  - Deload **X lb**.
-  - Deload **X reps**.
-  - **Drop a set**.
-  - **Repeat** — re-attempt same prescription next time as if nothing was added,
-    until all reps×sets succeed, *then* progress (StrongLifts-style; user's
-    120×5×5 example).
-- ❓ What counts as "failure" (threshold) and whether **Repeat** loops forever
-  or repeats N times then deloads (see open questions).
+| You want… | Pipeline |
+|---|---|
+| StrongLifts linear (+5 squat every workout) | `[weight +5 every1, cap none]` |
+| OHP +5 each time **until 150 target**, then stop [O-4] | `[weight +5, cap target_weight=150, on_cap stop]` |
+| Bench +5 **every 2nd** time | `[weight +5 every2]` |
+| Double progression 3×8–12 [O-7] | `[reps +1 all_sets, cap rep_count=12, on_cap next_step reset reps_to_base] → [weight +5, on_cap loop]` |
+| Shoulders: +1 rep/set until X, **then add sets** [Q-B] | `[reps +1 all_sets, cap rep_count=X, on_cap next_step] → [sets +1, cap set_count=Y]` |
+| +1 rep to **last set** only | `[reps +1 last_set]` |
+| Last set to failure | workout-entry flag `last_set_amrap=true` |
 
-### Warm-up sets
+- **`pct_of_target`** = increment is a % of the target weight (constant absolute
+  jump). **`pct_of_last`** = % of last performed weight. **Target** is a goal
+  weight you set in-app (also the cap). [O-4]
+- ❓ Minor: when rolling reps→sets (shoulders), reset reps to base or keep at
+  cap? Default 🟡 = **reset reps to base** (repeating ladder).
 
-- ✅ Auto-generate warm-ups **only if** working weight/volume exceeds a
-  threshold set in the workout's settings.
-- ❓ Threshold basis (weight vs volume) and the ramp scheme (how many warm-up
-  sets and at what %s).
+### Failure handling ✅ (per workout-entry, all in-app)
+- **Failure condition** is configurable. Default 🟡 = *any working set finished
+  below its target reps*. [O-6]
+- **Failure response** is configurable and **chainable**, choose any:
+  - **Repeat** (hold weight, re-attempt next time until all reps×sets succeed —
+    your 120×5×5 example). Default 🟡 = repeat indefinitely.
+  - **Deload** X lb / X% / X reps / **drop a set**.
+  - Chain: e.g. "repeat up to N times, *then* deload Y%."
 
-### Rest timer
+### Warm-up sets ✅
+- Auto-generate **only if** working load exceeds a threshold set in the
+  workout's settings. Default 🟡 threshold basis = **working weight**
+  (configurable to volume).
+- ✅ Ramp = sensible default: empty bar → ~55% → 70% → 85% of work weight. [O-8]
 
-- ✅ Pre-defined rest intervals per workout-entry at build time.
-- ✅ In-gym: change the rest on the fly and tap a button to **save the change
-  back to the workout template**.
-- 🟡 Generalize "save in-session change back to template" to other fields
-  (reps/sets/weight)? ❓
+### Rest timer + in-session edits ✅
+- Pre-defined rest per workout-entry at build time.
+- In-gym: change **rest, reps, sets, or weight** on the fly and tap **"save to
+  workout"** to persist back to the template. [O-9]
 
-### Audit log
-
-- ✅ Keep an **audit log** of changes: program/template edits, progression
-  adjustments, in-session overrides saved back, deloads. Logged sessions are
-  immutable history (§3).
-
----
-
-## 5. Exercise library & movement types
-
-- ✅ **HUGE** built-in library, all movement types: barbell, dumbbell, machine
-  (plate-stack), cable, bodyweight, weighted bodyweight, assisted, timed/cardio.
-- 🟡 Seed from an open dataset with muscle mappings (candidates: free-exercise-db
-  / wger). Progression engine primarily targets loadable exercises; bodyweight/
-  cardio still log but with type-appropriate progression/logging UI.
-
----
-
-## 6. Plate calculator + rounding (features #2, #7)
-
-- ✅ Honors the user's **actual equipment** (bar weight + plate inventory in
-  pairs) for the active gym/location.
-- ✅ "**Do the best you can**" rounding: reach the target with whatever plates
-  exist (combine smaller plates rather than refusing). If exact target isn't
-  loadable, get as close as possible.
-- ❓ Tie-break when equidistant (round down / up / nearest) and confirm
-  symmetric per-side loading for barbells.
+### Audit log ✅
+- Immutable history of: template edits, progression adjustments, in-session
+  overrides saved back, deloads/gap-workouts. Sessions are immutable.
 
 ---
 
-## 7. Equipment / locations (feature #3)
-
-- ✅ Single gym today, but build the **multi-location framework**: a location
-  has its own barbells (with weights), plate inventory (denomination ×
-  quantity/pairs), dumbbell set (range + increment), machines, etc.
-- Used by the plate calculator and by progression rounding.
+## 5. Exercise library & movement types ✅
+- **HUGE** built-in library, all types: barbell, dumbbell, machine, cable,
+  bodyweight, weighted bodyweight, assisted, timed/cardio.
+- 🟡 Seed from an open dataset with muscle mappings (free-exercise-db / wger).
 
 ---
+
+## 6. Plate calculator + rounding (features #2 / #3) ✅
+- Honors the active location's **actual equipment** (bar weight + plate
+  inventory in pairs); supports 2.5 lb and 1.25 lb micro-plates.
+- "**Do the best you can**" — combine available plates to get closest to target;
+  symmetric per-side loading.
+- ✅ **Round up / round down is a user setting** (O-11), used when the exact
+  target isn't loadable.
+- ✅ **"Gap workout" / consolidation:** when forced rounding makes the actual
+  jump *larger* than the desired increment (e.g. plates only allow +10 but you
+  wanted +5, round-up → +10), optionally **hold the new weight for an extra
+  session** (repeat it across the next workout) before resuming progression, to
+  soften the oversized jump. [O-11] (Setting: on/off + # consolidation sessions.)
+  - 🟡 *Confirm this is the intended behavior — see Q-C.*
+
+---
+
+## 7. Equipment / locations (feature #3) ✅
+- Single gym today; build the **multi-location framework**. A location has its
+  own barbells (with weights), plate inventory (denomination × quantity/pairs),
+  dumbbell set (range + increment), machines, etc. Drives plate calc + rounding.
 
 ## 8. Muscle & frequency tracking (feature #4)
-
-- ✅ Uses the seeded exercise→muscle map (primary/secondary).
+- ✅ Uses seeded exercise→muscle map (primary/secondary).
 - 🟡 "Worked" metric default = **tonnage** (sets×reps×weight) + set count, over
-  selectable time windows. Most-frequent workouts/movements tracked.
+  selectable time windows; track most-frequent workouts/movements.
 
-## 9. Strength / weakest-area (feature #5)
+## 9. Strength / weakest-area (feature #5) ✅
+- **Spiderweb (radar) chart with a metric toggle**: "lowest volume" vs "weakest".
+- ✅ **Strength** = **estimated 1RM** (Epley) per lift, rolled up to muscle
+  groups. [O-10]
+- ✅ Also show **strength standards** → needs a profile with **bodyweight, sex,
+  age** (and height). Weakest shown both relative to your own muscles
+  (imbalance) and to standards.
 
-- ✅ **Spiderweb (radar) chart of muscle groups with a metric toggle**:
-  - "Lowest volume" view (under-trained) vs "Weakest" view (low strength) —
-    explicitly different measurements.
-- ❓ Define "weakest" quantitatively: estimated 1RM aggregated per muscle group,
-  and weak **relative to** what — your other muscles (imbalance) or published
-  strength standards for bodyweight/sex/age? (see open questions.)
-
-## 10. Form video (feature #6) — scaffold only
-
-- ✅ Build the **bones**: capture/upload a video, attach it to a specific
-  session/exercise/set, scrub + slow-mo playback. Leave a clean seam where
-  pose/form analysis plugs in later.
-- 🟡 Storage in Supabase Storage (private bucket); watch quota/cost — video is
-  heavy.
+## 10. Form video (feature #6) — scaffold only ✅
+- Bones: capture/upload, attach to session/exercise/set, scrub + slow-mo
+  playback. Clean seam for future pose/form analysis.
+- 🟡 Private Supabase Storage bucket; watch quota/cost.
 
 ## 11. External sync (feature #7)
-
-- ✅ Scope realistically; do the best we can. Findings:
-  - **Fitbit Web API** (OAuth) is the viable hub for weight/body-fat/activity.
-  - **FitIndex scale** has no public API — it pushes to Fitbit / Apple Health /
-    Google Fit, so we read it *indirectly* via Fitbit.
-  - **LoseIt** API is partner-gated → likely CSV export import.
-  - **Google Fit**: the REST API is deprecated (Google steering devs to
-    Health Connect, which is on-device Android-only and not callable from a web
-    app). So Google Fit is **not** a reliable web-app integration; Fitbit is the
-    practical target. (To re-verify before building.)
-- 🟡 v1 = read-only ingest of weight/body-composition via Fitbit; manual/CSV
-  fallback. Sync direction, frequency, and dedup with manual entries TBD.
+- 🟡 Scope realistically. **Fitbit Web API** (OAuth) = practical hub for
+  weight/body-fat/activity. **FitIndex scale** has no public API (pushes to
+  Fitbit/Apple Health/Google Fit → read indirectly via Fitbit). **LoseIt** API
+  is partner-gated → CSV import. **Google Fit** REST API is deprecated (Health
+  Connect is on-device Android-only, not callable from web) → not a reliable
+  web-app integration. v1 = read-only weight/body-comp via Fitbit + CSV
+  fallback. (Re-verify API states before building.)
 
 ## 12. Progress photos + reminders (feature #8)
-
-- ✅ v1 reminders are **on-screen text after a workout** (e.g. "you haven't
-  updated measurements in 2 weeks — do it now?"). No push for v1.
-- 🟡 Store photos in private Supabase Storage; track measurements (which body
-  parts ❓) and weight; side-by-side comparison over time.
+- ✅ v1 reminders = **on-screen text after a workout** (e.g. "haven't updated
+  measurements in 2 weeks — do it now?"). No push v1.
+- 🟡 Private photo storage; track measurements (which parts ❓ O-12) + weight;
+  side-by-side comparison over time.
 
 ---
 
-## 13. Open questions (blocking, by priority)
+## 13. Open questions
 
-**Foundations**
-- O-1 Offline-first required, or is online-only acceptable for v1?
-- O-2 Phone OS (iPhone / Android)?
-- O-3 Smallest plate increment owned (do you have 2.5s? 1.25 micro-plates?).
+**Engine (tiny, non-blocking — defaults set)**
+- Q-C Confirm the **"gap workout"** behavior as written in §6.
+- O-6b Reps→sets ladder: reset reps to base (default) or keep at cap?
 
-**Engine**
-- O-4 "% of target" — what is "target" (a goal/1RM you set)? vs "% of last".
-- O-5 Same exercise in A vs B: shared weight but per-entry rep scheme? Or fully
-  independent per workout?
-- O-6 Failure: what counts as a failed session (any set short? a whole-exercise
-  miss?), and does **Repeat** loop forever or repeat N times then deload?
-- O-7 Double progression encoding (rep range + "top hit → +weight, reset reps").
-- O-8 Warm-up threshold basis + ramp scheme.
-- O-9 "Save in-session change back to template" — rest only, or any field?
-
-**Analysis / calc**
-- O-10 "Weakest" definition (est-1RM per muscle; relative to self vs standards).
-- O-11 Plate rounding tie-break (down/up/nearest); confirm symmetric loading.
-
-**Misc**
+**Deferred until their feature**
+- O-2 Phone OS (before #6).
 - O-12 Which body measurements to track (#8).
+
+**Resolved this session:** O-4, O-5, O-7, O-8, O-9, O-10, O-11, Q-A, Q-B,
+foundations (offline/Android phasing, plates).
