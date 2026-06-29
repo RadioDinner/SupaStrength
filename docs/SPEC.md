@@ -168,9 +168,16 @@ All weight outputs pass through **plate/equipment-aware rounding** (§6).
 - Honors the active location's **actual equipment** (bar weight + plate
   inventory in pairs); supports 2.5 lb and 1.25 lb micro-plates.
 - "**Do the best you can**" — combine available plates to get closest to target;
-  symmetric per-side loading.
+  symmetric per-side loading. **Respects quantity** (can't use a plate twice if
+  you own one pair).
 - ✅ **Round up / round down is a user setting** (O-11), used when the exact
   target isn't loadable.
+- ✅ **Flow** [P1]: enter target total → use the exercise's **default bar**
+  (overridable) → show **plates per side**; if target isn't loadable, show the
+  **closest achievable** per the round up/down setting.
+- ✅ **Where** [P2]: both a **standalone tool** and **inline in logging** (tap a
+  set → see how to load it).
+- ✅ **Scope** [P3]: barbells + plate-loaded only (dumbbells = pick the bell).
 - ✅ **"Gap workout" / consolidation:** when forced rounding makes the actual
   jump *larger* than the desired increment (e.g. plates only allow +10 but you
   wanted +5, round-up → +10), optionally **hold the new weight for an extra
@@ -184,7 +191,26 @@ All weight outputs pass through **plate/equipment-aware rounding** (§6).
 ## 7. Equipment / locations (feature #3) ✅
 - Single gym today; build the **multi-location framework**. A location has its
   own barbells (with weights), plate inventory (denomination × quantity/pairs),
-  dumbbell set (range + increment), machines, etc. Drives plate calc + rounding.
+  dumbbells, machines, etc. Drives plate calc + rounding.
+
+### User's actual home-gym inventory (seed data) ✅
+- **Plates — one pair of each:** 2.5, 5, 10, 15, 25, 35, 45 lb.
+- **Dumbbells — fixed pairs:** 15, 20, 25 lb (no adjustable).
+- **No machines/cable stacks** (just a power/weight rack), no bands/kettlebells.
+- **Collars/clips ignored** (weight = 0).
+- ❓ **E-bar:** E1 didn't list a barbell — assuming **one 45 lb Olympic bar**.
+  Confirm (any EZ/trap/other bars?).
+
+### Derived loadable math (sanity-check facts)
+- Per side, subset sums of one-of-each {2.5…45} give **continuous 2.5 lb steps,
+  0→137.5 lb**. With a 45 lb bar → **total loadable = 45→320 lb in 5 lb steps.**
+  So every +5 lb jump is loadable up to 320; finer than 5 lb needs 1.25 micro
+  plates; >320 lb isn't loadable with current plates.
+- **Dumbbell lifts** snap to the discrete owned bells (15/20/25); a weight
+  progression caps at 25 until more are bought.
+- 🟡 **Equipment-ceiling behavior:** when a weight progression exceeds what's
+  loadable (e.g. dumbbells past 25, barbell past 320), default = **hold + warn**;
+  optionally auto-switch that lift to rep/set progression. (Confirm later.)
 
 ## 8. Muscle & frequency tracking (feature #4)
 - ✅ Uses seeded exercise→muscle map (primary/secondary).
@@ -231,16 +257,27 @@ ladders default to reset-reps-to-base; configurable.)
 - O-2 Phone OS (before #6).
 - O-12 Which body measurements to track (#8).
 
-**Open — feature #2/#3 (plate calc + equipment), grilling now:**
-- E1 Actual inventory (bars: name+weight; plate denominations × quantity).
-- E2 Dumbbells: fixed set (range+increment) or adjustable? owned?
-- E3 Machines / cable stacks tracked? (log weight; plate-calc N/A; stack steps).
-- E4 Bands / kettlebells / other — model now or defer?
-- E5 Account for collar/clip weight or treat as 0?
-- P1 Calc flow: target total → default bar (overridable) → plates per side +
-  closest-achievable if exact isn't loadable.
-- P2 Standalone tool AND inline in logging (tap a set → see loading)?
-- P3 Scope = barbell + plate-loaded machines only (dumbbell/stack = pick number)?
+**Plate calc / equipment — LOCKED** ✅ (E1–E5, P1–P3). Two small follow-ups:
+- E-bar: confirm one 45 lb Olympic bar (any others?).
+- Equipment-ceiling behavior (hold+warn vs auto-switch to reps) — confirm later.
+
+**Open — feature #4/#5 (muscle tracking + weakest/strength), grilling now:**
+- M1 Muscle granularity for the radar (~12 major groups vs finer like
+  delt heads). Default: ~12 major.
+- M2 "Volume" metric: hard **sets per muscle per week** (sports-sci standard)
+  vs **tonnage**. Offer both as toggle; which is primary?
+- M3 Secondary-muscle weighting (primary=1.0, secondary=0.5)?
+- M4 Default time windows (7d / 4wk / all-time)?
+- M5 "Most often" tracks workouts + exercises + muscles (assume all)?
+- M6 Strength **standards are per-lift** (squat/bench/dead/OHP/row by
+  bodyweight/sex), not per-muscle — OK to show standards on the main lifts while
+  the muscle radar uses your-own-relative est-1RM?
+- M7 Per-muscle strength score = top est-1RM among that muscle's exercises
+  (default) — confirm aggregation.
+
+**Deferred until their feature**
+- O-2 Phone OS (before #6).
+- O-12 Which body measurements to track (#8).
 
 **Resolved this session:** O-4, O-5, O-6, O-6b, O-7, O-8, O-9, O-10, O-11,
-Q-A, Q-B, Q-C, foundations (offline/Android phasing, plates).
+Q-A, Q-B, Q-C, E1–E5, P1–P3, foundations (offline/Android phasing, plates).
