@@ -90,3 +90,8 @@ M6 - set toggles
 M7 - idk, you choose.
 
 I want this thing written in probably a vite typescripti so I can use vercel to autodeploy. We'll use supabase to store the data
+
+--- 2026-06-29 19:10 ---
+#6 V1 Capture is fine. 30 second max attached to a specific set. Store the vids for 30 days. Stills for a year if they pay for it. 
+#7 sync we can skip for now. Put that on a Long term feature backlog
+#8 progress photos we'll spec out later. go with whatever is best for now. I'll refine later, I'm exciting to get building

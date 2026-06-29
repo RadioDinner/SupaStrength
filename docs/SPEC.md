@@ -243,24 +243,30 @@ All weight outputs pass through **plate/equipment-aware rounding** (§6).
     profile: bodyweight, sex, age, height).
 
 ## 10. Form video (feature #6) — scaffold only ✅
-- Bones: capture/upload, attach to session/exercise/set, scrub + slow-mo
-  playback. Clean seam for future pose/form analysis.
-- 🟡 Private Supabase Storage bucket; watch quota/cost.
+- Bones: **native-camera capture** (file input w/ `capture`), **attach to a
+  specific logged set**, scrub + slow-mo playback. Clean seam for future
+  pose/form analysis (no analysis now). [V1/V2]
+- ✅ **30 s max** per clip. [V3]
+- ✅ **Retention:** videos **auto-purge after 30 days**; progress photos kept
+  **~1 year**. (A future paid tier may extend retention — no billing now.)
+- Private Supabase Storage bucket; a scheduled purge job enforces retention.
 
-## 11. External sync (feature #7)
-- 🟡 Scope realistically. **Fitbit Web API** (OAuth) = practical hub for
-  weight/body-fat/activity. **FitIndex scale** has no public API (pushes to
-  Fitbit/Apple Health/Google Fit → read indirectly via Fitbit). **LoseIt** API
-  is partner-gated → CSV import. **Google Fit** REST API is deprecated (Health
-  Connect is on-device Android-only, not callable from web) → not a reliable
-  web-app integration. v1 = read-only weight/body-comp via Fitbit + CSV
-  fallback. (Re-verify API states before building.)
+## 11. External sync (feature #7) — DEFERRED to long-term backlog ✅
+- **Not in the initial build.** v1 = manual entry + CSV import for body metrics.
+- Backlog notes (when revisited): **Fitbit Web API** (OAuth) is the practical
+  hub; **FitIndex** has no API (read indirectly via Fitbit/Health); **LoseIt**
+  API is partner-gated (CSV); **Google Fit** REST API is deprecated. Re-verify
+  API states before building.
 
-## 12. Progress photos + reminders (feature #8)
-- ✅ v1 reminders = **on-screen text after a workout** (e.g. "haven't updated
-  measurements in 2 weeks — do it now?"). No push v1.
-- 🟡 Private photo storage; track measurements (which parts ❓ O-12) + weight;
-  side-by-side comparison over time.
+## 12. Progress photos + reminders (feature #8) — light spec, refine later ✅
+- Build sensible defaults now; user refines later.
+- Reminders = **on-screen nudges after a workout** + dashboard (no push v1).
+- Default measurements: bodyweight, body-fat%, neck, shoulders, chest, waist,
+  hips, arms L/R, thighs L/R, calves L/R, forearms L/R (editable later).
+- Photos: front/side/back categories, private storage, side-by-side compare,
+  ~1 yr retention (§10).
+- Default reminder cadence (configurable): weigh-in weekly, measurements 2 wk,
+  photos 4 wk.
 
 ---
 
@@ -280,26 +286,17 @@ ladders default to reset-reps-to-base; configurable.)
 
 **Analytics #4/#5 — LOCKED** ✅ (M1–M7; M3/M6/M7 defaults chosen by me).
 
-**Open — features #6/#7/#8 (lighter), grilling now:**
-- V1 Video capture: native camera via `<input type=file capture>` (default,
-  works iOS+Android) vs in-browser MediaRecorder.
-- V2 Attach a clip to a **logged set** (default) vs exercise vs whole session.
-- V3 Max clip length/size cap (default ~60s) to keep storage sane.
-- S1 Defer live API sync; v1 = **manual entry + CSV import** for body metrics,
-  Fitbit OAuth as Phase 2 — OK?
-- S2 Sync metric scope = **bodyweight + body-fat%** (+ lean mass) primary;
-  steps/activity optional?
-- S3 Do you currently have FitIndex syncing into Fitbit? (gates indirect path)
-- B1 (O-12) Measurements default list (neck/shoulders/chest/waist/hips/arms L+R/
-  thighs L+R/calves L+R/forearms) — trim/add?
-- B2 Photo categories front/side/back (+custom)?
-- B3 Reminder cadence defaults: weigh-in weekly, measurements 2wk, photos 4wk
-  (configurable; shown after workout save + on dashboard).
+**SPEC COMPLETE for v1.** ✅ Features #1–#8 decided (#7 deferred to backlog;
+#8 light-spec with sensible defaults to refine later).
 
-**Deferred**
-- O-2 Phone OS — softened (V1 `<input capture>` works on both); confirm before #6.
-- Equipment-ceiling behavior (hold+warn vs auto-switch to reps).
+**Minor deferrals (non-blocking, decide during build):**
+- O-2 Phone OS (native capture works on both anyway).
+- Equipment-ceiling behavior (hold+warn default vs auto-switch to reps).
+- #8 detailed refinement; exact strength-standards dataset.
+
+**Next:** full **data model** (Postgres + RLS) + **phased build plan** for
+sign-off, then scaffold the Vite/TS/Supabase app.
 
 **Resolved this session:** O-4, O-5, O-6, O-6b, O-7, O-8, O-9, O-10, O-11,
-M1–M7, Q-A, Q-B, Q-C, E1–E5, P1–P3, stack (Vite+TS+Vercel+Supabase),
-foundations (offline/Android phasing, plates).
+M1–M7, V1–V3, S1–S3 (backlog), B1–B3 (defaults), Q-A, Q-B, Q-C, E1–E5, P1–P3,
+stack, foundations.
