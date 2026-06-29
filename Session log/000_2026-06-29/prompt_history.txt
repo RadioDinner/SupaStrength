@@ -14,3 +14,34 @@ I want it to do the following, in order of importance.
 6. A way to record videos of myself doing the workout and have my form anallyzed (this is a complex feature that we'll build the bones for now, and revisit the function later)
 7. Sync my data from FitBit and LoseIt and FitIndex scale
 8. Stores pictures with my progress along with reminders to measure, weigh and take progress pictures.
+
+--- 2026-06-29 18:13 ---
+Here is how I want F1 (the engine) to work. I want to mimic stronglifts workouts A and B. I want to be able to set up The Engine to plan for a schedule of sequence of workouts. I want to be able to customize it. For example, if I mimic'd stronglifts. It would be Workout A and then when workout A is completed, it would schedule workout B to be completed next, and cycle through the letters. However, the reason I'm building this app is because I want to hit my shoulders every single time I workout. BUT I want to cycle through my workout sets by letter. So I do workout A and "shoulder blowup" on Monday, then workout B and "shoulder blowup" on Wednesday. I guess we could call these routines? So the routine would be the schedule I guess and I could add workouts to the schedule for the routine. I want the ability to do it by calendar like schedule, but I would rather have a "schedule" of, whenever I get to it. For example, some weeks I work out on Tuesday and then on Thursday and then Saturday, but the next week, I might only get to lift on Monday and Friday. I don't want to have to catch up the routine. I just want to hit the next set of workouts the next time I'm in the gym
+
+F1.2, the progression trigger I want to be able to set per workout program. So if I make a Stronglifts workout A and B, I want to be able to set "add 5 lbs to each lift every workout". So lets say workout A is squats with 45lb bar. If workout B has the same squat exercise in it, add 5 pounds. So the squats on the workout B would be 50lb. Then the next workout A would have 55lbs. I want to be able to set the progression engine to be by % of target or % of last lift rounded to the nearest available plate in gym settings. I want to be able to tune the progression settings PER excerise in the workout. Like in the routine set the ability to add 5lbs every time I do squats. BUT add 5lbs every X times I do bench press. Or I want to be able to add a rep to each set, or add an additional rep to the last set each time or take it to failure. I want a very flexible overload enginge.
+
+F1.3 I want to be able to set what happens on failure. Deload X lbs, deload x reps, drop a set, redo the workout next time as if we never added any this time (for example, if I am squatting 120lbs for 5 reps on 5 sets and I fail the workout that would move it to 125lbs, I would redo 120lbs 5x5 until I get all the reps and sets successfully). But I want all these thigns to be able to be set on the app, not code changes.
+
+F1.4 Already answered
+
+F1.5 I want the option to do any of these 3 when I build a workout that I can add to a routine. 
+
+F1.6 Already answered
+
+F1.7 I want plate aware rounding, AND I want equipment aware rounding. So if I need to add 10lbs but only have 4 5lb plates, use those 5lbs combined rather than saying I don't have the weight in my gym. Do the best you can with the plates you have is the thought process
+
+F1.8 I want a HUGE library of available workout types.
+
+F1.9 Rest timer I want to be able to add into workouts at pre-definied intervals when I create the workout but I want to be able to click a button while I'm in the gym that would save the rest to the workout. For example, if my workout has a 3 minute rest between each set for squats and one day, I decide that 2 minutes is enough, I could change it to 2 minutes and click a button that saves it to the workout
+
+F1.10 Warm up sets IF the volume or weight load is over X amount. I want this to be set in the workout settings. 
+
+F1.11 I want an audit log of sorts. 
+
+#2 I want the plate calculator to honor the weight equipment that I have. 
+#3 I have a single gym but add teh framework for working out in different places
+#4 Muscle tracking... surely there is a library of exercises and these things mapped already
+#5 I want to be able to select my view when I'm evaluating my weakest lifts. If I toggle lowest volume I want the spideweb chart to show me lowest volume, but weakest would be a different measurement.
+#6 build the bones, we'll finish the feature later. 
+#7 scope it and we'll do the best we can. Any chance we could pull down data from Google Fit? 
+#8 for now reminders could just be text on the screen after the workout saying "you haven't updated your measurements in 2 weeks, do that now?"
