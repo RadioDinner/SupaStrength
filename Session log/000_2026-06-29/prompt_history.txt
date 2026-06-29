@@ -1,2 +1,16 @@
 --- 2026-06-29 18:01 ---
 Add the instructions above to the repository, consider this session 000. Commit to main for the remainder of this session.
+
+--- 2026-06-29 18:07 ---
+The plan for this project is to build a personalized android app and web app for my workout tracker. We'll start with the web app and I'll use it on my phone in mobile view on the web page. I want to plan EXTENSIVELY before we build ANYTHING. GRILL ME on how each feature will work. 
+
+I want it to do the following, in order of importance.
+
+1. Lets you add custom workouts (reps, sets, movements, rests) and allows you to create a routine to progressively add weight by a predifinied amount? (for example, you could set your workout to increase by 5lbs per workout logged, etc)
+2. Has an easy to use plate calculator
+3. Allows you to set what equipment / plates you have and build you workouts around it
+4. Tracks what muscles were worked out and what workouts you do the most often
+5. Tracks strength of muscle groups and tells you your least worked / weakest area?
+6. A way to record videos of myself doing the workout and have my form anallyzed (this is a complex feature that we'll build the bones for now, and revisit the function later)
+7. Sync my data from FitBit and LoseIt and FitIndex scale
+8. Stores pictures with my progress along with reminders to measure, weigh and take progress pictures.
