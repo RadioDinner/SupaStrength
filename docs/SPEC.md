@@ -78,7 +78,19 @@ Four layers:
 ## 4. Progression engine — the unified model ✅
 
 **Everything is data-driven and editable in-app. No code changes ever.**
-Configured **per exercise** in a routine, with a routine-level default.
+
+**Scope / inheritance ✅** — every progression/failure/warmup/rest setting can be
+set at three levels; the most specific wins:
+`Routine default → Workout default → Exercise-entry override`.
+So you can set a whole workout to "add 5 lb to everything" and still override
+just the bench to "+5 every 2nd time." [user: "flexible and set per workout or
+per exercise"]
+
+**Common presets** (each is just a one-step pipeline; the ladder/chaining is
+optional): [O-6b]
+- **A** weight +X, keep reps/sets (e.g. row 3×8 → +5 lb, still 3×8).
+- **B** reps +1 per set, keep weight (row 3×8 → 3×9).
+- **C** add a set of X reps, keep weight (row 3×8 → 4×8).
 
 ### Progression = an ordered **pipeline of steps**
 
@@ -163,8 +175,9 @@ All weight outputs pass through **plate/equipment-aware rounding** (§6).
   jump *larger* than the desired increment (e.g. plates only allow +10 but you
   wanted +5, round-up → +10), optionally **hold the new weight for an extra
   session** (repeat it across the next workout) before resuming progression, to
-  soften the oversized jump. [O-11] (Setting: on/off + # consolidation sessions.)
-  - 🟡 *Confirm this is the intended behavior — see Q-C.*
+  soften the oversized jump. [O-11]
+  - ✅ **Opt-in per workout/exercise** — only triggers if that workout/exercise
+    is configured to consolidate. Setting: on/off + # consolidation sessions. [Q-C]
 
 ---
 
@@ -210,13 +223,24 @@ All weight outputs pass through **plate/equipment-aware rounding** (§6).
 
 ## 13. Open questions
 
-**Engine (tiny, non-blocking — defaults set)**
-- Q-C Confirm the **"gap workout"** behavior as written in §6.
-- O-6b Reps→sets ladder: reset reps to base (default) or keep at cap?
+**Engine — FULLY LOCKED.** ✅ Progression pipeline + scope/inheritance + presets
++ failure + warmup + rounding + gap-workout all decided. (Chained reps→sets
+ladders default to reset-reps-to-base; configurable.)
 
 **Deferred until their feature**
 - O-2 Phone OS (before #6).
 - O-12 Which body measurements to track (#8).
 
-**Resolved this session:** O-4, O-5, O-7, O-8, O-9, O-10, O-11, Q-A, Q-B,
-foundations (offline/Android phasing, plates).
+**Open — feature #2/#3 (plate calc + equipment), grilling now:**
+- E1 Actual inventory (bars: name+weight; plate denominations × quantity).
+- E2 Dumbbells: fixed set (range+increment) or adjustable? owned?
+- E3 Machines / cable stacks tracked? (log weight; plate-calc N/A; stack steps).
+- E4 Bands / kettlebells / other — model now or defer?
+- E5 Account for collar/clip weight or treat as 0?
+- P1 Calc flow: target total → default bar (overridable) → plates per side +
+  closest-achievable if exact isn't loadable.
+- P2 Standalone tool AND inline in logging (tap a set → see loading)?
+- P3 Scope = barbell + plate-loaded machines only (dumbbell/stack = pick number)?
+
+**Resolved this session:** O-4, O-5, O-6, O-6b, O-7, O-8, O-9, O-10, O-11,
+Q-A, Q-B, Q-C, foundations (offline/Android phasing, plates).

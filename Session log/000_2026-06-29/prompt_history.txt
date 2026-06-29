@@ -58,3 +58,15 @@ O-10 use an estimated 1RM for strength estimation. I also want to see strength s
 O-11 Add this as a setting when I (the user) can decide, to prefer round up or down. And if lets say we're supposed to go from 45lb bar to 50lb but I only have 2 5lb plates, I can't increase to 50lb. I'd have to go to 55lbs but if the user selects round up, maybe I could add a "gap workout". For example, If I rounded up to 55lbs, I'd do that same workout twice. I'd do the 55lb on both workout A and B
 
 On foundations. I want the online version first, then offline version, then the android app. I have 2.5lb plates but I want the generator to support 1.25 micro plates.
+
+--- 2026-06-29 18:34 ---
+Q-C the gap workout should be a consolidation set IF the workout is set to work that way.
+O-6b I want the ladder to be optional. Either add x amount of weight per rep and keep the rep/set or increase the reps An example would be 
+Example A) I have a standing row set for 8 reps for 3 sets with a 45lb bar. If I complete the workout, add 5 pounds to the bar and keep 8x3
+Example B) I have a standing row set for 8 reps for 3 sets with a 45lb bar. If I complete the workout, add 1 rep to each set
+Example C) I have a standing row set for 8 reps for 3 sets with a 45lb bar. If I complete the workout, add 1 set of X amount of reps
+
+For the "The unified progression model"
+[user pasted back the assistant's previous "unified progression model" message in full]
+
+I want it to be flexible and set per workout or per exercise
