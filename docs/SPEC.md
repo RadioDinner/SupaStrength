@@ -28,7 +28,12 @@ weakest-area, (6) form-video capture (scaffold only), (7) external sync,
   Phase 2 = **offline** (local-first + background sync). Phase 3 = **Android**
   (Capacitor wrap). Phase 1 must not architect *out* Phase 2 — data access goes
   through a clean layer that a local store can back later.
-- 🟡 **Stack:** Supabase (Postgres + Auth + Storage + RLS) + Next.js (React) PWA.
+- ✅ **Stack:** **Vite + React + TypeScript** SPA, auto-deployed on **Vercel**;
+  **Supabase** (Postgres + Auth + Storage + RLS) for data/auth/files. PWA via
+  `vite-plugin-pwa` (enables Phase-2 offline + home-screen install). Server-side
+  needs (Fitbit OAuth token exchange, webhooks) run as **Vercel serverless
+  functions** or **Supabase Edge Functions** — the SPA holds no secrets.
+  Radar/charts via a React chart lib (Recharts or Chart.js).
 - 🟡 **Single user, real auth** (Supabase Auth + RLS) so multi-user is possible
   later without a rewrite.
 - ✅ **Units: lbs** (no kg toggle v1).
@@ -212,18 +217,30 @@ All weight outputs pass through **plate/equipment-aware rounding** (§6).
   loadable (e.g. dumbbells past 25, barbell past 320), default = **hold + warn**;
   optionally auto-switch that lift to rep/set progression. (Confirm later.)
 
-## 8. Muscle & frequency tracking (feature #4)
-- ✅ Uses seeded exercise→muscle map (primary/secondary).
-- 🟡 "Worked" metric default = **tonnage** (sets×reps×weight) + set count, over
-  selectable time windows; track most-frequent workouts/movements.
+## 8. Muscle & frequency tracking (feature #4) ✅
+- Uses seeded exercise→muscle map (primary/secondary).
+- ✅ **Radar = 12 major groups** [M1]: chest, back, shoulders, biceps, triceps,
+  quads, hamstrings, glutes, calves, core, traps, forearms.
+- ✅ **Build all volume metrics** [M2], toggleable: **hard sets/muscle/week**
+  (default primary), **tonnage** (sets×reps×weight), **total reps**.
+- ✅ **Secondary-muscle weighting = 1.0 primary / 0.5 secondary** [M3, my pick].
+- ✅ **Time-window toggles** [M4]: 7d / 4wk / 12wk / all-time.
+- ✅ **"Most often" tracks workouts + exercises + muscles** [M5].
 
 ## 9. Strength / weakest-area (feature #5) ✅
-- **Spiderweb (radar) chart with a metric toggle**: "lowest volume" vs "weakest".
-- ✅ **Strength** = **estimated 1RM** (Epley) per lift, rolled up to muscle
-  groups. [O-10]
-- ✅ Also show **strength standards** → needs a profile with **bodyweight, sex,
-  age** (and height). Weakest shown both relative to your own muscles
-  (imbalance) and to standards.
+- **Spiderweb (radar) chart with a metric toggle**: volume view (any §8 metric)
+  vs strength view.
+- ✅ **Strength = estimated 1RM (Epley = w × (1 + reps/30))** per lift, rolled up
+  to muscle groups. [O-10] Only loaded lifts feed the strength score
+  (bodyweight/timed excluded).
+- ✅ **Per-muscle strength score = best est-1RM among exercises whose *primary*
+  muscle = that group** [M7, my pick] (chest ← best of bench/incline/…).
+- ✅ **Weakest view = two toggles** [M6, my pick]:
+  - *Relative to you* — each muscle's best est-1RM min-max normalized 0–100
+    across your muscles; smallest spoke = weakest (balance/imbalance view).
+  - *Relative to standards* — **main lifts only** (squat/bench/deadlift/OHP/row),
+    percentile vs published novice→elite standards by bodyweight/sex (needs
+    profile: bodyweight, sex, age, height).
 
 ## 10. Form video (feature #6) — scaffold only ✅
 - Bones: capture/upload, attach to session/exercise/set, scrub + slow-mo
@@ -261,23 +278,28 @@ ladders default to reset-reps-to-base; configurable.)
 - E-bar: confirm one 45 lb Olympic bar (any others?).
 - Equipment-ceiling behavior (hold+warn vs auto-switch to reps) — confirm later.
 
-**Open — feature #4/#5 (muscle tracking + weakest/strength), grilling now:**
-- M1 Muscle granularity for the radar (~12 major groups vs finer like
-  delt heads). Default: ~12 major.
-- M2 "Volume" metric: hard **sets per muscle per week** (sports-sci standard)
-  vs **tonnage**. Offer both as toggle; which is primary?
-- M3 Secondary-muscle weighting (primary=1.0, secondary=0.5)?
-- M4 Default time windows (7d / 4wk / all-time)?
-- M5 "Most often" tracks workouts + exercises + muscles (assume all)?
-- M6 Strength **standards are per-lift** (squat/bench/dead/OHP/row by
-  bodyweight/sex), not per-muscle — OK to show standards on the main lifts while
-  the muscle radar uses your-own-relative est-1RM?
-- M7 Per-muscle strength score = top est-1RM among that muscle's exercises
-  (default) — confirm aggregation.
+**Analytics #4/#5 — LOCKED** ✅ (M1–M7; M3/M6/M7 defaults chosen by me).
 
-**Deferred until their feature**
-- O-2 Phone OS (before #6).
-- O-12 Which body measurements to track (#8).
+**Open — features #6/#7/#8 (lighter), grilling now:**
+- V1 Video capture: native camera via `<input type=file capture>` (default,
+  works iOS+Android) vs in-browser MediaRecorder.
+- V2 Attach a clip to a **logged set** (default) vs exercise vs whole session.
+- V3 Max clip length/size cap (default ~60s) to keep storage sane.
+- S1 Defer live API sync; v1 = **manual entry + CSV import** for body metrics,
+  Fitbit OAuth as Phase 2 — OK?
+- S2 Sync metric scope = **bodyweight + body-fat%** (+ lean mass) primary;
+  steps/activity optional?
+- S3 Do you currently have FitIndex syncing into Fitbit? (gates indirect path)
+- B1 (O-12) Measurements default list (neck/shoulders/chest/waist/hips/arms L+R/
+  thighs L+R/calves L+R/forearms) — trim/add?
+- B2 Photo categories front/side/back (+custom)?
+- B3 Reminder cadence defaults: weigh-in weekly, measurements 2wk, photos 4wk
+  (configurable; shown after workout save + on dashboard).
+
+**Deferred**
+- O-2 Phone OS — softened (V1 `<input capture>` works on both); confirm before #6.
+- Equipment-ceiling behavior (hold+warn vs auto-switch to reps).
 
 **Resolved this session:** O-4, O-5, O-6, O-6b, O-7, O-8, O-9, O-10, O-11,
-Q-A, Q-B, Q-C, E1–E5, P1–P3, foundations (offline/Android phasing, plates).
+M1–M7, Q-A, Q-B, Q-C, E1–E5, P1–P3, stack (Vite+TS+Vercel+Supabase),
+foundations (offline/Android phasing, plates).

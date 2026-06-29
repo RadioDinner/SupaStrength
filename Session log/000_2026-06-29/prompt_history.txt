@@ -79,3 +79,14 @@ E3 : Only a weight rack.
 No bands, kettlebells or anythign else. Ignore collars / clips
 
 Agree on P questions
+
+--- 2026-06-29 18:58 ---
+M1 - Default to 12 is fine. 
+M2 - Volume just build everything
+M3 - idk, you choose
+M4 - set toggles
+M5 - assume all three I guess, or whatever makes the most sense
+M6 - set toggles
+M7 - idk, you choose.
+
+I want this thing written in probably a vite typescripti so I can use vercel to autodeploy. We'll use supabase to store the data
