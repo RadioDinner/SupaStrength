@@ -298,3 +298,67 @@ export interface Dumbbell {
   created_at: string
   updated_at: string
 }
+
+// ---------------------------------------------------------------------------
+// Analytics (BUILD_PLAN M6). UI state + the read-only shapes of the computed
+// `v_*` analytics views (DATA_MODEL §5). Views are never written to.
+// ---------------------------------------------------------------------------
+
+export type VolumeMetric = 'hard_sets' | 'tonnage' | 'total_reps'
+export type TimeWindow = '7d' | '4wk' | '12wk' | 'all'
+export type RadarMode = 'volume' | 'strength'
+export type WeakestView = 'relative' | 'standards'
+export type StandardBand = 'beginner' | 'novice' | 'intermediate' | 'advanced' | 'elite'
+export type FrequencyDimension = 'workout' | 'exercise' | 'muscle'
+
+export interface ChartPreferences {
+  user_id: string
+  volume_metric: VolumeMetric
+  time_window: TimeWindow
+  radar_mode: RadarMode
+  weakest_view: WeakestView
+  count_secondary: boolean
+  created_at: string
+  updated_at: string
+}
+
+/** One row per (user, muscle_group, week) — `v_muscle_volume_weekly`. */
+export interface MuscleVolumeWeekly {
+  user_id: string
+  muscle_group_id: number
+  week_start: string
+  hard_sets: number
+  hard_sets_primary: number
+  tonnage_lb: number
+  total_reps: number
+}
+
+/** Per-muscle best est-1RM among primary lifts — `v_muscle_strength`. */
+export interface MuscleStrength {
+  user_id: string
+  muscle_group_id: number
+  strength_e1rm_lb: number
+}
+
+/** Main-lift est-1RM vs the seeded standards bracket — `v_strength_vs_standards`. */
+export interface StrengthVsStandards {
+  user_id: string
+  lift_key: LiftKey
+  best_e1rm_lb: number
+  bodyweight_lb: number | null
+  novice_lb: number
+  intermediate_lb: number
+  advanced_lb: number
+  elite_lb: number
+  standard_band: StandardBand
+}
+
+/** Completed-session counts by dimension/window — `v_frequency`. */
+export interface FrequencyRow {
+  user_id: string
+  time_window: TimeWindow
+  dimension: FrequencyDimension
+  key: string
+  label: string | null
+  cnt: number
+}

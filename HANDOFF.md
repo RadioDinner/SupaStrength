@@ -5,14 +5,50 @@
 
 ## Where the project is
 
-**Phase 0 — DONE. M1–M4 — DONE. M5 (a/b/c/d) — DONE. Design system — DONE.
-Next: M6 (analytics radar).** Spec, data model, migration, build plan done. User
+**Phase 0 — DONE. M1–M6 — DONE. M5 (a/b/c/d) — DONE. Design system — DONE.
+Next: M7 (video bones).** Spec, data model, migration, build plan done. User
 completed account setup. Session 001 shipped the pure progression engine + plate
 calculator (`src/engine/*`, 62 tests), M1 (auth/profile/equipment/shell) + auth
 fixes, M2 (exercise library seed + browser), M3 (workout builder), M4 (routine
 scheduler), M5 full (live session logging + plate calc + rest timer + **engine
-auto-progression**), and a bold dark+light design system. The app is a complete
-end-to-end auto-progressing workout logger. typecheck + lint + build + test green.
+auto-progression**), a bold dark+light design system, a live-session **redesign**
+(impeccable critique → "the set is the hero"), and **M6 (analytics radar)**. The
+app is a complete end-to-end auto-progressing workout logger with analytics.
+typecheck + lint + build + 62 tests green.
+
+### M6 — DONE (analytics radar)
+- **Schema was already in `9999_init.sql`** — all 7 `v_*` views
+  (`v_set_log_metrics`, `v_muscle_volume_weekly`, `v_exercise_e1rm`,
+  `v_muscle_strength`, `v_strength_vs_standards`, `v_frequency`, `reminders_due`,
+  all `security_invoker`) + `chart_preferences` + `strength_standards` + the
+  `muscle_groups` `radar_order` seed. So **no new migration** was needed (the
+  HANDOFF's old "author them as `9998_*`" step was superseded — they ship in init).
+- **`supabase/seed/strength_standards_seed.sql`** — re-runnable (delete-by-source
+  + insert), **ratio-form** novice→elite for the 5 mains × 2 sexes (10 rows);
+  `v_strength_vs_standards` resolves ratio→lb via the user's bodyweight at query
+  time, so one all-bodyweight bracket covers everyone. Source tag
+  `supastrength-ratio-v1` (synthesized; not a copy of a proprietary table). User
+  must paste it into the SQL Editor (like the exercises seed).
+- **`analyticsRepo`** reads the views (window-filters `v_muscle_volume_weekly` by
+  `week_start` and sums in JS; `v_frequency` by `time_window`) + get/upsert
+  `chart_preferences`. **`useAnalytics`** hooks (optimistic prefs). Recharts dep
+  added (`recharts@3`).
+- **`features/analytics/AnalyticsPage`** + "Stats" tab (`/analytics`, 6 tabs now):
+  Recharts radar over the 12 groups in `radar_order` (volume↔strength mode,
+  metric toggle, 7d/4wk/12wk/all window, count-secondary), a **weakest-areas**
+  panel (relative-to-you bars **or** strength-vs-standards bands with a
+  stale-bodyweight warning), and "most often" workout/exercise/muscle lists. All
+  UI state persists in `chart_preferences`. CSS added (segmented controls, bars,
+  std bands, freq lists).
+- **VALIDATED on real PG16** (Supabase-stubbed): init migration + both seeds +
+  fixtures (squat 315×5, bench 225×5, +warmup) → every view returns correct
+  numbers (warmup excluded; e1RM squat 367.5 / bench 262.5; primaries 3 hard sets,
+  secondaries 1.5; squat & bench → `intermediate` band off the ratio seed at
+  200 lb bw; frequency counts right). The standards seed ran **twice** cleanly.
+  **This is the first live exercise of the analytics view layer — it works.**
+- Design verified by headless-Chromium static previews of the Stats screen in
+  both themes (sent to the user). Note: the radar tick fill uses `var(--muted)`
+  (a defined token; an earlier `var(--text-dim)` typo was fixed).
 
 ### M5b/M5c — DONE (live session logging)
 - `sessionsRepo`: `startFromWorkout` / `startNextGymDay` (snapshot entries →
@@ -176,12 +212,14 @@ make a routine with rotations → make it active → "Start this day" → log se
 **climbed** (M5d) and the rotation advanced. This is the first live exercise of
 the `sessionCommit` wiring — watch for upsert/RLS issues.
 
-Then **M6 — analytics radar** (BUILD_PLAN M6): author the SQL `v_*` views
-(`v_set_log_metrics`, `v_muscle_volume_weekly`, `v_exercise_e1rm`,
-`v_muscle_strength`, `v_strength_vs_standards`, `v_frequency`, `reminders_due`)
-as a re-runnable migration (`9998_*`), seed `strength_standards`, and build a
-Recharts radar over the 12 muscle groups (volume/strength toggle, time windows,
-weakest-area). Then M7 (video bones) → M8 (photos/measurements/reminders).
+**Also paste `supabase/seed/strength_standards_seed.sql`** (new in M6) so the
+Stats screen's "vs standards" panel resolves bands.
+
+M6 is **DONE** (see the M6 section above) — views were already in init; the work
+was the standards seed + repo/hooks + the Recharts Stats screen, all validated on
+real PG16. Next: **M7 (video bones)** — native `<input capture>` ≤30 s clip →
+private `form-videos/{user_id}/…` → link to a `set_logs` row via `videos.set_log_id`
+→ scrub + slow-mo playback (no analysis). Then M8 (photos/measurements/reminders).
 
 Engine reuse: M4/M5 should import `src/engine` and follow the "Engine encoding
 notes" above — the pure functions are done and tested; the remaining work is the

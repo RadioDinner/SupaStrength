@@ -147,6 +147,34 @@ After the engine + M1 commits, the user hit live-auth friction and we kept going
   end-of-session summary sheet. RestTimer got `role="timer"`. Deleted the orphaned
   PlateCalculator. Verified both themes via headless Chromium. Gate green.
 
+## Continued — M6 analytics radar (+ live Postgres validation)
+
+- Shipped the live-session **redesign** commit (`Redesign live-session screen…`)
+  — the full reimagining from the critique. Sent the before/after screenshots.
+- **M6 — DONE** (`M6: analytics radar`): discovered all 7 `v_*` views +
+  `chart_preferences` + `strength_standards` + the `radar_order` seed were
+  **already in `9999_init.sql`**, so no new migration was needed (the old plan to
+  author them as `9998_*` was superseded). Built the rest:
+  - **`supabase/seed/strength_standards_seed.sql`** — re-runnable, ratio-form
+    novice→elite for the 5 mains × 2 sexes (10 rows). The view resolves ratio→lb
+    via bodyweight, so one all-bodyweight bracket covers everyone.
+  - **`analyticsRepo`** (window-aggregates the weekly volume view in JS, reads the
+    strength/standards/frequency views, get/upsert `chart_preferences`) +
+    **`useAnalytics`** hooks (optimistic prefs). Added `recharts@3`.
+  - **`features/analytics/AnalyticsPage`** + a "Stats" tab: a Recharts radar over
+    the 12 groups (volume↔strength, metric toggle, 7d/4wk/12wk/all, count-secondary),
+    a weakest-areas panel (relative-to-you bars **or** strength-vs-standards bands
+    + stale-bodyweight warning), and "most often" lists. State persists in
+    `chart_preferences`. CSS for segmented controls / bars / std bands / freq lists.
+- **Validated the whole analytics layer on real PG16** (Supabase-stubbed): init
+  migration + both seeds + a fixture session (squat 315×5, bench 225×5, + a warmup)
+  → every view returns correct numbers (warmup excluded, e1RM exact, primaries 3
+  hard sets / secondaries 1.5, squat & bench land in `intermediate` off the ratio
+  seed at 200 lb bw, frequency counts correct). The standards seed ran twice
+  cleanly. **First time the view layer has ever been exercised — it works.**
+- Verified the Stats screen design via headless-Chromium static previews in both
+  themes (sent). Fixed a `var(--text-dim)`→`var(--muted)` token typo on the radar.
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh

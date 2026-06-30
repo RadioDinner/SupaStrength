@@ -1160,6 +1160,269 @@ button {
   }
 }
 
+/* ── analytics (M6) ─────────────────────────────────────────────────────────── */
+.ancontrols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.seg {
+  display: inline-flex;
+  background: color-mix(in oklch, var(--ink) 6%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  padding: 3px;
+  gap: 2px;
+}
+.seg__btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 650;
+  padding: 6px 12px;
+  min-height: 34px;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.seg__btn--on {
+  background: var(--accent);
+  color: var(--on-accent, oklch(0.99 0 0));
+  box-shadow: 0 1px 6px -2px var(--accent);
+}
+.antoggle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.antoggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.radarwrap {
+  margin: calc(-1 * var(--s-2)) 0 var(--s-2);
+}
+.radarwrap .recharts-polar-angle-axis-tick-value {
+  font-weight: 600;
+}
+.radarlegend {
+  list-style: none;
+  margin: 0;
+  padding: var(--s-3) 0 0;
+  display: grid;
+  gap: var(--s-1);
+  border-top: 1px dashed var(--border);
+}
+.radarlegend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+}
+.radarlegend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bad);
+  flex: none;
+}
+.radarlegend__name {
+  flex: 1;
+  color: var(--ink);
+  font-weight: 600;
+}
+.radarlegend__val {
+  color: var(--muted);
+}
+.radarlegend__cap {
+  margin: var(--s-2) 0 0;
+  font-size: var(--fs-xs);
+}
+
+/* horizontal bar ranks (weakest, relative-to-you) */
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-3);
+}
+.bar {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  align-items: center;
+  gap: var(--s-3);
+}
+.bar__label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+.bar__track {
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: color-mix(in oklch, var(--ink) 8%, transparent);
+  overflow: hidden;
+}
+.bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong, var(--accent)));
+  transition: width var(--dur) var(--ease);
+}
+.bar__val {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* strength vs standards */
+.stds {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-4);
+}
+.std__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s-2);
+}
+.std__lift {
+  font-weight: 700;
+  color: var(--ink);
+}
+.std__band {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+.std__band--beginner {
+  background: color-mix(in oklch, var(--muted) 18%, transparent);
+  color: var(--muted);
+}
+.std__band--novice {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+.std__band--intermediate {
+  background: var(--good-tint);
+  color: var(--good);
+}
+.std__band--advanced {
+  background: var(--warn-tint);
+  color: var(--warn);
+}
+.std__band--elite {
+  background: color-mix(in oklch, var(--bad) 18%, transparent);
+  color: var(--bad);
+}
+.std__track {
+  position: relative;
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: color-mix(in oklch, var(--ink) 8%, transparent);
+  overflow: hidden;
+}
+.std__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--accent), var(--good));
+}
+.std__marker {
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  border-radius: 2px;
+  background: var(--ink);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.std__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: var(--s-2);
+  font-size: var(--fs-sm);
+}
+
+/* most-often frequency lists */
+.freqcols {
+  display: grid;
+  gap: var(--s-4);
+}
+@media (min-width: 460px) {
+  .freqcols {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+.freqcol__title {
+  margin: 0 0 var(--s-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--muted);
+}
+.freqcol__empty {
+  margin: 0;
+}
+.freqlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-1);
+  counter-reset: freq;
+}
+.freqlist__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+  background: color-mix(in oklch, var(--ink) 4%, transparent);
+  counter-increment: freq;
+}
+.freqlist__item::before {
+  content: counter(freq);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--faint);
+  width: 14px;
+  flex: none;
+}
+.freqlist__name {
+  flex: 1;
+  font-size: var(--fs-sm);
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.freqlist__cnt {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

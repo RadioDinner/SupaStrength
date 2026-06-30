@@ -66,8 +66,12 @@ trigger a redeploy.
 5. **Seed the exercise library** (M2): paste `supabase/seed/exercises_seed.sql`
    into the SQL Editor and run it (after the migration). It's re-runnable —
    873 global exercises + their muscle map. Regenerate it from the vendored
-   dataset with `node supabase/seed/build-exercise-seed.mjs`. Strength-standards
-   seed lands with M6.
+   dataset with `node supabase/seed/build-exercise-seed.mjs`.
+6. **Seed the strength standards** (M6): paste
+   `supabase/seed/strength_standards_seed.sql` into the SQL Editor and run it.
+   It's re-runnable (delete-by-source + insert) — novice→elite thresholds for the
+   five main lifts (ratio-of-bodyweight form) that power the Stats screen's
+   "vs standards" panel.
 
 When configured, the home screen shows **"Connected ✓ — schema live"** with the
 seeded muscle-group count.

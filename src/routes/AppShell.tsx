@@ -12,12 +12,14 @@ import { WorkoutBuilderPage } from '../features/workouts/WorkoutBuilderPage'
 import { RoutinesPage } from '../features/routines/RoutinesPage'
 import { RoutineBuilderPage } from '../features/routines/RoutineBuilderPage'
 import { SessionPage } from '../features/session/SessionPage'
+import { AnalyticsPage } from '../features/analytics/AnalyticsPage'
 import { useTheme } from '../hooks/useTheme'
 
 const TABS = [
   { to: '/', label: 'Home', icon: '🏠', end: true },
   { to: '/workouts', label: 'Workouts', icon: '📋', end: false },
   { to: '/routines', label: 'Routines', icon: '🗓️', end: false },
+  { to: '/analytics', label: 'Stats', icon: '📊', end: false },
   { to: '/exercises', label: 'Exercises', icon: '📚', end: false },
   { to: '/profile', label: 'Profile', icon: '👤', end: false },
 ]
@@ -51,6 +53,7 @@ export function AppShell() {
           <Route path="/routines" element={<RoutinesPage />} />
           <Route path="/routines/:id" element={<RoutineBuilderPage />} />
           <Route path="/session/:id" element={<SessionPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/exercises" element={<ExercisesPage />} />
           <Route path="/equipment" element={<EquipmentPage />} />
           <Route path="/profile" element={<ProfilePage />} />
