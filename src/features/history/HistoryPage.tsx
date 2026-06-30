@@ -5,6 +5,7 @@
  */
 import { useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
+import { ChevronDown, ChevronRight, NotebookText } from 'lucide-react'
 import { Card, EmptyState, Skeleton, SkeletonList } from '../../components/ui'
 import { useRecentSessions, useSessionEntries, useSetLogs } from '../session/useSession'
 import { useExercisesByIds } from '../workouts/useWorkouts'
@@ -28,7 +29,7 @@ export function HistoryPage() {
         <SkeletonList rows={4} />
       ) : !sessions || sessions.length === 0 ? (
         <EmptyState
-          icon="📒"
+          icon={<NotebookText size={40} aria-hidden />}
           title="No sessions yet"
           hint="Finish a workout and it lands here — every set you logged, kept for good."
         />
@@ -57,7 +58,7 @@ function HistoryRow({ session }: { session: Session }) {
       >
         <span className="historyrow__date">{prettyDate(session.performed_on)}</span>
         <span className="historyrow__chev" aria-hidden="true">
-          {open ? '▾' : '▸'}
+          {open ? <ChevronDown size={18} aria-hidden /> : <ChevronRight size={18} aria-hidden />}
         </span>
       </button>
       {open ? <SessionDetail sessionId={session.id} /> : null}

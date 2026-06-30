@@ -1,0 +1,1722 @@
+{
+  "summary": "Audit every SupaStrength page against DESIGN.md, a11y, and vibe-coded artifacts; verify each finding; synthesize a ranked fix plan",
+  "agentCount": 27,
+  "logs": [
+    "Audited 13 units; 77 verified findings."
+  ],
+  "result": {
+    "plan": {
+      "headline": "No — the app is not poorly designed; it's well-architected design executed with a handful of amateur tells that the owner is correctly smelling but mislabeling as \"generic/vibe-coded.\" The token layer (OKLCH palette, type scale, --font-num/--fs-stat hero figures, spacing rhythm, dual themes) is genuinely strong and mostly internally consistent. The problem is execution drift that clusters into a few systemic patterns: (1) the entire icon system is raw OS emoji with grayscale() filters band-aiding them, which is the single loudest \"AI-built\" signal and touches nearly every screen; (2) the Home page literally ships a developer build-verification scaffold (DB ping, setup checklist, \"Phase 1 — online MVP\") as the user's dashboard, and Exercises leaks a SQL seed filename into product copy — these are the most damning \"vibe-coded\" artifacts; (3) the design system's own thesis — \"numbers go big and heavy\" — is never executed on the pages that should showcase it (Home, History, Progress, Equipment), so data reads as flat body text; (4) card-per-item monotony makes list pages look like an unstyled default; and (5) the CSS violates two bans DESIGN.md names by hand (1px-border + wide-shadow ghost card, glassmorphism). None of this is deep; it's roughly two days of focused, mechanical cleanup against an already-good system. Fix the icon set and the Home scaffold first and the \"vibe-coded\" impression largely collapses.",
+      "themes": [
+        {
+          "title": "Replace the emoji icon system with one real monochrome SVG set",
+          "why": "Raw OS emoji used as the entire icon language is the loudest amateur/AI tell in the app and it is everywhere: bottom-tab nav, brand mark, theme toggle, every empty state, in-content data icons, and primary CTAs. They render full-color and OS-dependent, ignore the OKLCH token palette, and forced grayscale() filter hacks into the CSS to tame them. A single currentColor SVG set instantly makes the app look intentionally designed and lets active state become a clean color:var(--accent) swap.",
+          "affectedPages": [
+            "App shell + primitives",
+            "Auth",
+            "Home",
+            "Live Session",
+            "Routines",
+            "Workouts",
+            "History",
+            "Analytics",
+            "Progress",
+            "Exercises",
+            "Design tokens (index.css)"
+          ],
+          "severity": "p0",
+          "effort": "L",
+          "actions": [
+            "Add a self-hosted icon set (Lucide React or inline 24px stroke=currentColor SVGs) and a typed <Icon/> component; no network/CDN dependency",
+            "Replace bottom-tab emoji in src/routes/AppShell.tsx:21 and theme toggle ☀️/🌙 at :46 with SVGs that inherit currentColor",
+            "Replace the 🏋️ brand emoji (AppShell.tsx:34, App.tsx, AuthScreen.tsx:82, ResetPasswordScreen.tsx:37) with a real inline SVG <Logo/> filled with var(--accent)",
+            "Swap every EmptyState icon prop from an emoji string to an <svg> node: RoutinesPage.tsx:42, WorkoutsPage.tsx:60, HistoryPage.tsx:31, AnalyticsPage.tsx:208, ProgressPage.tsx:179",
+            "Replace in-content/data emoji: AnalyticsPage.tsx:417-421 (📋/🏋️/💪), SessionPage.tsx:442 (🎥), VideoSheet.tsx:50/107 (🎥/🎬), ProgressPage.tsx:223 reminder icons, PhotosSection.tsx:91 camera",
+            "Replace Unicode glyph 'icons' used as controls/disclosure with SVGs: ✕ (RoutineBuilderPage.tsx:158/172, WorkoutBuilderPage.tsx:81, photothumb del), ↑↓ (WorkoutBuilderPage.tsx:63/77), ▾/▸ (HistoryPage.tsx:60), ○/✓ checklist (index.css:378), → and ← nav arrows in label strings (ProfilePage.tsx:140/147, RoutinesPage.tsx:55, RoutineBuilderPage.tsx:69/95)",
+            "After conversion, delete the grayscale() filter hacks at index.css .tab__icon (256-265) and .empty__icon (1145), and drop the grayscale(0.15) band-aid; active vs inactive tab becomes color:var(--accent) vs var(--faint)"
+          ]
+        },
+        {
+          "title": "Strip developer/build internals out of product UI",
+          "why": "This is the most literal 'vibe-coded' artifact: the Home screen the user lands on is a build-verification scaffold showing DB connection diagnostics, a setup checklist, and a 'Phase 1 — online MVP' label. Exercises leaks a SQL seed filename and a hardcoded 873 count into the empty state. End users must never see infrastructure status, file paths, or build-phase labels — this single fix changes the first impression more than any visual polish.",
+          "affectedPages": [
+            "Home",
+            "Exercises"
+          ],
+          "severity": "p0",
+          "effort": "M",
+          "actions": [
+            "Rewrite src/features/home/HomePage.tsx: remove the pingRepo connection banner and setup checklist; move health-checks to a dev-only diagnostics route",
+            "Delete the 'Phase 1 — online MVP' subtitle entirely",
+            "Replace the scaffold with real dashboard content (next session, recent PR, training readiness); if M6/M8 content isn't ready, ship a minimal real state, not diagnostics",
+            "Rewrite the Exercises empty-state copy at ExercisesPage.tsx:108 to user language ('Your exercise library is still loading — pull to refresh, or add your own.'); never surface seed filenames or hardcoded counts in product copy"
+          ]
+        },
+        {
+          "title": "Execute the 'numbers are the hero' thesis on data pages",
+          "why": "DESIGN.md commits a heroic numeric register (--font-num tabular, --fs-stat 2.75rem) but the pages whose whole job is showing data never use it — Home clones three identical cards, History rows show only a date, Progress renders bodyweight as fs-sm table cells, Equipment buries 'Max loadable' as grey fine print. Surfacing one anchor figure per page is what makes a tracker look professionally designed rather than a generic CRUD list, and the tokens already exist to do it.",
+          "affectedPages": [
+            "Home",
+            "History",
+            "Progress",
+            "Equipment",
+            "Workouts",
+            "Live Session"
+          ],
+          "severity": "p1",
+          "effort": "M",
+          "actions": [
+            "Home (HomePage.tsx:20): lead with one var(--font-num)/--fs-stat hero metric (days-since-last-session or current top set), then differentiate secondary content by size/role instead of cloning .card",
+            "History (HistoryPage.tsx:58): add a quiet tabular numeric summary (working sets, session volume) to each collapsed row so the list scans as data",
+            "Progress (ProgressPage.tsx:184): surface latest bodyweight + delta as a large --font-num --fs-2xl/--fs-stat stat above the dense table",
+            "Equipment (EquipmentPage.tsx:134): promote 'Max loadable' from card__sub grey text to a real tabular stat with a quiet micro-label",
+            "Workouts (WorkoutBuilderPage.tsx:48): render sets×reps·rest prescription in --font-num tabular ink, keep qualifier words muted",
+            "Promote .resttimer__time (index.css:1080) toward var(--fs-stat) so working weight and rest timer share one hero scale"
+          ]
+        },
+        {
+          "title": "Collapse card-per-item monotony into real lists",
+          "why": "Several pages wrap each item in its own full-chrome Card, producing a monotonous stack of identical elevated sections that reads as an unstyled default — and Card is also used as a lazy container for single controls. The .list/.list__row hairline pattern already exists for exactly this; using it adds hierarchy and removes redundant chrome.",
+          "affectedPages": [
+            "Routines",
+            "Workouts",
+            "Equipment",
+            "Profile / Settings"
+          ],
+          "severity": "p1",
+          "effort": "M",
+          "actions": [
+            "Routines (RoutinesPage.tsx:48): one <Card title='Routines'> wrapping a single <ul className='list'> of .list__row, not a card per routine",
+            "Workouts (WorkoutsPage.tsx:66): same — one Card + list of rows, matching WorkoutBuilderPage's existing pattern (l42-44)",
+            "Routines (RoutineBuilderPage.tsx:120): render the '+ Add rotation' action and hint inline (.row-actions/.muted), not in its own elevated Card",
+            "Equipment (EquipmentPage.tsx:79): group bar/plates/dumbbells under one section and de-emphasize Preferences so the five equal-weight cards gain hierarchy",
+            "Profile (ProfilePage.tsx:138-156): merge the two single-link Equipment/Progress cards into one 'More' card with a list, and drop the title-less Card wrapping Sign out — render it as a plain footer ghost button"
+          ]
+        },
+        {
+          "title": "Resolve self-inflicted DESIGN.md ban violations (ghost card + glass)",
+          "why": "The CSS violates two anti-patterns DESIGN.md names by hand — the 1px-border + 28px-blur-shadow 'ghost card' (banned twice, lines 55 and 73) and default glassmorphism on sticky chrome. When the code contradicts its own design doc, the system stops being a source of truth. These are near-trivial edits with outsized credibility payoff.",
+          "affectedPages": [
+            "Design tokens (index.css)"
+          ],
+          "severity": "p1",
+          "effort": "S",
+          "actions": [
+            "index.css:281-284 .card: pick one elevation — either drop the 1px border and keep --shadow, or keep the hairline border and tighten --shadow to a contact shadow (blur <= 8px)",
+            "index.css appbar (185-187), tabbar (236-238), sprogress (712-714): either replace backdrop-blur frosted glass with opaque var(--surface-2)+hairline border, or explicitly document the sticky-chrome glass as an intentional exception in DESIGN.md so code and doc agree"
+          ]
+        },
+        {
+          "title": "Bring every tap target up to the 44px floor",
+          "why": "PRODUCT.md states a >=44px tap minimum for one-handed mid-set gym use, but the most-tapped controls fall short: rep steppers 36px, segmented toggles 34px, quantity steppers ~28px, theme toggle 42px, photo delete 24px, reminder buttons 36px. The product's stated context is the gym; undersized controls are both an accessibility failure and a quality tell. Most are one-line CSS bumps.",
+          "affectedPages": [
+            "Live Session",
+            "Workouts",
+            "Equipment",
+            "Analytics",
+            "Progress",
+            "App shell + primitives",
+            "Exercises"
+          ],
+          "severity": "p1",
+          "effort": "S",
+          "actions": [
+            "index.css: raise .repstep (894-895), .setvid (1341-1342), .seg__btn min-height (1635), .reminder btn (1476), .iconbtn (213-214) and .reorderbtn (1261-1264) to >=44px in the tappable dimension; transparent padding can keep visual chrome small (pattern already used by .logbtn:44 / .weighthero__step:48)",
+            "Equipment QuantityStepper .stepper .btn (~28px) to 44x44",
+            "Progress .photothumb__del (24px): >=44px hit area around the 16-24px glyph, plus consider a confirm step since a stray tap deletes a photo",
+            "Exercises .chip--toggle (~26px) interactive selection chips to min-height 44px; leave the read-only static .chip variant as-is"
+          ]
+        },
+        {
+          "title": "Restore accent discipline (one focal accent per view)",
+          "why": "DESIGN.md reserves the single committed accent for primary action, current selection, and live state, but accent leaks onto secondary text links and informational decoration, diluting the one focal point that makes the palette feel deliberate. Pulling accent back is what separates a restrained pro palette from a generic 'color everything' look.",
+          "affectedPages": [
+            "Auth",
+            "Live Session",
+            "Progress",
+            "Analytics"
+          ],
+          "severity": "p2",
+          "effort": "S",
+          "actions": [
+            "Auth (AuthScreen.tsx:135): render 'Create one'/'Forgot password?' in --ink/--muted with an underline, keeping saturated accent only on the submit button",
+            "Live Session plate chips (index.css:836): render in --ink on --surface-2/--inset with a hairline border; reserve accent for the active/selected chip and let weight+size make numbers the hero",
+            "Progress per-row Edit (ProgressPage.tsx:206): neutral --ink/--muted ghost affordance, not accent zero-padding link",
+            "Analytics bar fills (index.css:1730 .bar__fill, 1798 .std__fill): use flat var(--accent) instead of accent→accent-strong / accent→good gradients to match the flat radar fill"
+          ]
+        },
+        {
+          "title": "Close AA contrast and focus-visibility gaps",
+          "why": "Real instructional text and primary toggles fail the 4.5:1 AA floor the product claims: --faint (L0.56) on 10.5px tab labels and 12px field hints, the plate readout in light theme (~4.4:1), and the global focus ring computes ~1.2:1 vs surface for border-none focusables. These are correctness issues against the app's own stated bar, and they're token-level fixes.",
+          "affectedPages": [
+            "Profile / Settings",
+            "Design tokens (index.css)"
+          ],
+          "severity": "p2",
+          "effort": "S",
+          "actions": [
+            "Point .field__hint (index.css:435) at --muted (verified 7.77:1 dark / 7.13:1 light), or lift --faint to ~L0.66+ and re-verify both themes; switch tab labels off --faint too",
+            "Solid focus ring: box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent) so .linkbtn/.seg__btn/.picker__item/.exrow__head meet 3:1 regardless of border (index.css:136)",
+            "Light-theme text-on-tint: use --accent-strong (or darken the tint) for .plate/.badge/.chip--primary so the readout clears 4.5:1 (index.css:836)"
+          ]
+        },
+        {
+          "title": "Fix accessibility semantics (h1, labels, live regions, disclosure state)",
+          "why": "Screen-reader semantics are missing in ways that are invisible visually but mark unpolished implementation: no page <h1> (headings start at card h2), unlabeled text inputs, save/error banners with no aria-live, and disclosure buttons without aria-expanded. Low effort, and part of looking professionally built.",
+          "affectedPages": [
+            "Workouts",
+            "Equipment",
+            "Exercises",
+            "Profile / Settings",
+            "App shell + primitives"
+          ],
+          "severity": "p2",
+          "effort": "S",
+          "actions": [
+            "Give each route an <h1>: make AppShell.tsx:37 appbar title an h1 or add a visually-hidden page h1 so heading order has a top level",
+            "Add aria-label to label-less inputs: WorkoutsPage.tsx:45 ('New workout name'), EquipmentPage.tsx:68 ('New location name'), or wrap in the Field primitive",
+            "Banner (ui.tsx:133-135): add role='status' aria-live='polite' for ok/info/warn and role='alert' for err so 'Saved.' and errors announce",
+            "Exercises disclosure (ExercisesPage.tsx:127): add aria-expanded and aria-controls pointing to the detail panel id"
+          ]
+        },
+        {
+          "title": "Clean up token/spacing drift and hardcoded colors",
+          "why": "Numerous magic-number paddings (3/6/10/14/1.5px) drift off the declared 8px rhythm, hardcoded #000/#fff and raw oklch scrims bypass the OKLCH token system, the spacing scale name set disagrees with DESIGN.md (no --s-7), and inline-style magic numbers bypass tokens. Individually minor, collectively they're the difference between a system that's followed and one that's decorative.",
+          "affectedPages": [
+            "Design tokens (index.css)",
+            "Live Session",
+            "Routines",
+            "History",
+            "App shell + primitives"
+          ],
+          "severity": "p3",
+          "effort": "M",
+          "actions": [
+            "Snap off-scale paddings to --s-1..--s-4: .plate/.std__band (834,1762), .warmup (1303), .seg__btn (834), .mtable th (1427), History set chips (1244); standardize borders to 1px or add a deliberate --bw-strong:2px token",
+            "Add --overlay/--on-overlay/--scrim tokens and replace #000 (1382), #fff (1509/1574/1606), and raw oklch scrims (1023/1573/1607)",
+            "Reconcile the spacing scale: rename --s-8 to --s-7 and update DESIGN.md, or add --s-7:32/--s-8:40 to match the documented 8-step scale (index.css:76-78)",
+            "Remove inline magic-number styles: RoutineBuilderPage.tsx:124 marginTop:10 → var(--s-2/3); SkeletonList spacer (ui.tsx:102) → flex gap var(--s-2/3); tab label 10.5px (index.css:251) → var(--fs-xs)"
+          ]
+        },
+        {
+          "title": "Extract duplicated markup into shared primitives",
+          "why": "The brand header is copy-pasted across App/AuthScreen/ResetPasswordScreen, and PlatesCard/DumbbellsCard duplicate inventory-row + 'pair(s)' logic. Deduping is low-urgency for visual perception but reduces drift and is the kind of structural tidiness that keeps the now-fixed icon/brand decisions in one place.",
+          "affectedPages": [
+            "Auth",
+            "Equipment",
+            "App shell + primitives"
+          ],
+          "severity": "p3",
+          "effort": "S",
+          "actions": [
+            "Extract a <Brand/> (or <AuthHeader/>) primitive into components/ui.tsx; render it in the appbar, auth screen, and reset screen so the logo/wordmark lives once",
+            "Extract an <InventoryCard> (title, items, onChange, weight accessor) so EquipmentPage plates/dumbbells share pair derivation and empty state instead of near-identical copies (138-150, 160-172)"
+          ]
+        }
+      ],
+      "quickWins": [
+        "Remove the DB ping banner, setup checklist, and 'Phase 1 — online MVP' subtitle from HomePage.tsx — kills the worst vibe-coded artifact in minutes",
+        "Rewrite the Exercises empty-state copy (ExercisesPage.tsx:108) to drop the SQL seed filename and hardcoded 873 count",
+        "Delete the 🎉 from Analytics standards copy (AnalyticsPage.tsx:406) and remove emoji baked into button label strings (PhotosSection.tsx:91, ProfilePage.tsx:140/147)",
+        "Add aria-label to the two unlabeled inputs (WorkoutsPage.tsx:45, EquipmentPage.tsx:68) and add role/aria-live to Banner (ui.tsx:133-135)",
+        "Bump .iconbtn, .seg__btn, .repstep, .reorderbtn, and the quantity stepper to >=44px — one-line CSS changes against the stated gym-use floor",
+        "Point .field__hint at --muted (index.css:435) to clear the AA contrast failure on instructional text",
+        "Resolve the ghost-card ban: drop the 1px border OR tighten --shadow on .card (index.css:281-284) — a 2-line fix that ends a self-violated DESIGN.md rule",
+        "Reconcile the spacing-scale naming (--s-7 gap) between index.css:76-78 and DESIGN.md so the token system is internally honest"
+      ],
+      "pageScores": [
+        {
+          "page": "Auth",
+          "score": 6
+        },
+        {
+          "page": "Home",
+          "score": 4
+        },
+        {
+          "page": "Live Session",
+          "score": 7
+        },
+        {
+          "page": "Routines",
+          "score": 6
+        },
+        {
+          "page": "Workouts",
+          "score": 6
+        },
+        {
+          "page": "Exercises",
+          "score": 7
+        },
+        {
+          "page": "Equipment",
+          "score": 7
+        },
+        {
+          "page": "History",
+          "score": 6
+        },
+        {
+          "page": "Analytics",
+          "score": 6
+        },
+        {
+          "page": "Progress",
+          "score": 5
+        },
+        {
+          "page": "Profile / Settings",
+          "score": 7
+        },
+        {
+          "page": "App shell + primitives",
+          "score": 4
+        },
+        {
+          "page": "Design tokens (index.css)",
+          "score": 6
+        }
+      ]
+    },
+    "pages": [
+      {
+        "page": "Auth",
+        "vibeScore": 6,
+        "overall": "Structurally solid auth flow: real semantic markup (main/header/section/form), proper Field labels with htmlFor, token-driven spacing/radii, a global accent focus ring, and AA-grade --muted text. The one clearly vibe-coded tell is the raw 🏋️ emoji used as the app brand mark in both screens, which reads as a placeholder logo and renders inconsistently per OS. Beyond that, the only real gaps are sub-44px link tap targets and a brand header duplicated verbatim across both files.",
+        "keptCount": 4
+      },
+      {
+        "page": "Home",
+        "vibeScore": 4,
+        "overall": "The code is technically clean — it uses the Card/section/ul/li primitives, design tokens, and react-query correctly with no inline styles or hardcoded colors. But as a *design* it isn't a home screen; it's a developer build-verification scaffold (DB ping banner, \"Phase 1 — online MVP\", a \"Your setup\" checklist confirming the schema seeded) dressed in three identical stacked cards. The product thesis \"numbers are the hero\" is entirely unrealized: the only figures (873 exercises, N muscle groups) are buried in body prose, never rendered as the big tabular display figures the design system was built for.",
+        "keptCount": 4
+      },
+      {
+        "page": "Live Session",
+        "vibeScore": 7,
+        "overall": "Structurally this is a well-built page: one-exercise-at-a-time hero with a big fs-stat tabular weight, a real plate readout, prominent set logging, and a clean progress header — numbers genuinely read as the hero, semantics are correct (ul/li/button/role=dialog/role=timer), every icon-only control has an aria-label, focus-visible and prefers-reduced-motion are handled globally. The professionalism is dragged down almost entirely by raw color emoji standing in for a real icon set (🎥, 🎬, plus ✕/chevron glyphs), which is exactly the vibe-coded artifact the brief flags and clashes with the restrained monochrome system. A couple of mid-set tap targets (rep steppers at 36px, close at 42px) fall under the 44px floor for a product whose whole thesis is mid-set phone use.",
+        "keptCount": 6
+      },
+      {
+        "page": "Routines",
+        "vibeScore": 6,
+        "overall": "Both files lean on the shared design system correctly — tokenized spacing, global focus-visible ring, aria-labels on icon-only controls, semantic ul/li in the builder, text-backed badges (no color-only state), and accent reserved for selection/active state. The cheap tells are concentrated and fixable: a raw emoji as the empty-state hero icon (with a grayscale CSS band-aid), raw glyph \"icons\" (✕, +, →) standing in for a real SVG set, a card-per-routine list that reads as monotonous card grid, and one off-scale inline magic-number style. Numbers-as-hero isn't really applicable on these planning screens, so its absence isn't a fault here.",
+        "keptCount": 6
+      },
+      {
+        "page": "Workouts",
+        "vibeScore": 6,
+        "overall": "Both screens are built cleanly on the design system — tokens, global focus-visible accent ring, reduced-motion support, mostly-labeled icon buttons, and the Builder correctly uses a single Card + semantic ul/li list. The quality drops on the classic vibe-coded tells: an emoji clipboard as the empty-state icon and raw Unicode glyphs (↑ ↓ ✕) standing in for a real SVG icon set, plus a few hierarchy and a11y misses (per-item card monotony on the list page, sub-44px reorder buttons, an unlabeled create input, numbers not treated as the hero). Solid bones, amateur surface details.",
+        "keptCount": 7
+      },
+      {
+        "page": "Exercises",
+        "vibeScore": 7,
+        "overall": "Structurally this page is one of the cleaner ones: it composes the shared primitives, uses token-driven CSS classes throughout, has semantic markup (ul/li, real buttons, label-wired fields, aria-labels on the search/filter controls), and avoids inline-style/hardcoded-color drift. The blemishes are concentrated in a raw emoji used as the empty-state icon and developer-facing copy that leaks a SQL seed filename to a single end-user, plus a couple of disclosure/tap-target a11y gaps. Numbers aren't the hero here (it's a browser, not a logging surface), so the flat list is acceptable.",
+        "keptCount": 4
+      },
+      {
+        "page": "Equipment",
+        "vibeScore": 7,
+        "overall": "Restrained and mostly on-system: real Archivo/Inter via .mono, token-driven spacing/color, no emoji icons or debug cruft, semantic markup, and aria-labeled stepper buttons. The weaknesses are ergonomic/hierarchy ones: the New-location input is placeholder-only with no label, the +/- steppers render well under a 44px tap target, the genuinely interesting \"max loadable\" figure is buried as muted fine print instead of being the hero number the product thesis asks for, and the screen is five visually identical stacked cards with no rhythm.",
+        "keptCount": 5
+      },
+      {
+        "page": "History",
+        "vibeScore": 6,
+        "overall": "Code-wise this is one of the cleaner pages: correct semantics (button with aria-expanded, ul/li list, aria-hidden on decorative glyphs), fully token-driven CSS, real human copy, skeleton loaders, and no inline color hacks or nested-card soup. It is dragged down by the exact vibe-coded smell the user flags — a raw notebook emoji as the empty-state icon and Unicode triangle glyphs standing in for a real SVG chevron — and by a flat information design where the product's \"numbers are the hero\" thesis is entirely absent at the list level (collapsed rows are pure date ledgers with zero figures).",
+        "keptCount": 5
+      },
+      {
+        "page": "Analytics",
+        "vibeScore": 6,
+        "overall": "A competently built analytics screen — semantic lists/sections, real buttons with aria-pressed and role=group, token-driven styles, tabular mono numbers, and animation disabled on the chart. It is not generic card-grid soup; the radar is a genuine hero. The drag on quality is vibe-coded emoji standing in for an icon set (📋🏋️💪 column icons, 📊 empty state, 🎉 in copy) plus a radar-legend caption that mislabels strength values as 'volume'.",
+        "keptCount": 6
+      },
+      {
+        "page": "Progress",
+        "vibeScore": 5,
+        "overall": "Structurally this page is more disciplined than most vibe-coded work: the history is a real semantic table, inputs go through the Field/label primitive, icon-only controls carry aria-labels, the segmented control uses role=group + aria-pressed, and there is a global focus-visible ring. What drags it down is two things. First, raw emoji is the page's entire icon vocabulary (reminder rows, both empty states, the primary photo button), which is exactly the cheap/amateur signal the user is complaining about. Second, it quietly violates the product's core thesis: this is a bodyweight/measurements screen where the numbers should be the hero, yet every figure renders as a tiny fs-sm monospace table cell with no big tabular stat anywhere. A few mid-set tap targets also sit under 44px.",
+        "keptCount": 7
+      },
+      {
+        "page": "Profile / Settings",
+        "vibeScore": 7,
+        "overall": "A genuinely clean, restrained settings form that does the right things: shared primitives, semantic form/label, token-driven spacing and color, no inline styles, no emoji, no hardcoded hex/oklch. It correctly stays quiet (numbers-as-hero rightly doesn't apply to a settings form). The real gaps are accessibility (a below-AA hint token and save/error banners that announce nothing to screen readers) plus a couple of cheap-feeling touches: raw \"→\" glyphs standing in for a real nav icon and a full elevated card wrapping a lone Sign-out button.",
+        "keptCount": 5
+      },
+      {
+        "page": "App shell + primitives",
+        "vibeScore": 4,
+        "overall": "The shell's bones are genuinely solid: correct landmarks (header/main/nav), real aria-labels on icon-only controls, token-driven CSS, a global focus-visible ring, and shape-backed active state. But the entire icon system is raw emoji — tab bar, brand mark, and theme toggle — and a project-wide grep confirms zero SVG/icon-set usage. That single choice is the defining \"vibe-coded\" tell, and because it lives in the always-on shell it brands every screen. Fix the icon system and this jumps to ship-grade.",
+        "keptCount": 7
+      },
+      {
+        "page": "Design tokens (index.css)",
+        "vibeScore": 6,
+        "overall": "Token-driven, well-organized, OKLCH throughout, full reduced-motion fallback, and numbers genuinely go big in the weight hero — the system has real bones. But it ships two explicit DESIGN.md ban violations (1px-border + wide-shadow cards, default glassmorphism on chrome), the tell-tale CSS signatures of emoji-as-icons (grayscale filters, an emoji in a comment), several mid-set tap targets below 44px, and at least one muted role (--faint) that likely fails AA on small text. Solid foundation, not yet ship-grade on the bans and a11y it claims to honor.",
+        "keptCount": 11
+      }
+    ],
+    "totalFindings": 77,
+    "findings": [
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/auth/AuthScreen.tsx",
+        "line": 82,
+        "summary": "Raw weightlifter emoji is used as the app's brand mark/logo on the primary entry screen.",
+        "fix": "Replace the emoji with a real inline SVG mark (a dedicated <Logo/> component) filled with var(--accent). Emoji glyphs render differently across Apple/Android/Windows and read as a placeholder; an SVG gives a consistent, on-brand mark. Keep aria-hidden on the decorative mark and rely on the h1 text for the accessible name.",
+        "verdict": "CONFIRMED",
+        "page": "Auth"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/features/auth/AuthScreen.tsx",
+        "line": 124,
+        "summary": "'Forgot password?', 'Create one', and the sign-in/up toggle are .linkbtn controls with padding:0, giving a tap target only ~19px tall — well under the 44px minimum.",
+        "fix": "Give .linkbtn a real hit area: add min-height: 44px and inline-flex centering plus small vertical padding (e.g. padding: var(--s-2) var(--s-1)), or wrap each link in a 44px-tall tap zone. Keep text color but ensure the focus-visible ring still shows.",
+        "verdict": "CONFIRMED",
+        "page": "Auth"
+      },
+      {
+        "severity": "p3",
+        "category": "vibe-coded",
+        "file": "src/features/auth/ResetPasswordScreen.tsx",
+        "line": 37,
+        "summary": "The brand header block (mark + 'SupaStrength' h1) is duplicated verbatim across both auth screens instead of being a shared primitive.",
+        "fix": "Extract a <Brand/> (or <AuthHeader/>) component into components/ui.tsx and render it in both screens so the logo/wordmark lives in one place.",
+        "verdict": "CONFIRMED",
+        "page": "Auth"
+      },
+      {
+        "severity": "p3",
+        "category": "design-drift",
+        "file": "src/features/auth/AuthScreen.tsx",
+        "line": 135,
+        "summary": "Accent color is applied to secondary text links, competing with the accent-filled primary button; DESIGN.md reserves the accent for primary action / selection / live state.",
+        "fix": "Distinguish links by an underline (text-decoration: underline) and use --ink or --muted text for the secondary 'Create one'/'Forgot password?' links, keeping the saturated accent solely on the primary submit button so the page has a single clear accent focal point.",
+        "verdict": "PLAUSIBLE",
+        "page": "Auth"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/home/HomePage.tsx",
+        "line": 32,
+        "summary": "The home screen is a developer build-verification scaffold, not a lifter's dashboard — it surfaces DB-connection diagnostics and a setup checklist as primary content.",
+        "fix": "Replace the ping banner and setup checklist with the actual M6/M8 dashboard content (next session, recent PR, training-readiness). At minimum, the user must never see DB-query/connection status or build-phase labels — move pingRepo health-checks to a dev-only diagnostics route. Drop the 'Phase 1 — online MVP' subtitle entirely.",
+        "verdict": "CONFIRMED",
+        "page": "Home"
+      },
+      {
+        "severity": "p2",
+        "category": "generic-flat",
+        "file": "src/features/home/HomePage.tsx",
+        "line": 20,
+        "summary": "Three identical stacked .card blocks with no hierarchy and zero hero figures — the 'numbers are the hero' thesis (--fs-stat 2.75rem, --font-num tabular) is never used on the page that should showcase it.",
+        "fix": "Lead with one real numeric hero block (e.g. days-since-last-session or current top set) using --font-num + --fs-stat, then differentiate secondary content by size/role instead of cloning the card. Make at least one metric the visual anchor so the home page demonstrates the number-first register.",
+        "verdict": "PLAUSIBLE",
+        "page": "Home"
+      },
+      {
+        "severity": "p2",
+        "category": "vibe-coded",
+        "file": "src/features/home/HomePage.tsx",
+        "line": 32,
+        "summary": "Raw Unicode glyphs are used as UI affordances/icons inside copy instead of a real icon set or styled control.",
+        "fix": "Remove the inline ✓ from the banner (the status--ok fill already carries success state); render directional/CTA arrows as a sized SVG chevron inside the link, not as a literal → character concatenated into the label.",
+        "verdict": "CONFIRMED",
+        "page": "Home"
+      },
+      {
+        "severity": "p3",
+        "category": "vibe-coded",
+        "file": "src/styles/index.css",
+        "line": 378,
+        "summary": "Checklist status markers are CSS pseudo-element Unicode glyphs (○ / ✓) rather than the project's icon set.",
+        "fix": "Swap the ::before content glyphs for an inline SVG check/circle (or a masked icon) so the checklist matches the rest of the icon system; keep --good as the done color with the shape change for non-color-only signaling.",
+        "verdict": "CONFIRMED",
+        "page": "Home"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/session/VideoSheet.tsx",
+        "line": 107,
+        "summary": "Raw clapperboard emoji (🎬) used as the icon inside the primary record/upload CTA label.",
+        "fix": "Drop the emoji and render a monochrome SVG icon that inherits currentColor (e.g. a camera/record glyph from one icon set) sized to the text. Color emoji render OS-dependently and break the restrained, currentColor-driven palette.",
+        "verdict": "CONFIRMED",
+        "page": "Live Session"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/session/SessionPage.tsx",
+        "line": 442,
+        "summary": "Icon-only form-video set button uses a raw 🎥 emoji instead of an SVG icon.",
+        "fix": "Replace 🎥 with an inline SVG video icon that inherits currentColor so it tints with --ink/--muted; keep the existing aria-label. The emoji is full-color and ignores theme tokens.",
+        "verdict": "CONFIRMED",
+        "page": "Live Session"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/session/VideoSheet.tsx",
+        "line": 50,
+        "summary": "Sheet heading text is prefixed with a 🎥 emoji as decoration.",
+        "fix": "Remove the emoji from the heading string. If an icon is wanted, place a sized aria-hidden SVG as a sibling before the <h3> text rather than inside the heading content.",
+        "verdict": "CONFIRMED",
+        "page": "Live Session"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/styles/index.css",
+        "line": 895,
+        "summary": "Rep +/- steppers are 36x36px — small for the most-tapped mid-set control on a phone (44px is the HIG/AAA touch-target guideline).",
+        "fix": "Bump .repstep to ~44x44 (or add padding to reach a 44px hit area). These are the primary mid-set interactions and 36px is undersized for the 'mid-set phone use' thesis. Note: the stated 'fails AA' is imprecise — WCAG 2.5.8 AA is 24px; the 44px floor is HIG/AAA.",
+        "verdict": "PLAUSIBLE",
+        "page": "Live Session"
+      },
+      {
+        "severity": "p2",
+        "category": "design-drift",
+        "file": "src/styles/index.css",
+        "line": 836,
+        "summary": "Every plate denomination chip is painted with accent-tint background + accent text, using the one committed accent as informational decoration.",
+        "fix": "DESIGN.md:18-19 restricts the accent to primary actions, current selection, and live state. Render plate chips in --ink on --surface-2/--inset with a hairline border, reserving accent for the active/selected state; let weight + size make the numbers the hero.",
+        "verdict": "CONFIRMED",
+        "page": "Live Session"
+      },
+      {
+        "severity": "p3",
+        "category": "design-drift",
+        "file": "src/styles/index.css",
+        "line": 834,
+        "summary": "Chip paddings use off-scale magic numbers (3/6/10/14px) instead of the --s-* tokens (4/8/12/16).",
+        "fix": "Snap to the --s-1..--s-4 scale (4/8/12/16) for .plate (3px 10px), .plate--lg/.warmup (6px 14px), and .seg__btn (6px 12px); the hand-tuned values drift off the declared 8px rhythm across the plate/warmup/segmented chips.",
+        "verdict": "CONFIRMED",
+        "page": "Live Session"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/routines/RoutinesPage.tsx",
+        "line": 42,
+        "summary": "Empty-state hero icon is a raw calendar emoji (icon=\"🗓️\") instead of a real SVG icon, rendered at 40px in .empty__icon which even applies filter: grayscale(0.15) to tame it.",
+        "fix": "Pass a 40px SVG calendar/clock glyph from the app's icon set (e.g. <CalendarIcon aria-hidden />) as the icon prop and drop the grayscale(0.15) band-aid on .empty__icon. Emoji render inconsistently per-OS and read amateur.",
+        "verdict": "CONFIRMED",
+        "page": "Routines"
+      },
+      {
+        "severity": "p2",
+        "category": "generic-flat",
+        "file": "src/features/routines/RoutinesPage.tsx",
+        "line": 48,
+        "summary": "Each routine is wrapped in its own Card containing a single .list__row, producing card-per-item monotony instead of one cohesive list.",
+        "fix": "Render one <Card title=\"Routines\"> containing a single <ul className=\"list\"> with one <li className=\"list__row\"> per routine. The .list__row hairline divider (border-bottom) already exists for exactly this.",
+        "verdict": "CONFIRMED",
+        "page": "Routines"
+      },
+      {
+        "severity": "p2",
+        "category": "vibe-coded",
+        "file": "src/features/routines/RoutineBuilderPage.tsx",
+        "line": 158,
+        "summary": "Icon-only remove buttons use a bare ✕ text glyph instead of an SVG icon (also at line 172).",
+        "fix": "Replace the ✕ character on both ghost buttons with an SVG close/trash icon (keep the existing aria-labels). A bare Unicode multiplication-X as a control glyph is the same vibe-coded tell as emoji icons.",
+        "verdict": "CONFIRMED",
+        "page": "Routines"
+      },
+      {
+        "severity": "p2",
+        "category": "vibe-coded",
+        "file": "src/features/routines/RoutineBuilderPage.tsx",
+        "line": 124,
+        "summary": "Inline style style={{ marginTop: 10 }} uses a 10px magic number off the 4/8/12/16 spacing scale and bypasses the token system.",
+        "fix": "Drop the inline style; use a token-based margin (var(--s-2)=8 or var(--s-3)=12).",
+        "verdict": "CONFIRMED",
+        "page": "Routines"
+      },
+      {
+        "severity": "p2",
+        "category": "generic-flat",
+        "file": "src/features/routines/RoutineBuilderPage.tsx",
+        "line": 120,
+        "summary": "A whole elevated Card is used just to hold one '+ Add rotation' button plus a hint paragraph — card-as-lazy-default with no real content.",
+        "fix": "Render the add-rotation action and its hint inline (a div with .row-actions / .muted, or as a footer of the last rotation section) rather than wrapping a non-content control in its own Card. Reserve Card for actual content blocks.",
+        "verdict": "CONFIRMED",
+        "page": "Routines"
+      },
+      {
+        "severity": "p3",
+        "category": "vibe-coded",
+        "file": "src/features/routines/RoutineBuilderPage.tsx",
+        "line": 121,
+        "summary": "Typographic glyphs are substituted for icons in labels: '+ Add rotation' (L121), '← All' (L69), 'Start this day →' (L95), plus RoutinesPage L55 'Tap to build rotations →'.",
+        "fix": "Use real SVG icons (plus, chevron-left/right) alongside the text label instead of glyphs prefixed/suffixed into the string, for consistent icon weight and baseline.",
+        "verdict": "PLAUSIBLE",
+        "page": "Routines"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/workouts/WorkoutsPage.tsx",
+        "line": 60,
+        "summary": "Raw emoji used as the empty-state UI icon instead of a monochrome SVG icon.",
+        "fix": "Replace icon=\"📋\" with an inline monochrome SVG (currentColor) sized to .empty__icon; emoji render as platform-specific color blobs against the restrained OKLCH-neutral palette in DESIGN.md.",
+        "verdict": "CONFIRMED",
+        "page": "Workouts"
+      },
+      {
+        "severity": "p2",
+        "category": "vibe-coded",
+        "file": "src/features/workouts/WorkoutBuilderPage.tsx",
+        "line": 63,
+        "summary": "Reorder/remove controls use raw Unicode glyphs (↑ ↓ ✕) as icon-button content rather than SVG icons.",
+        "fix": "Swap the three glyphs (↑ l63, ↓ l77, ✕ l81) for SVG chevron-up / chevron-down / x icons (currentColor) for consistent weight and cross-platform rendering.",
+        "verdict": "CONFIRMED",
+        "page": "Workouts"
+      },
+      {
+        "severity": "p2",
+        "category": "generic-flat",
+        "file": "src/features/workouts/WorkoutsPage.tsx",
+        "line": 66,
+        "summary": "Each workout is wrapped in its own <Card>, producing a monotonous stack of identical full-chrome <section>s instead of one list.",
+        "fix": "Render one <Card title=\"Workouts\"> containing a <ul className=\"list\"> of <li className=\"list__row\"> rows — the pattern WorkoutBuilderPage already uses (l42-44) — to remove redundant per-item chrome and give real list semantics.",
+        "verdict": "PLAUSIBLE",
+        "page": "Workouts"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/features/workouts/WorkoutsPage.tsx",
+        "line": 45,
+        "summary": "The 'new workout' text input has only a placeholder and no associated label (placeholder is not an accessible name).",
+        "fix": "Wrap the TextInput in the Field primitive or add aria-label=\"New workout name\"; the placeholder disappears on input and is not reliably exposed as the field's name.",
+        "verdict": "CONFIRMED",
+        "page": "Workouts"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/features/workouts/WorkoutBuilderPage.tsx",
+        "line": 51,
+        "summary": "Reorder buttons are 36x36px, below the 44px minimum tap target for touch controls.",
+        "fix": "Bump .reorderbtn (index.css:1261-1264) to min 44x44px; this also unifies their height with the adjacent ~42px ghost ✕ Button.",
+        "verdict": "CONFIRMED",
+        "page": "Workouts"
+      },
+      {
+        "severity": "p3",
+        "category": "design-drift",
+        "file": "src/features/workouts/WorkoutBuilderPage.tsx",
+        "line": 48,
+        "summary": "Prescription numbers (sets × reps · rest) render as small muted body text rather than tabular --font-num, de-emphasizing the page's actual data.",
+        "fix": "Render the numeric prescription in --font-num with tabular-nums and ink (not .muted/--fs-sm body) per DESIGN.md 'numbers go big and heavy'; keep qualifier words (rest, AMRAP) quiet.",
+        "verdict": "PLAUSIBLE",
+        "page": "Workouts"
+      },
+      {
+        "severity": "p3",
+        "category": "a11y-contrast",
+        "file": "src/features/workouts/WorkoutsPage.tsx",
+        "line": 43,
+        "summary": "Page's first heading is the Card <h2>; there is no <h1> (the shell renders the app title as a <span>), so heading order starts at h2.",
+        "fix": "Shared-shell fix: give each route an <h1> (make AppShell.tsx:37 appbar title an h1, or add a visually-hidden page <h1>) so SR heading navigation has a top level before card h2s.",
+        "verdict": "CONFIRMED",
+        "page": "Workouts"
+      },
+      {
+        "severity": "p2",
+        "category": "vibe-coded",
+        "file": "src/features/exercises/ExercisesPage.tsx",
+        "line": 108,
+        "summary": "User-facing empty-state copy leaks an implementation/dev detail (SQL seed filename and a hardcoded 873 count) into product UI.",
+        "fix": "Rewrite for the end-user, e.g. 'Your exercise library is still loading — pull to refresh, or add your own with New.' Move the seed-script instruction to developer docs; never surface a file path or hardcoded count in product copy.",
+        "verdict": "PLAUSIBLE",
+        "page": "Exercises"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/features/exercises/ExercisesPage.tsx",
+        "line": 127,
+        "summary": "Expand/collapse disclosure button has no aria-expanded/aria-controls, so screen readers can't tell it toggles detail.",
+        "fix": "Add aria-expanded={open} and aria-controls pointing to the detail panel's id (give exrow__detail an id), so the disclosure state is announced.",
+        "verdict": "CONFIRMED",
+        "page": "Exercises"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/features/exercises/ExercisesPage.tsx",
+        "line": 250,
+        "summary": "Secondary-muscle toggle chips are real tap targets but fall well under the documented ≥44px minimum (~26px tall).",
+        "fix": "Give .chip--toggle a min-height of 44px (or padding bump) so these interactive selection chips meet the PRODUCT.md ≥44px tap-target floor; keep the static read-only .chip variant as-is.",
+        "verdict": "CONFIRMED",
+        "page": "Exercises"
+      },
+      {
+        "severity": "p3",
+        "category": "design-drift",
+        "file": "src/features/exercises/ExercisesPage.tsx",
+        "line": 147,
+        "summary": "Detail muscles use a plain 'Loading…' text where the same file (and app) uses SkeletonList for loading states.",
+        "fix": "Swap for a small chip-shaped Skeleton row to match the skeleton convention already used in this file (SkeletonList at line 99).",
+        "verdict": "PLAUSIBLE",
+        "page": "Exercises"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/features/equipment/EquipmentPage.tsx",
+        "line": 68,
+        "summary": "The 'New location name' text input has no associated label or aria-label — only a placeholder, which is not an accessible name and disappears on input.",
+        "fix": "Add aria-label=\"New location name\" to the input (or wrap it in the Field primitive); the Card already shows a visible 'Locations' title so the aria-label is the minimal correct fix.",
+        "verdict": "CONFIRMED",
+        "page": "Equipment"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/features/equipment/EquipmentPage.tsx",
+        "line": 232,
+        "summary": "QuantityStepper +/- buttons (.stepper .btn: padding 4px 12px, font 18px/1) render ~28px tall, well below a 44px touch target on a phone-first inventory control.",
+        "fix": "Give the stepper buttons a min 44x44 hit area (min-width/min-height: 44px, center the glyph) since they are the primary editing control on this screen.",
+        "verdict": "CONFIRMED",
+        "page": "Equipment"
+      },
+      {
+        "severity": "p2",
+        "category": "generic-flat",
+        "file": "src/features/equipment/EquipmentPage.tsx",
+        "line": 134,
+        "summary": "The computed 'Max loadable' figure — the one real hero number on the page — is rendered as muted fs-sm subtitle text (card__sub: color var(--muted), font-size var(--fs-sm)).",
+        "fix": "Promote the loadable value to a real stat: a large var(--font-num) tabular figure (fs-xl/fs-2xl) with a quiet 'max loadable' micro-label instead of grey fine print.",
+        "verdict": "PLAUSIBLE",
+        "page": "Equipment"
+      },
+      {
+        "severity": "p2",
+        "category": "generic-flat",
+        "file": "src/features/equipment/EquipmentPage.tsx",
+        "line": 79,
+        "summary": "Page is five stacked cards (Locations, Barbells, Plates, Dumbbells, Preferences) at equal visual weight with the same card__title treatment and spacing — no hierarchy or rhythm.",
+        "fix": "Differentiate: group the three inventory cards (bar/plates/dumbbells) under one section heading or merge them, and de-emphasize the Preferences card so the eye gets a hierarchy.",
+        "verdict": "PLAUSIBLE",
+        "page": "Equipment"
+      },
+      {
+        "severity": "p3",
+        "category": "vibe-coded",
+        "file": "src/features/equipment/EquipmentPage.tsx",
+        "line": 138,
+        "summary": "PlatesCard (138-150) and DumbbellsCard (160-172) duplicate near-identical list+QuantityStepper markup and the exact 'pair(s)' suffix logic instead of sharing one inventory-row component.",
+        "fix": "Extract an InventoryCard (title, items, onChange, weight accessor) so the pair derivation and empty-state live in one place instead of being copy-pasted.",
+        "verdict": "CONFIRMED",
+        "page": "Equipment"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/history/HistoryPage.tsx",
+        "line": 31,
+        "summary": "Raw emoji used as the empty-state UI icon instead of an SVG glyph.",
+        "fix": "Replace the 📒 emoji with a stroked SVG icon (document/clipboard) sized via the icon token. Note the app currently has no SVG icon set at all — every empty state uses emoji — so this is part of a wider pattern. The .empty__icon `filter: grayscale(0.15)` (index.css:1145) is itself the tell that an emoji is being tamed rather than a real icon used.",
+        "verdict": "CONFIRMED",
+        "page": "History"
+      },
+      {
+        "severity": "p2",
+        "category": "vibe-coded",
+        "file": "src/features/history/HistoryPage.tsx",
+        "line": 60,
+        "summary": "Unicode triangle glyphs ('▾' / '▸') stand in for a real SVG disclosure chevron.",
+        "fix": "Render one SVG chevron and rotate it 90deg via a CSS transform keyed off the open state (gated by prefers-reduced-motion). Text triangles render inconsistently across platforms, can't animate cleanly, and aren't part of any icon set.",
+        "verdict": "CONFIRMED",
+        "page": "History"
+      },
+      {
+        "severity": "p2",
+        "category": "generic-flat",
+        "file": "src/features/history/HistoryPage.tsx",
+        "line": 58,
+        "summary": "Collapsed history rows show only a date + chevron — no numbers, so the 'numbers are the hero' thesis (DESIGN.md) is absent and every row reads as identical-weight monotony.",
+        "fix": "Add a quiet numeric summary to each collapsed row (e.g. total working sets and session volume) set in --font-num/tabular-nums so the list scans as data. Even when expanded, weights/reps are tiny --fs-sm chips (histex__sets, line 110); promote the working figures' size/weight so numbers lead.",
+        "verdict": "PLAUSIBLE",
+        "page": "History"
+      },
+      {
+        "severity": "p3",
+        "category": "vibe-coded",
+        "file": "src/features/history/HistoryPage.tsx",
+        "line": 106,
+        "summary": "Exercise-name fallback flashes a placeholder ellipsis because the exercises query's loading state is not gated.",
+        "fix": "useExercisesByIds (line 73) destructures only `data` — its isLoading is never read, and the skeleton gate (line 89) checks only entriesLoading/logsLoading. Capture the exercises loading flag and either include it in the gate or render a name Skeleton, so rows never flash '…'.",
+        "verdict": "CONFIRMED",
+        "page": "History"
+      },
+      {
+        "severity": "p3",
+        "category": "design-drift",
+        "file": "src/styles/index.css",
+        "line": 1244,
+        "summary": "History set chips use 2px vertical padding (and a 1px margin on histset__x), off the documented 8px rhythm whose floor is --s-1 = 4px.",
+        "fix": "Bring chip padding onto the scale (token-derived value, e.g. --s-1 vertical or a dedicated chip token) to stay on the 4/8/12 rhythm DESIGN.md mandates, and drop the magic 1px margin on .histset__x.",
+        "verdict": "CONFIRMED",
+        "page": "History"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/analytics/AnalyticsPage.tsx",
+        "line": 443,
+        "summary": "The 'Most often' frequency columns use raw emoji as section icons (DIM_TITLE 📋/🏋️/💪 at lines 417-421, rendered at line 443) instead of the app's SVG icon set.",
+        "fix": "Replace the 📋/🏋️/💪 emoji with inline SVG glyphs sized via currentColor so they inherit --muted (the .freqcol__title color) and theme correctly.",
+        "verdict": "CONFIRMED",
+        "page": "Analytics"
+      },
+      {
+        "severity": "p2",
+        "category": "design-drift",
+        "file": "src/features/analytics/AnalyticsPage.tsx",
+        "line": 260,
+        "summary": "The radar legend caption is hardcoded 'Your 3 lowest-volume areas right now.' but the enclosing Card renders in strength mode too, where the legend values (line 250) show e1RM lb — so it mislabels strength as volume.",
+        "fix": "Make the caption mode-aware: in strength mode show 'Your 3 weakest areas by estimated 1RM.' so it matches the unit switch already applied to the legend values.",
+        "verdict": "CONFIRMED",
+        "page": "Analytics"
+      },
+      {
+        "severity": "p2",
+        "category": "vibe-coded",
+        "file": "src/features/analytics/AnalyticsPage.tsx",
+        "line": 406,
+        "summary": "A decorative party emoji is embedded in standards copy ('Elite — maxed out 🎉'), an AI-tell flourish that clashes with the restrained one-accent color strategy.",
+        "fix": "Drop the 🎉 and render plain 'Elite — top band' (optionally paired with the existing --bad band chip), keeping the restrained voice.",
+        "verdict": "CONFIRMED",
+        "page": "Analytics"
+      },
+      {
+        "severity": "p2",
+        "category": "vibe-coded",
+        "file": "src/features/analytics/AnalyticsPage.tsx",
+        "line": 208,
+        "summary": "The empty state passes a raw 📊 emoji to EmptyState's icon prop (rendered by .empty__icon) rather than an SVG glyph; this is consistent app-wide but still an emoji-as-icon tell on this page.",
+        "fix": "Pass an SVG node (bar/radar chart glyph) to EmptyState's icon prop so it matches a real icon set and inherits theme color; ideally apply across the other EmptyState call sites too.",
+        "verdict": "CONFIRMED",
+        "page": "Analytics"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/styles/index.css",
+        "line": 1635,
+        "summary": "The segmented-control pills (.seg__btn) — the primary mode/window/metric toggles on this mobile-first page — have min-height 34px, below the common 44px touch-target guideline that the app already meets elsewhere (e.g. .warmup min-height:44px). Note: DESIGN.md does not actually define a 44px floor, so this is a heuristic, not a documented-token violation.",
+        "fix": "Raise .seg__btn min-height to ~44px (adjust the 6px 12px padding to keep the pill proportion) so the toggles meet the touch-target size used by other tap targets.",
+        "verdict": "PLAUSIBLE",
+        "page": "Analytics"
+      },
+      {
+        "severity": "p3",
+        "category": "design-drift",
+        "file": "src/styles/index.css",
+        "line": 1730,
+        "summary": "Rank/standards bar fills use gradients — .bar__fill accent→accent-strong (line 1730) and .std__fill accent→good (line 1798) — whereas the radar itself uses a flat var(--accent) fill, a minor drift from the single-flat-accent intent (the accent→good blend is the stronger case).",
+        "fix": "Use a flat var(--accent) fill for .bar__fill; for .std__fill, if accent→good is meant to encode progress, lean on the existing numeric label rather than the two-hue color ramp.",
+        "verdict": "PLAUSIBLE",
+        "page": "Analytics"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/progress/ProgressPage.tsx",
+        "line": 223,
+        "summary": "Reminder rows use raw emoji as their icon set instead of a real SVG icon system.",
+        "fix": "Replace the emoji strings ('⚖️','📏','📸', fallback '🔔') with monochrome inline SVGs (currentColor) rendered inside .reminder__icon so they inherit --ink/--muted and align with the Archivo/Inter system; emoji render as full-color OS glyphs that ignore the token palette.",
+        "verdict": "CONFIRMED",
+        "page": "Progress"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/progress/PhotosSection.tsx",
+        "line": 91,
+        "summary": "The primary photo-capture action has an emoji baked into its button label.",
+        "fix": "Drop the '📸 ' from the label; if a leading icon is wanted, render an SVG camera glyph as a child element before the text rather than an emoji inside the string.",
+        "verdict": "CONFIRMED",
+        "page": "Progress"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/features/progress/ProgressPage.tsx",
+        "line": 179,
+        "summary": "Empty states pass raw emoji to the EmptyState icon slot on both tabs.",
+        "fix": "Pass an <svg> element (ruler / camera) to EmptyState's icon prop (it accepts ReactNode) instead of the '📏'/'📸' strings, styled with --muted.",
+        "verdict": "CONFIRMED",
+        "page": "Progress"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/styles/index.css",
+        "line": 1569,
+        "summary": "The photo delete control is a 24x24px hit target overlapping the image, well under the 44px gym-use minimum.",
+        "fix": "Give .photothumb__del a >=44px hit area (e.g. padding around a 24px visual chip, or a 44px min target with a 16px inner glyph) and swap the raw '✕' for an SVG close icon; consider a confirm step since a stray tap deletes a photo.",
+        "verdict": "CONFIRMED",
+        "page": "Progress"
+      },
+      {
+        "severity": "p2",
+        "category": "generic-flat",
+        "file": "src/features/progress/ProgressPage.tsx",
+        "line": 184,
+        "summary": "On a bodyweight-tracking page no number is the hero — all figures render as tiny fs-sm table cells.",
+        "fix": "Surface the latest bodyweight (and delta vs previous entry) as a large tabular stat using --font-num at --fs-2xl/--fs-stat above the history table, per DESIGN's 'numbers go big and heavy'; keep the dense table below.",
+        "verdict": "PLAUSIBLE",
+        "page": "Progress"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/styles/index.css",
+        "line": 1635,
+        "summary": "Primary tab controls (34px) and reminder action buttons (36px) fall below the documented 44px tap minimum.",
+        "fix": "Raise .seg__btn (currently min-height:34px) and .reminder__actions .btn (min-height:36px) to min-height:44px; the product is explicitly 'built for gym use' with a stated >=44px floor.",
+        "verdict": "CONFIRMED",
+        "page": "Progress"
+      },
+      {
+        "severity": "p3",
+        "category": "design-drift",
+        "file": "src/features/progress/ProgressPage.tsx",
+        "line": 206,
+        "summary": "Per-row 'Edit' is an accent-colored, zero-padding text link — accent spreading beyond primary action/selection and a tiny tap target.",
+        "fix": "Use a neutral (--ink/--muted) ghost affordance for the row edit action with a >=44px hit area; reserve --accent for the primary save action and current selection per the documented accent rule (accent only on primary actions, selection, state).",
+        "verdict": "CONFIRMED",
+        "page": "Progress"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/features/settings/ProfilePage.tsx",
+        "line": 116,
+        "summary": "Field hint copy carrying real meaning ('Display only — data is stored in lb/in', 'For strength standards', 'Stamps the weigh-in date') renders in --faint, which measures 3.85:1 (dark) / 3.95:1 (light) on --surface — below the 4.5:1 AA floor for this 12px instructional text.",
+        "fix": "Point .field__hint at --muted (verified 7.77:1 dark / 7.13:1 light) in src/styles/index.css:435, or lighten --faint until hint text clears 4.5:1.",
+        "verdict": "CONFIRMED",
+        "page": "Profile / Settings"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/features/settings/ProfilePage.tsx",
+        "line": 127,
+        "summary": "Success ('Saved.') and error banners are inert <div className=\"status\"> elements (Banner, ui.tsx:133-135) with no role or aria-live, so a screen-reader user gets no announcement after submitting.",
+        "fix": "In Banner add role=\"status\" aria-live=\"polite\" for ok/info/warn and role=\"alert\" for err so save confirmation and update errors are announced.",
+        "verdict": "CONFIRMED",
+        "page": "Profile / Settings"
+      },
+      {
+        "severity": "p2",
+        "category": "vibe-coded",
+        "file": "src/features/settings/ProfilePage.tsx",
+        "line": 140,
+        "summary": "A literal '→' glyph is appended inside the link label strings (lines 140 and 147) as a stand-in nav affordance, polluting the accessible name (screen readers read 'right arrow').",
+        "fix": "Drop the literal arrow from the copy and render an aria-hidden chevron-right SVG at the row end via a flex/justify-between layout.",
+        "verdict": "CONFIRMED",
+        "page": "Profile / Settings"
+      },
+      {
+        "severity": "p3",
+        "category": "generic-flat",
+        "file": "src/features/settings/ProfilePage.tsx",
+        "line": 152,
+        "summary": "A title-less Card (lines 152-156) wraps only the Sign-out ghost button, giving a minor low-frequency action full card border + --shadow + --s-5 padding, the same elevation as the primary profile and nav cards.",
+        "fix": "Remove the wrapping Card and render Sign out as a plain full-width ghost (or quiet danger) button in the page footer.",
+        "verdict": "PLAUSIBLE",
+        "page": "Profile / Settings"
+      },
+      {
+        "severity": "p3",
+        "category": "generic-flat",
+        "file": "src/features/settings/ProfilePage.tsx",
+        "line": 138,
+        "summary": "Two adjacent near-identical single-link cards (Equipment 138-143, Progress 145-150), each containing exactly one .workout-link, create card-grid monotony with no hierarchy between them.",
+        "fix": "Collapse Equipment + Progress into one card (e.g. 'More') with a <ul className=\"list\"> of two .list__row links, using the existing divider/rhythm pattern.",
+        "verdict": "PLAUSIBLE",
+        "page": "Profile / Settings"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/routes/AppShell.tsx",
+        "line": 21,
+        "summary": "The primary bottom-tab navigation uses raw emoji as its icon set instead of a real SVG icon family.",
+        "fix": "Introduce a real monochrome icon set (e.g. self-hosted Lucide React components or inline 24px SVGs using stroke=currentColor) and map each tab to one, so active state can inherit var(--accent) cleanly instead of OS full-color emoji.",
+        "verdict": "CONFIRMED",
+        "page": "App shell + primitives"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/routes/AppShell.tsx",
+        "line": 34,
+        "summary": "Brand mark is the 🏋️ emoji, and the same emoji-brand markup is duplicated across App.tsx, AuthScreen.tsx, and ResetPasswordScreen.tsx instead of a single Brand component.",
+        "fix": "Replace the emoji with a real SVG logo/wordmark and extract one <Brand /> primitive in ui.tsx reused by the appbar and the auth/unconfigured screens, eliminating the duplicated markup (the same emoji is also reused as a data icon in AnalyticsPage.tsx:419).",
+        "verdict": "CONFIRMED",
+        "page": "App shell + primitives"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/routes/AppShell.tsx",
+        "line": 46,
+        "summary": "Theme toggle button renders ☀️/🌙 emoji as its glyph rather than an SVG sun/moon icon.",
+        "fix": "Swap to two inline SVG icons (sun/moon) using stroke=currentColor so the glyph matches var(--ink) and the restrained monochrome chrome instead of clashing colorful OS emoji.",
+        "verdict": "CONFIRMED",
+        "page": "App shell + primitives"
+      },
+      {
+        "severity": "p2",
+        "category": "vibe-coded",
+        "file": "src/styles/index.css",
+        "line": 256,
+        "summary": "The tab-icon CSS desaturates emoji with grayscale() filters (and .empty__icon too) — a workaround that exists only because emoji, not SVGs, are used as icons.",
+        "fix": "Once real monochrome SVG icons (currentColor) replace the emoji, delete the grayscale filter hacks at .tab__icon, .tab--active .tab__icon, and .empty__icon; active vs inactive becomes a simple color: var(--accent) vs var(--faint) swap.",
+        "verdict": "CONFIRMED",
+        "page": "App shell + primitives"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/styles/index.css",
+        "line": 210,
+        "summary": "The theme-toggle icon button is 42x42px, under the ≥44px touch-target minimum PRODUCT.md mandates for one-handed/mid-set gym use.",
+        "fix": "Set the .iconbtn width/height to 44px (or min-width/min-height: 44px) so every shell control meets the documented 44px tap minimum.",
+        "verdict": "CONFIRMED",
+        "page": "App shell + primitives"
+      },
+      {
+        "severity": "p3",
+        "category": "design-drift",
+        "file": "src/styles/index.css",
+        "line": 251,
+        "summary": "Tab labels use a hardcoded 10.5px font size that is off the defined rem type scale (smallest token --fs-xs is 0.75rem/12px).",
+        "fix": "Use var(--fs-xs) for the tab label, or define a dedicated smaller token if truly needed, instead of a raw 10.5px value that bypasses the type scale.",
+        "verdict": "CONFIRMED",
+        "page": "App shell + primitives"
+      },
+      {
+        "severity": "p3",
+        "category": "generic-flat",
+        "file": "src/components/ui.tsx",
+        "line": 102,
+        "summary": "SkeletonList uses an inline-styled spacer div with a magic-number height of 10px that is off the 4/8/12/16 spacing scale.",
+        "fix": "Wrap the skeleton rows in a flex column with gap: var(--s-2) or var(--s-3) and remove the empty spacer div and its inline magic-number height.",
+        "verdict": "CONFIRMED",
+        "page": "App shell + primitives"
+      },
+      {
+        "severity": "p1",
+        "category": "ban",
+        "file": "src/styles/index.css",
+        "line": 284,
+        "summary": ".card pairs a 1px border (281) with --shadow's 28px-blur elevation (31) — the exact 1px-border + wide-shadow ghost-card combo DESIGN.md bans by name twice (lines 55 and 73).",
+        "fix": "Pick one elevation per card: drop the 1px border and keep the shadow, or keep the hairline border and tighten --shadow to a contact shadow (blur <= 8px).",
+        "verdict": "CONFIRMED",
+        "page": "Design tokens (index.css)"
+      },
+      {
+        "severity": "p1",
+        "category": "vibe-coded",
+        "file": "src/styles/index.css",
+        "line": 258,
+        "summary": "Icons are emoji, not an SVG set: grayscale-toggle filters on .tab__icon (258/265) and .empty__icon (1145), a 🎥 emoji in the comment at 1353, and emoji icons in components (AppShell 📊, AnalyticsPage 💪/🏋️, SessionPage/VideoSheet 🎥).",
+        "fix": "Replace emoji with one inline-SVG set using currentColor; drive the active tab with color: var(--accent) and delete the grayscale filters.",
+        "verdict": "CONFIRMED",
+        "page": "Design tokens (index.css)"
+      },
+      {
+        "severity": "p1",
+        "category": "a11y-contrast",
+        "file": "src/styles/index.css",
+        "line": 894,
+        "summary": "Mid-set controls are below the >=44px tap target PRODUCT.md line 53 requires: .repstep 36x36 (894-895), .setvid 36x40 (1341-1342), .seg__btn min-height 34 (1635), .reminder btn min-height 36 (1476), .iconbtn 42x42 (213-214).",
+        "fix": "Raise these to >=44px in the tappable dimension (transparent padding can keep visual chrome small); match .logbtn (44) and .weighthero__step (48).",
+        "verdict": "CONFIRMED",
+        "page": "Design tokens (index.css)"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/styles/index.css",
+        "line": 17,
+        "summary": "--faint (L0.56) is used for real small text — 10.5px tab labels (250-251) and 12px field hints (435) — yielding ~4.1:1 on bg and ~3.6:1 on the surface-2 tab bar, below the AA 4.5:1 PRODUCT.md line 51 requires.",
+        "fix": "Lift --faint to ~L0.66+ to clear 4.5:1, or restrict --faint to decorative use and switch tab labels and field hints to --muted. Verify both themes.",
+        "verdict": "CONFIRMED",
+        "page": "Design tokens (index.css)"
+      },
+      {
+        "severity": "p2",
+        "category": "ban",
+        "file": "src/styles/index.css",
+        "line": 185,
+        "summary": "Translucent + backdrop-blur frosted glass on appbar (185-187), tabbar (236-238) and sprogress (712-714) reads as the 'default glassmorphism' DESIGN.md line 72 bans, with no documented exception.",
+        "fix": "Either document the sticky-chrome glass as an intentional exception in DESIGN.md, or replace with opaque var(--surface-2) plus a hairline border. Make code and doc agree.",
+        "verdict": "PLAUSIBLE",
+        "page": "Design tokens (index.css)"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/styles/index.css",
+        "line": 136,
+        "summary": "The global focus ring is a 3px box-shadow at --accent-tint (16% alpha) which computes to ~1.2:1 vs surface; bordered elements also get border-color:accent, but true border:none focusables (.linkbtn, .seg__btn, .picker__item, .exrow__head) rely on the faint ring alone, below 3:1.",
+        "fix": "Use a solid accent ring, e.g. box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent), so the indicator itself meets 3:1 regardless of border.",
+        "verdict": "PLAUSIBLE",
+        "page": "Design tokens (index.css)"
+      },
+      {
+        "severity": "p2",
+        "category": "a11y-contrast",
+        "file": "src/styles/index.css",
+        "line": 836,
+        "summary": "Accent text on accent-tint, the .plate readout (the stated trust moment, 13px on --inset, 832-840), computes to ~4.4:1 in the LIGHT theme — below the 4.5:1 AA threshold for small text.",
+        "fix": "In light theme use a darker text token for text-on-tint (e.g. --accent-strong) or darken the tint background. Verify .plate, .badge and .chip--primary specifically.",
+        "verdict": "PLAUSIBLE",
+        "page": "Design tokens (index.css)"
+      },
+      {
+        "severity": "p3",
+        "category": "design-drift",
+        "file": "src/styles/index.css",
+        "line": 78,
+        "summary": "Spacing scale drifts from the doc: code defines --s-6 24 then --s-8 32 with no --s-7 (76-78), but DESIGN.md line 52 specifies 4/8/12/16/20/24/32/40 — code's --s-8(32) is the doc's --s-7 and 40 is undefined.",
+        "fix": "Either rename --s-8 to --s-7 and update DESIGN.md to a 7-step scale, or add --s-7: 32 / --s-8: 40 to match the documented scale.",
+        "verdict": "CONFIRMED",
+        "page": "Design tokens (index.css)"
+      },
+      {
+        "severity": "p3",
+        "category": "generic-flat",
+        "file": "src/styles/index.css",
+        "line": 1080,
+        "summary": "The rest timer uses --fs-2xl (2rem, 1081) rather than the dedicated --fs-stat hero-figure token (2.75rem, used only by .weighthero__input at 793), though DESIGN.md groups the working weight and rest timer together as the big numbers.",
+        "fix": "Promote .resttimer__time toward var(--fs-stat) so the two hero numbers share one heroic scale.",
+        "verdict": "PLAUSIBLE",
+        "page": "Design tokens (index.css)"
+      },
+      {
+        "severity": "p3",
+        "category": "vibe-coded",
+        "file": "src/styles/index.css",
+        "line": 1382,
+        "summary": "Hardcoded colors bypass the OKLCH token system: #000 (1382), #fff (1509, 1574, 1606), and raw oklch(0 0 0 / .5x) scrims (1023, 1573, 1607), against DESIGN.md's tokens-as-source-of-truth / colors-in-OKLCH rule.",
+        "fix": "Add --overlay / --on-overlay / --scrim tokens and reference them so overlay and knob colors stay theme-consistent.",
+        "verdict": "CONFIRMED",
+        "page": "Design tokens (index.css)"
+      },
+      {
+        "severity": "p3",
+        "category": "generic-flat",
+        "file": "src/styles/index.css",
+        "line": 1303,
+        "summary": "Off-scale paddings and border widths break the stated 8px rhythm: .warmup 6px 14px + 1.5px border (1303-1305), .setcard 1.5px (870), .plate/.std__band 3px 10px (834,1762), .mtable th 6px 8px (1427).",
+        "fix": "Snap paddings to --s-1/--s-2/--s-3 and standardize borders to 1px (or add a deliberate --bw-strong: 2px token), reserving sub-scale px only for specific tap-target sizing.",
+        "verdict": "PLAUSIBLE",
+        "page": "Design tokens (index.css)"
+      }
+    ]
+  },
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Audit"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 2,
+      "title": "Verify"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 3,
+      "title": "Synthesize"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "audit:auth",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a63b40b77568b695c",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389039,
+      "queuedAt": 1782847389016,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Auth",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847490188,
+      "tokens": 33655,
+      "toolCalls": 12,
+      "durationMs": 101149,
+      "resultPreview": "{\"page\":\"Auth\",\"overall\":\"Structurally solid auth flow: real semantic markup (main/header/section/form), proper Field labels with htmlFor, token-driven spacing/radii, a global accent focus ring, and AA-grade --muted text. The one clearly vibe-coded tell is the raw 🏋️ emoji used as the app brand mark in both screens, which reads as a placeholder logo and renders inconsistently per OS. Beyond that,…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "audit:home",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a5bf81b829950902a",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389040,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Home",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847460731,
+      "tokens": 28186,
+      "toolCalls": 7,
+      "durationMs": 71691,
+      "resultPreview": "{\"page\":\"Home\",\"overall\":\"The code is technically clean — it uses the Card/section/ul/li primitives, design tokens, and react-query correctly with no inline styles or hardcoded colors. But as a *design* it isn't a home screen; it's a developer build-verification scaffold (DB ping banner, \\\"Phase 1 — online MVP\\\", a \\\"Your setup\\\" checklist confirming the schema seeded) dressed in three identical s…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "audit:session",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a711296ae71389dcc",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389040,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Live Session",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847560961,
+      "tokens": 44785,
+      "toolCalls": 9,
+      "durationMs": 171921,
+      "resultPreview": "{\"page\":\"Live Session\",\"overall\":\"Structurally this is a well-built page: one-exercise-at-a-time hero with a big fs-stat tabular weight, a real plate readout, prominent set logging, and a clean progress header — numbers genuinely read as the hero, semantics are correct (ul/li/button/role=dialog/role=timer), every icon-only control has an aria-label, focus-visible and prefers-reduced-motion are han…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "audit:routines",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "ac5390a277a817a81",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389040,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Routines",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847495704,
+      "tokens": 36141,
+      "toolCalls": 11,
+      "durationMs": 106664,
+      "resultPreview": "{\"page\":\"Routines\",\"overall\":\"Both files lean on the shared design system correctly — tokenized spacing, global focus-visible ring, aria-labels on icon-only controls, semantic ul/li in the builder, text-backed badges (no color-only state), and accent reserved for selection/active state. The cheap tells are concentrated and fixable: a raw emoji as the empty-state hero icon (with a grayscale CSS ban…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "audit:workouts",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "addd255d69b06b1b4",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389041,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Workouts",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847533766,
+      "tokens": 42612,
+      "toolCalls": 14,
+      "durationMs": 144725,
+      "resultPreview": "{\"page\":\"Workouts\",\"overall\":\"Both screens are built cleanly on the design system — tokens, global focus-visible accent ring, reduced-motion support, mostly-labeled icon buttons, and the Builder correctly uses a single Card + semantic ul/li list. The quality drops on the classic vibe-coded tells: an emoji clipboard as the empty-state icon and raw Unicode glyphs (↑ ↓ ✕) standing in for a real SVG i…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "audit:exercises",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "ad4aeb973ca701db3",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389041,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Exercises",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847447530,
+      "tokens": 50934,
+      "toolCalls": 5,
+      "durationMs": 58489,
+      "resultPreview": "{\"page\":\"Exercises\",\"overall\":\"Structurally this page is one of the cleaner ones: it composes the shared primitives, uses token-driven CSS classes throughout, has semantic markup (ul/li, real buttons, label-wired fields, aria-labels on the search/filter controls), and avoids inline-style/hardcoded-color drift. The blemishes are concentrated in a raw emoji used as the empty-state icon and developer…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 7,
+      "label": "audit:equipment",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "aabc7410f9846c690",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389041,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Equipment",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847463391,
+      "tokens": 50294,
+      "toolCalls": 5,
+      "durationMs": 74349,
+      "resultPreview": "{\"page\":\"Equipment\",\"overall\":\"Restrained and mostly on-system: real Archivo/Inter via .mono, token-driven spacing/color, no emoji icons or debug cruft, semantic markup, and aria-labeled stepper buttons. The weaknesses are ergonomic/hierarchy ones: the New-location input is placeholder-only with no label, the +/- steppers render well under a 44px tap target, the genuinely interesting \\\"max loadabl…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 8,
+      "label": "audit:history",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a6cc31fd5834a9e35",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389042,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "History",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847512453,
+      "tokens": 31120,
+      "toolCalls": 9,
+      "durationMs": 123411,
+      "resultPreview": "{\"page\":\"History\",\"overall\":\"Code-wise this is one of the cleaner pages: correct semantics (button with aria-expanded, ul/li list, aria-hidden on decorative glyphs), fully token-driven CSS, real human copy, skeleton loaders, and no inline color hacks or nested-card soup. It is dragged down by the exact vibe-coded smell the user flags — a raw notebook emoji as the empty-state icon and Unicode trian…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 9,
+      "label": "audit:analytics",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "ab893f0d6af30fee7",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389042,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "A competently built analytics screen — semantic lists/secti…",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847468807,
+      "tokens": 52324,
+      "toolCalls": 4,
+      "durationMs": 79765,
+      "resultPreview": "{\"findings\":[{\"severity\":\"p1\",\"category\":\"vibe-coded\",\"file\":\"src/features/analytics/AnalyticsPage.tsx\",\"line\":443,\"summary\":\"Raw emoji used as section icons in the 'Most often' frequency columns instead of a real SVG icon set.\",\"evidence\":\"const DIM_TITLE: Record<...> = { workout: { title: 'Top workouts', icon: '📋' }, exercise: { title: 'Top exercises', icon: '🏋️' }, muscle: { title: 'Top muscl…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 10,
+      "label": "audit:progress",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a7bcff87d1d6bc684",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389042,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Progress",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847522456,
+      "tokens": 37659,
+      "toolCalls": 12,
+      "durationMs": 133414,
+      "resultPreview": "{\"page\":\"Progress\",\"overall\":\"Structurally this page is more disciplined than most vibe-coded work: the history is a real semantic table, inputs go through the Field/label primitive, icon-only controls carry aria-labels, the segmented control uses role=group + aria-pressed, and there is a global focus-visible ring. What drags it down is two things. First, raw emoji is the page's entire icon vocabu…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 11,
+      "label": "audit:profile",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "ad2647c6e0ba20c03",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389042,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Profile / Settings",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847552975,
+      "tokens": 36420,
+      "toolCalls": 9,
+      "durationMs": 163933,
+      "resultPreview": "{\"page\":\"Profile / Settings\",\"overall\":\"A genuinely clean, restrained settings form that does the right things: shared primitives, semantic form/label, token-driven spacing and color, no inline styles, no emoji, no hardcoded hex/oklch. It correctly stays quiet (numbers-as-hero rightly doesn't apply to a settings form). The real gaps are accessibility (a below-AA hint token and save/error banners t…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 12,
+      "label": "audit:shell",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a58f58d2d040eb5fa",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389043,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "App shell + primitives (AppShell.tsx, ui.tsx, BootstrapGate…",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847479271,
+      "tokens": 53081,
+      "toolCalls": 9,
+      "durationMs": 90228,
+      "resultPreview": "{\"page\":\"App shell + primitives (AppShell.tsx, ui.tsx, BootstrapGate.tsx, App.tsx)\",\"overall\":\"The shell's bones are genuinely solid: correct landmarks (header/main/nav), real aria-labels on icon-only controls, token-driven CSS, a global focus-visible ring, and shape-backed active state. But the entire icon system is raw emoji — tab bar, brand mark, and theme toggle — and a project-wide grep confi…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 13,
+      "label": "audit:css",
+      "phaseIndex": 1,
+      "phaseTitle": "Audit",
+      "agentId": "a912be679bcc59fcd",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847389043,
+      "queuedAt": 1782847389017,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Design tokens (src/styles/index.css)",
+      "promptPreview": "You are auditing the DESIGN QUALITY of a page in SupaStrength — a dark-first, OKLCH,\nmobile-first React PWA for a single strength-training lifter. The PRODUCT thesis:\n\"numbers are the hero, logging is sacred (few-tap path), quiet strength, built for\nmid-set phone use.\" DESIGN.md: restrained palette, ONE electric-indigo accent, Archivo\n(display/numbers) + Inter (body), 8px spacing scale, radii cap …",
+      "lastProgressAt": 1782847534013,
+      "tokens": 44681,
+      "toolCalls": 3,
+      "durationMs": 144970,
+      "resultPreview": "{\"page\":\"Design tokens (src/styles/index.css)\",\"overall\":\"Token-driven, well-organized, OKLCH throughout, full reduced-motion fallback, and numbers genuinely go big in the weight hero — the system has real bones. But it ships two explicit DESIGN.md ban violations (1px-border + wide-shadow cards, default glassmorphism on chrome), the tell-tale CSS signatures of emoji-as-icons (grayscale filters, an…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 14,
+      "label": "verify:exercises",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "afdce493cbbab492c",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847447544,
+      "queuedAt": 1782847447531,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Exercises",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"Exercises\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the OKLCH lightnes…",
+      "lastProgressAt": 1782847535305,
+      "tokens": 52648,
+      "toolCalls": 9,
+      "durationMs": 87761,
+      "resultPreview": "{\"page\":\"Exercises\",\"kept\":[{\"severity\":\"p2\",\"category\":\"vibe-coded\",\"file\":\"src/features/exercises/ExercisesPage.tsx\",\"line\":108,\"summary\":\"User-facing empty-state copy leaks an implementation/dev detail (SQL seed filename and a hardcoded 873 count) into product UI.\",\"fix\":\"Rewrite for the end-user, e.g. 'Your exercise library is still loading — pull to refresh, or add your own with New.' Move th…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 15,
+      "label": "verify:home",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a18d9e79a931ec161",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847460732,
+      "queuedAt": 1782847460732,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Home",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"Home\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the OKLCH lightness val…",
+      "lastProgressAt": 1782847523608,
+      "tokens": 44106,
+      "toolCalls": 3,
+      "durationMs": 62875,
+      "resultPreview": "{\"page\":\"Home\",\"kept\":[{\"severity\":\"p1\",\"category\":\"vibe-coded\",\"file\":\"src/features/home/HomePage.tsx\",\"line\":32,\"summary\":\"The home screen is a developer build-verification scaffold, not a lifter's dashboard — it surfaces DB-connection diagnostics and a setup checklist as primary content.\",\"fix\":\"Replace the ping banner and setup checklist with the actual M6/M8 dashboard content (next session, r…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 16,
+      "label": "verify:equipment",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a4c0d4cbd52dd3d8b",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847463391,
+      "queuedAt": 1782847463391,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Equipment",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"Equipment\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the OKLCH lightnes…",
+      "lastProgressAt": 1782847542579,
+      "tokens": 33133,
+      "toolCalls": 7,
+      "durationMs": 79187,
+      "resultPreview": "{\"page\":\"Equipment\",\"kept\":[{\"severity\":\"p2\",\"category\":\"a11y-contrast\",\"file\":\"src/features/equipment/EquipmentPage.tsx\",\"line\":68,\"summary\":\"The 'New location name' text input has no associated label or aria-label — only a placeholder, which is not an accessible name and disappears on input.\",\"fix\":\"Add aria-label=\\\"New location name\\\" to the input (or wrap it in the Field primitive); the Card a…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 17,
+      "label": "verify:analytics",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a1f96cab753880a0d",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847468810,
+      "queuedAt": 1782847468809,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Analytics",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"Analytics\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the OKLCH lightnes…",
+      "lastProgressAt": 1782847694119,
+      "tokens": 47169,
+      "toolCalls": 16,
+      "durationMs": 225309,
+      "resultPreview": "{\"page\":\"Analytics\",\"kept\":[{\"severity\":\"p1\",\"category\":\"vibe-coded\",\"file\":\"src/features/analytics/AnalyticsPage.tsx\",\"line\":443,\"summary\":\"The 'Most often' frequency columns use raw emoji as section icons (DIM_TITLE 📋/🏋️/💪 at lines 417-421, rendered at line 443) instead of the app's SVG icon set.\",\"fix\":\"Replace the 📋/🏋️/💪 emoji with inline SVG glyphs sized via currentColor so they inherit…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 18,
+      "label": "verify:shell",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "accf0c3eacb40ef03",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847479272,
+      "queuedAt": 1782847479272,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "App shell + primitives",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"App shell + primitives\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the O…",
+      "lastProgressAt": 1782847562286,
+      "tokens": 35328,
+      "toolCalls": 10,
+      "durationMs": 83014,
+      "resultPreview": "{\"page\":\"App shell + primitives\",\"kept\":[{\"severity\":\"p1\",\"category\":\"vibe-coded\",\"file\":\"src/routes/AppShell.tsx\",\"line\":21,\"summary\":\"The primary bottom-tab navigation uses raw emoji as its icon set instead of a real SVG icon family.\",\"fix\":\"Introduce a real monochrome icon set (e.g. self-hosted Lucide React components or inline 24px SVGs using stroke=currentColor) and map each tab to one, so ac…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 19,
+      "label": "verify:auth",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a79267663c3cabb6f",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847490196,
+      "queuedAt": 1782847490195,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Auth",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"Auth\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the OKLCH lightness val…",
+      "lastProgressAt": 1782847622465,
+      "tokens": 48358,
+      "toolCalls": 6,
+      "durationMs": 132269,
+      "resultPreview": "{\"page\":\"Auth\",\"kept\":[{\"severity\":\"p1\",\"category\":\"vibe-coded\",\"file\":\"src/features/auth/AuthScreen.tsx\",\"line\":82,\"summary\":\"Raw weightlifter emoji is used as the app's brand mark/logo on the primary entry screen.\",\"fix\":\"Replace the emoji with a real inline SVG mark (a dedicated <Logo/> component) filled with var(--accent). Emoji glyphs render differently across Apple/Android/Windows and read a…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 20,
+      "label": "verify:routines",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a21ae6847c0660666",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847495706,
+      "queuedAt": 1782847495705,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Routines",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"Routines\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the OKLCH lightness…",
+      "lastProgressAt": 1782847602402,
+      "tokens": 50470,
+      "toolCalls": 8,
+      "durationMs": 106696,
+      "resultPreview": "{\"page\":\"Routines\",\"kept\":[{\"severity\":\"p1\",\"category\":\"vibe-coded\",\"file\":\"src/features/routines/RoutinesPage.tsx\",\"line\":42,\"summary\":\"Empty-state hero icon is a raw calendar emoji (icon=\\\"🗓️\\\") instead of a real SVG icon, rendered at 40px in .empty__icon which even applies filter: grayscale(0.15) to tame it.\",\"fix\":\"Pass a 40px SVG calendar/clock glyph from the app's icon set (e.g. <CalendarIc…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 21,
+      "label": "verify:history",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a1016807521327608",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847512460,
+      "queuedAt": 1782847512459,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "History",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"History\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the OKLCH lightness …",
+      "lastProgressAt": 1782847642604,
+      "tokens": 31757,
+      "toolCalls": 12,
+      "durationMs": 130144,
+      "resultPreview": "{\"page\":\"History\",\"kept\":[{\"severity\":\"p1\",\"category\":\"vibe-coded\",\"file\":\"src/features/history/HistoryPage.tsx\",\"line\":31,\"summary\":\"Raw emoji used as the empty-state UI icon instead of an SVG glyph.\",\"fix\":\"Replace the 📒 emoji with a stroked SVG icon (document/clipboard) sized via the icon token. Note the app currently has no SVG icon set at all — every empty state uses emoji — so this is part …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 22,
+      "label": "verify:progress",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "ae95722a16d74346d",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847522457,
+      "queuedAt": 1782847522456,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Progress",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"Progress\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the OKLCH lightness…",
+      "lastProgressAt": 1782847674431,
+      "tokens": 42854,
+      "toolCalls": 16,
+      "durationMs": 151974,
+      "resultPreview": "{\"page\":\"Progress\",\"kept\":[{\"severity\":\"p1\",\"category\":\"vibe-coded\",\"file\":\"src/features/progress/ProgressPage.tsx\",\"line\":223,\"summary\":\"Reminder rows use raw emoji as their icon set instead of a real SVG icon system.\",\"fix\":\"Replace the emoji strings ('⚖️','📏','📸', fallback '🔔') with monochrome inline SVGs (currentColor) rendered inside .reminder__icon so they inherit --ink/--muted and align …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 23,
+      "label": "verify:workouts",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a0f1ff1a100bc54b2",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847533770,
+      "queuedAt": 1782847533770,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Workouts",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"Workouts\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the OKLCH lightness…",
+      "lastProgressAt": 1782847646798,
+      "tokens": 54773,
+      "toolCalls": 9,
+      "durationMs": 113027,
+      "resultPreview": "{\"page\":\"Workouts\",\"kept\":[{\"severity\":\"p1\",\"category\":\"vibe-coded\",\"file\":\"src/features/workouts/WorkoutsPage.tsx\",\"line\":60,\"summary\":\"Raw emoji used as the empty-state UI icon instead of a monochrome SVG icon.\",\"fix\":\"Replace icon=\\\"📋\\\" with an inline monochrome SVG (currentColor) sized to .empty__icon; emoji render as platform-specific color blobs against the restrained OKLCH-neutral palette …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 24,
+      "label": "verify:css",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a2a784ad3f4953a6f",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847534016,
+      "queuedAt": 1782847534014,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Design tokens (index.css)",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"Design tokens (index.css)\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check th…",
+      "lastProgressAt": 1782847859451,
+      "tokens": 65520,
+      "toolCalls": 7,
+      "durationMs": 325435,
+      "resultPreview": "{\"page\":\"Design tokens (index.css)\",\"kept\":[{\"severity\":\"p1\",\"category\":\"ban\",\"file\":\"src/styles/index.css\",\"line\":284,\"summary\":\".card pairs a 1px border (281) with --shadow's 28px-blur elevation (31) — the exact 1px-border + wide-shadow ghost-card combo DESIGN.md bans by name twice (lines 55 and 73).\",\"fix\":\"Pick one elevation per card: drop the 1px border and keep the shadow, or keep the hairli…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 25,
+      "label": "verify:profile",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a56fba2897a036d96",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847552976,
+      "queuedAt": 1782847552976,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Profile / Settings",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"Profile / Settings\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the OKLCH…",
+      "lastProgressAt": 1782847673737,
+      "tokens": 55364,
+      "toolCalls": 5,
+      "durationMs": 120760,
+      "resultPreview": "{\"page\":\"Profile / Settings\",\"kept\":[{\"severity\":\"p2\",\"category\":\"a11y-contrast\",\"file\":\"src/features/settings/ProfilePage.tsx\",\"line\":116,\"summary\":\"Field hint copy carrying real meaning ('Display only — data is stored in lb/in', 'For strength standards', 'Stamps the weigh-in date') renders in --faint, which measures 3.85:1 (dark) / 3.95:1 (light) on --surface — below the 4.5:1 AA floor for this …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 26,
+      "label": "verify:session",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "ac1f43597413ed74d",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847560965,
+      "queuedAt": 1782847560965,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Live Session",
+      "promptPreview": "You are an adversarial verifier. A design auditor produced findings for the \"Live Session\" page of SupaStrength.\nFor EACH finding, open the cited file at E:/FileCloud/FileCloud/FileCloud/Ventures/SupaStrength and check it is REAL and correctly described. REJECT findings that are wrong, already handled by a token/class, duplicate, or generic filler. For contrast claims, sanity-check the OKLCH light…",
+      "lastProgressAt": 1782847698272,
+      "tokens": 36999,
+      "toolCalls": 10,
+      "durationMs": 137306,
+      "resultPreview": "{\"page\":\"Live Session\",\"kept\":[{\"severity\":\"p1\",\"category\":\"vibe-coded\",\"file\":\"src/features/session/VideoSheet.tsx\",\"line\":107,\"summary\":\"Raw clapperboard emoji (🎬) used as the icon inside the primary record/upload CTA label.\",\"fix\":\"Drop the emoji and render a monochrome SVG icon that inherits currentColor (e.g. a camera/record glyph from one icon set) sized to the text. Color emoji render OS-d…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 27,
+      "label": "synthesize",
+      "phaseIndex": 3,
+      "phaseTitle": "Synthesize",
+      "agentId": "a58f577a498d9e27a",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1782847859469,
+      "queuedAt": 1782847859452,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "No — the app is not poorly designed; it's well-architected …",
+      "promptPreview": "You are the lead designer synthesizing a verified audit of SupaStrength (a dark-first OKLCH React PWA strength tracker). The owner thinks the app is \"poorly designed / generic / vibe-coded,\" but the design SYSTEM (DESIGN.md, index.css) is actually strong. Your job: turn the per-page verified findings into a RANKED, systemic fix plan. Collapse issues that repeat across pages (e.g. emoji icons, miss…",
+      "lastProgressAt": 1782847962709,
+      "tokens": 34816,
+      "toolCalls": 1,
+      "durationMs": 103240,
+      "resultPreview": "{\"headline\":\"No — the app is not poorly designed; it's well-architected design executed with a handful of amateur tells that the owner is correctly smelling but mislabeling as \\\"generic/vibe-coded.\\\" The token layer (OKLCH palette, type scale, --font-num/--fs-stat hero figures, spacing rhythm, dual themes) is genuinely strong and mostly internally consistent. The problem is execution drift that cl…"
+    }
+  ],
+  "totalTokens": 1175187,
+  "totalToolCalls": 228
+}

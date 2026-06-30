@@ -4,6 +4,7 @@
  * pointer math is the pure, tested `engine/schedule`.
  */
 import { useMemo, useState } from 'react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Banner, Button, Card, Select, Spinner } from '../../components/ui'
 import { nextGymDay, type EngineRotation } from '../../data/repos/routinesRepo'
@@ -66,7 +67,7 @@ export function RoutineBuilderPage() {
             {routine.is_active ? <span className="badge">active</span> : null}
           </>
         }
-        actions={<Link className="linkbtn" to="/routines">← All</Link>}
+        actions={<Link className="linkbtn" to="/routines"><ChevronLeft size={18} aria-hidden="true" />All</Link>}
       >
         {!routine.is_active ? (
           <Button variant="ghost" onClick={() => setActive.mutate(id)}>
@@ -92,7 +93,7 @@ export function RoutineBuilderPage() {
             </ul>
             <div className="row-actions">
               <Button onClick={() => void onStartDay()} disabled={startDay.isPending || !!active}>
-                {active ? 'Session in progress' : 'Start this day →'}
+                {active ? 'Session in progress' : <>Start this day <ChevronRight size={18} aria-hidden="true" /></>}
               </Button>
               <Button
                 variant="ghost"
@@ -154,7 +155,7 @@ function RotationCard({
       title={row.rotation.name ?? `Rotation ${index + 1}`}
       actions={
         <Button variant="ghost" onClick={() => removeRotation.mutate(row.rotation.id)} aria-label="Remove rotation">
-          ✕
+          <X size={18} aria-hidden="true" />
         </Button>
       }
     >
@@ -169,7 +170,7 @@ function RotationCard({
                 {i === current ? <span className="badge">next</span> : null}
               </span>
               <Button variant="ghost" onClick={() => removeWorkout.mutate(rw.id)} aria-label="Remove">
-                ✕
+                <X size={18} aria-hidden="true" />
               </Button>
             </li>
           ))}

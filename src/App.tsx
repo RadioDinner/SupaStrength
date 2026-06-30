@@ -7,7 +7,7 @@ import { useAuth } from './hooks/useAuth'
 import { AuthScreen } from './features/auth/AuthScreen'
 import { ResetPasswordScreen } from './features/auth/ResetPasswordScreen'
 import { BootstrapGate } from './routes/BootstrapGate'
-import { Banner, Spinner } from './components/ui'
+import { Banner, Brand, Spinner } from './components/ui'
 
 export default function App() {
   const { status, recoveryMode } = useAuth()
@@ -35,12 +35,7 @@ export default function App() {
 function UnconfiguredScreen() {
   return (
     <main className="shell shell--center">
-      <header className="brand">
-        <span className="brand__mark" aria-hidden="true">
-          🏋️
-        </span>
-        <h1>SupaStrength</h1>
-      </header>
+      <Brand />
       <section className="card">
         <h2 className="card__title">Almost there</h2>
         <Banner kind="warn">

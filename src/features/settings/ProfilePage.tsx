@@ -4,6 +4,7 @@
  */
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { ChevronRight } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { Banner, Button, Card, Field, Select, SkeletonList, TextInput } from '../../components/ui'
 import { useProfile, useUpdateProfile } from './useProfile'
@@ -136,16 +137,22 @@ export function ProfilePage() {
       </Card>
 
       <Card title="Equipment">
-        <Link to="/equipment" className="workout-link">
-          <span className="workout-link__name">Gym, plates &amp; preferences →</span>
-          <span className="muted">Bars, plate inventory, dumbbells, rounding</span>
+        <Link to="/equipment" className="navrow">
+          <span>
+            <span className="workout-link__name">Gym, plates &amp; preferences</span>
+            <span className="muted">Bars, plate inventory, dumbbells, rounding</span>
+          </span>
+          <ChevronRight size={18} aria-hidden="true" className="navrow__icon" />
         </Link>
       </Card>
 
       <Card title="Progress">
-        <Link to="/progress" className="workout-link">
-          <span className="workout-link__name">Measurements, photos &amp; reminders →</span>
-          <span className="muted">Track bodyweight + girths, progress photos, check-ins</span>
+        <Link to="/progress" className="navrow">
+          <span>
+            <span className="workout-link__name">Measurements, photos &amp; reminders</span>
+            <span className="muted">Track bodyweight + girths, progress photos, check-ins</span>
+          </span>
+          <ChevronRight size={18} aria-hidden="true" className="navrow__icon" />
         </Link>
       </Card>
 

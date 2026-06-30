@@ -4,6 +4,7 @@
  */
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { CalendarDays } from 'lucide-react'
 import { Button, Card, EmptyState, SkeletonList, TextInput } from '../../components/ui'
 import { useCreateRoutine, useRoutines, useSetActiveRoutine } from './useRoutines'
 
@@ -39,7 +40,7 @@ export function RoutinesPage() {
         <SkeletonList rows={2} />
       ) : routines && routines.length === 0 ? (
         <EmptyState
-          icon="🗓️"
+          icon={<CalendarDays size={40} aria-hidden />}
           title="No routines yet"
           hint="A routine is your schedule — rotations of workouts that cycle (A → B → A) plus always-on days. Name one above to start."
         />
@@ -52,7 +53,7 @@ export function RoutinesPage() {
                   {r.name}
                   {r.is_active ? <span className="badge">active</span> : null}
                 </span>
-                <span className="muted">Tap to build rotations →</span>
+                <span className="muted">Tap to build rotations</span>
               </Link>
               {!r.is_active ? (
                 <Button variant="ghost" onClick={() => setActive.mutate(r.id)}>

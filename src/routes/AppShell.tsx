@@ -3,6 +3,18 @@
  * mobile-first. New milestones add routes/tabs here.
  */
 import { NavLink, Route, Routes } from 'react-router-dom'
+import {
+  Home,
+  ClipboardList,
+  CalendarDays,
+  BarChart3,
+  Library,
+  User,
+  Sun,
+  Moon,
+  type LucideIcon,
+} from 'lucide-react'
+import { Logo } from '../components/ui'
 import { HomePage } from '../features/home/HomePage'
 import { ProfilePage } from '../features/settings/ProfilePage'
 import { EquipmentPage } from '../features/equipment/EquipmentPage'
@@ -17,13 +29,13 @@ import { ProgressPage } from '../features/progress/ProgressPage'
 import { HistoryPage } from '../features/history/HistoryPage'
 import { useTheme } from '../hooks/useTheme'
 
-const TABS = [
-  { to: '/', label: 'Home', icon: '🏠', end: true },
-  { to: '/workouts', label: 'Workouts', icon: '📋', end: false },
-  { to: '/routines', label: 'Routines', icon: '🗓️', end: false },
-  { to: '/analytics', label: 'Stats', icon: '📊', end: false },
-  { to: '/exercises', label: 'Exercises', icon: '📚', end: false },
-  { to: '/profile', label: 'Profile', icon: '👤', end: false },
+const TABS: { to: string; label: string; Icon: LucideIcon; end: boolean }[] = [
+  { to: '/', label: 'Home', Icon: Home, end: true },
+  { to: '/workouts', label: 'Workouts', Icon: ClipboardList, end: false },
+  { to: '/routines', label: 'Routines', Icon: CalendarDays, end: false },
+  { to: '/analytics', label: 'Stats', Icon: BarChart3, end: false },
+  { to: '/exercises', label: 'Exercises', Icon: Library, end: false },
+  { to: '/profile', label: 'Profile', Icon: User, end: false },
 ]
 
 export function AppShell() {
@@ -31,9 +43,7 @@ export function AppShell() {
   return (
     <div className="app">
       <header className="appbar">
-        <span className="brand__mark" aria-hidden="true">
-          🏋️
-        </span>
+        <Logo size={22} />
         <span className="appbar__title">SupaStrength</span>
         <span className="appbar__spacer" />
         <button
@@ -43,7 +53,7 @@ export function AppShell() {
           aria-label={`Switch to ${resolved === 'dark' ? 'light' : 'dark'} theme`}
           title="Toggle theme"
         >
-          {resolved === 'dark' ? '☀️' : '🌙'}
+          {resolved === 'dark' ? <Sun size={20} aria-hidden="true" /> : <Moon size={20} aria-hidden="true" />}
         </button>
       </header>
 
@@ -74,7 +84,7 @@ export function AppShell() {
             className={({ isActive }) => `tab ${isActive ? 'tab--active' : ''}`}
           >
             <span className="tab__icon" aria-hidden="true">
-              {t.icon}
+              <t.Icon size={20} />
             </span>
             <span className="tab__label">{t.label}</span>
           </NavLink>

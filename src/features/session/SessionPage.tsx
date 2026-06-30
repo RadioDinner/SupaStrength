@@ -9,6 +9,7 @@
  */
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Check, Video } from 'lucide-react'
 import { Banner, Button, Card, SkeletonList } from '../../components/ui'
 import { useAuth } from '../../hooks/useAuth'
 import { useExercisesByIds } from '../workouts/useWorkouts'
@@ -174,7 +175,13 @@ export function SessionPage() {
                   >
                     <span className="upnext__name">{exById.get(e.exercise_id)?.name ?? '…'}</span>
                     <span className="upnext__meta mono">
-                      {allDone ? '✓ done' : `${d}/${ls.length}`}
+                      {allDone ? (
+                        <>
+                          <Check size={14} aria-hidden="true" /> done
+                        </>
+                      ) : (
+                        `${d}/${ls.length}`
+                      )}
                     </span>
                   </button>
                 </li>
@@ -391,7 +398,11 @@ function ActiveExercise({
                     {wu.weightLb}
                     <span className="warmup__unit">lb</span>
                   </span>
-                  {warmDone[i] ? <span className="warmup__check" aria-hidden="true">✓</span> : null}
+                  {warmDone[i] ? (
+                    <span className="warmup__check" aria-hidden="true">
+                      <Check size={16} aria-hidden="true" />
+                    </span>
+                  ) : null}
                 </button>
               </li>
             ))}
@@ -430,7 +441,7 @@ function ActiveExercise({
                 aria-label={`${done ? 'Undo' : 'Log'} set ${s.set_index}`}
                 onClick={() => onToggle(s)}
               >
-                {done ? '✓' : 'Log'}
+                {done ? <Check size={18} aria-hidden="true" /> : 'Log'}
               </button>
               {done ? (
                 <button
@@ -439,7 +450,7 @@ function ActiveExercise({
                   title="Form video"
                   onClick={() => onVideo(s)}
                 >
-                  🎥
+                  <Video size={18} aria-hidden="true" />
                 </button>
               ) : null}
             </li>

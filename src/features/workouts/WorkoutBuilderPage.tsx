@@ -5,6 +5,7 @@
  * (straight needs a rep target; double needs low ≤ high).
  */
 import { useMemo, useState, type FormEvent } from 'react'
+import { ChevronDown, ChevronLeft, ChevronUp, X } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { Banner, Button, Card, Field, Select, Spinner, TextInput } from '../../components/ui'
 import { useExercises } from '../exercises/useExercises'
@@ -37,7 +38,7 @@ export function WorkoutBuilderPage() {
 
   return (
     <div className="page">
-      <Card title={workout.name} subtitle="Exercises in this workout" actions={<Link className="linkbtn" to="/workouts">← All</Link>}>
+      <Card title={workout.name} subtitle="Exercises in this workout" actions={<Link className="linkbtn" to="/workouts"><ChevronLeft size={18} aria-hidden="true" />All</Link>}>
         {entries && entries.length > 0 ? (
           <ul className="list">
             {entries.map((e, i) => (
@@ -60,7 +61,7 @@ export function WorkoutBuilderPage() {
                       })
                     }
                   >
-                    ↑
+                    <ChevronUp size={18} aria-hidden="true" />
                   </button>
                   <button
                     type="button"
@@ -74,10 +75,10 @@ export function WorkoutBuilderPage() {
                       })
                     }
                   >
-                    ↓
+                    <ChevronDown size={18} aria-hidden="true" />
                   </button>
                   <Button variant="ghost" onClick={() => remove.mutate(e.id)} aria-label="Remove">
-                    ✕
+                    <X size={18} aria-hidden="true" />
                   </Button>
                 </span>
               </li>

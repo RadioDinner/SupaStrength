@@ -254,15 +254,13 @@ h3,
   transition: color var(--dur) var(--ease);
 }
 .tab__icon {
-  font-size: 19px;
-  filter: grayscale(0.4);
-  transition: filter var(--dur) var(--ease), transform var(--dur) var(--ease);
+  display: inline-flex;
+  transition: transform var(--dur) var(--ease);
 }
 .tab--active {
   color: var(--accent);
 }
 .tab--active .tab__icon {
-  filter: grayscale(0);
   transform: translateY(-1px) scale(1.06);
 }
 .tab--active::before {
@@ -1139,10 +1137,9 @@ h3,
   padding: var(--s-8) var(--s-5);
 }
 .empty__icon {
-  font-size: 40px;
-  line-height: 1;
+  display: inline-flex;
   margin-bottom: var(--s-1);
-  filter: grayscale(0.15);
+  color: var(--muted);
 }
 .empty__title {
   margin: 0;
@@ -1158,6 +1155,75 @@ h3,
 }
 .empty__action {
   margin-top: var(--s-3);
+}
+
+/* ── home dashboard ─────────────────────────────────────────────────────────── */
+.home__title {
+  margin: 0;
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.home__resume {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  width: 100%;
+  padding: var(--s-4);
+  font-size: var(--fs-md);
+  text-decoration: none;
+}
+.herostat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.herostat__label {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.herostat__value {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  font-family: var(--font-num);
+  font-variant-numeric: var(--tnum);
+  font-weight: 800;
+  font-size: var(--fs-stat);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.herostat__unit {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+/* drill-in row: label (+ optional sub) on the left, trailing chevron on the right */
+.navrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  text-decoration: none;
+  color: var(--ink);
+}
+.navrow .workout-link__name {
+  display: block;
+}
+.navrow .muted {
+  display: block;
+  margin-top: 2px;
+}
+.navrow__icon {
+  color: var(--muted);
+  flex: none;
 }
 
 /* ── micro-interactions ──────────────────────────────────────────────────── */
@@ -1350,7 +1416,7 @@ h3,
 .setvid:active {
   transform: scale(0.92);
 }
-/* When a row also shows the 🎥 button, tighten it so all four items fit. */
+/* When a row also shows the form-video button, tighten it so all four items fit. */
 .setcard.is-done {
   gap: var(--s-2);
 }

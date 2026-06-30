@@ -4,6 +4,7 @@
  * reminders surfaced via the `reminders_due` view. Phase-1 exit feature.
  */
 import { useMemo, useRef, useState, type FormEvent } from 'react'
+import { Bell, Camera, Ruler, Scale, type LucideIcon } from 'lucide-react'
 import { Banner, Button, Card, EmptyState, Field, SkeletonList, TextInput } from '../../components/ui'
 import { useAuth } from '../../hooks/useAuth'
 import { MEASUREMENT_FIELDS, type MeasurementValues } from '../../data/repos/measurementsRepo'
@@ -176,7 +177,7 @@ function MeasurementsSection() {
         <SkeletonList rows={3} />
       ) : (rows ?? []).length === 0 ? (
         <EmptyState
-          icon="📏"
+          icon={<Ruler size={40} aria-hidden />}
           title="No measurements yet"
           hint="Log your bodyweight and a few girths above — or import a CSV with a date column."
         />
@@ -219,10 +220,10 @@ function MeasurementsSection() {
 }
 
 // ── Reminders ─────────────────────────────────────────────────────────────────
-const REMINDER_META: Record<string, { label: string; icon: string }> = {
-  weigh_in: { label: 'Weigh-in', icon: '⚖️' },
-  measurements: { label: 'Measurements', icon: '📏' },
-  photos: { label: 'Progress photos', icon: '📸' },
+const REMINDER_META: Record<string, { label: string; Icon: LucideIcon }> = {
+  weigh_in: { label: 'Weigh-in', Icon: Scale },
+  measurements: { label: 'Measurements', Icon: Ruler },
+  photos: { label: 'Progress photos', Icon: Camera },
 }
 
 function RemindersSection() {
@@ -235,12 +236,12 @@ function RemindersSection() {
     <Card title="Check-in reminders" subtitle="On-screen nudges — never a push notification">
       <ul className="list">
         {(reminders ?? []).map((r) => {
-          const meta = REMINDER_META[r.type] ?? { label: r.type, icon: '🔔' }
+          const meta = REMINDER_META[r.type] ?? { label: r.type, Icon: Bell }
           const snoozeUntil = new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString()
           return (
             <li key={r.id} className="reminder">
               <span className="reminder__icon" aria-hidden="true">
-                {meta.icon}
+                <meta.Icon size={20} aria-hidden />
               </span>
               <div className="reminder__body">
                 <span className="reminder__name">
@@ -288,11 +289,11 @@ export function DueNudges() {
     <Card title="Time for a check-in">
       <ul className="list">
         {due.map((r) => {
-          const meta = REMINDER_META[r.type] ?? { label: r.type, icon: '🔔' }
+          const meta = REMINDER_META[r.type] ?? { label: r.type, Icon: Bell }
           return (
             <li key={r.id} className="reminder">
               <span className="reminder__icon" aria-hidden="true">
-                {meta.icon}
+                <meta.Icon size={20} aria-hidden />
               </span>
               <div className="reminder__body">
                 <span className="reminder__name">{meta.label} is due</span>

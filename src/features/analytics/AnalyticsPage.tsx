@@ -12,6 +12,13 @@
  */
 import { useMemo } from 'react'
 import {
+  BarChart3,
+  BicepsFlexed,
+  ClipboardList,
+  Dumbbell,
+  type LucideIcon,
+} from 'lucide-react'
+import {
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
@@ -205,7 +212,7 @@ export function AnalyticsPage() {
 
       {!hasData ? (
         <EmptyState
-          icon="📊"
+          icon={<BarChart3 size={40} aria-hidden />}
           title={prefs.radar_mode === 'strength' ? 'No strength data yet' : 'No volume logged yet'}
           hint={
             prefs.radar_mode === 'strength'
@@ -403,7 +410,7 @@ function StandardsPanel({
                     {fmtNum(Math.max(0, next.lb - s.best_e1rm_lb))} lb to {BAND_LABEL[next.band]}
                   </span>
                 ) : (
-                  <span className="muted">Elite — maxed out 🎉</span>
+                  <span className="muted">Elite — top band</span>
                 )}
               </div>
             </li>
@@ -414,10 +421,10 @@ function StandardsPanel({
   )
 }
 
-const DIM_TITLE: Record<'workout' | 'exercise' | 'muscle', { title: string; icon: string }> = {
-  workout: { title: 'Top workouts', icon: '📋' },
-  exercise: { title: 'Top exercises', icon: '🏋️' },
-  muscle: { title: 'Top muscles', icon: '💪' },
+const DIM_TITLE: Record<'workout' | 'exercise' | 'muscle', { title: string; Icon: LucideIcon }> = {
+  workout: { title: 'Top workouts', Icon: ClipboardList },
+  exercise: { title: 'Top exercises', Icon: Dumbbell },
+  muscle: { title: 'Top muscles', Icon: BicepsFlexed },
 }
 
 function FrequencyLists({
@@ -437,10 +444,11 @@ function FrequencyLists({
         <div className="freqcols">
           {dims.map((d) => {
             const top = rows.filter((r) => r.dimension === d).slice(0, 5)
+            const meta = DIM_TITLE[d]
             return (
               <div key={d} className="freqcol">
                 <h3 className="freqcol__title">
-                  <span aria-hidden="true">{DIM_TITLE[d].icon}</span> {DIM_TITLE[d].title}
+                  <meta.Icon size={18} aria-hidden="true" /> {meta.title}
                 </h3>
                 {top.length === 0 ? (
                   <p className="muted freqcol__empty">—</p>

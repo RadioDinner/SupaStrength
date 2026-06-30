@@ -3,8 +3,24 @@
  * presentational pieces the feature screens compose.
  */
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react'
+import { Dumbbell } from 'lucide-react'
 
 type ButtonVariant = 'primary' | 'ghost' | 'danger'
+
+/** The app mark — a single inline SVG tinted with the brand accent (no emoji). */
+export function Logo({ size = 28 }: { size?: number }) {
+  return <Dumbbell size={size} strokeWidth={2.25} color="var(--accent)" aria-hidden="true" />
+}
+
+/** Brand header (mark + wordmark) reused by the auth/unconfigured screens. */
+export function Brand() {
+  return (
+    <header className="brand">
+      <Logo size={28} />
+      <h1>SupaStrength</h1>
+    </header>
+  )
+}
 
 export function Button({
   variant = 'primary',

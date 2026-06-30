@@ -5,6 +5,7 @@
  * - Clip exists → scrub (native controls) + slow-mo playback (0.25/0.5/1×) +
  *   delete. Clean seam for future pose/form analysis — none today.
  */
+import { Video as VideoIcon, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Banner, Button, Spinner } from '../../components/ui'
 import { MAX_VIDEO_SECONDS } from '../../data/repos/videosRepo'
@@ -47,9 +48,12 @@ export function VideoSheet({
       <div className="sheet__backdrop" onClick={onClose} />
       <div className="sheet__panel">
         <div className="sheet__head">
-          <h3 className="sheet__title">🎥 Form video · {setLabel}</h3>
+          <h3 className="sheet__title">
+            <VideoIcon size={18} aria-hidden="true" />
+            Form video · {setLabel}
+          </h3>
           <button className="iconbtn" onClick={onClose} aria-label="Close">
-            ✕
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
@@ -104,7 +108,14 @@ function Capture({ setLogId, userId }: { setLogId: string; userId: string }) {
         id="vidpick"
       />
       <Button onClick={() => inputRef.current?.click()} disabled={record.isPending}>
-        {record.isPending ? 'Uploading…' : '🎬 Record / choose clip'}
+        {record.isPending ? (
+          'Uploading…'
+        ) : (
+          <>
+            <VideoIcon size={18} aria-hidden="true" />
+            Record / choose clip
+          </>
+        )}
       </Button>
       {error ? <Banner kind="err">{error}</Banner> : null}
     </div>

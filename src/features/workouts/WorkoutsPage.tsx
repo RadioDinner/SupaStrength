@@ -4,6 +4,7 @@
  */
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ClipboardList } from 'lucide-react'
 import { Button, Card, EmptyState, SkeletonList, TextInput } from '../../components/ui'
 import { useArchiveWorkout, useCreateWorkout, useWorkouts } from './useWorkouts'
 import { useActiveSession, useStartFromWorkout } from '../session/useSession'
@@ -57,7 +58,7 @@ export function WorkoutsPage() {
         <SkeletonList rows={2} />
       ) : workouts && workouts.length === 0 ? (
         <EmptyState
-          icon="📋"
+          icon={<ClipboardList size={40} aria-hidden="true" />}
           title="No workouts yet"
           hint="A workout is a training day — like Workout A or a shoulder finisher. Name one above, then add exercises to it."
         />
@@ -67,7 +68,7 @@ export function WorkoutsPage() {
             <div className="list__row">
               <Link to={`/workouts/${w.id}`} className="workout-link">
                 <span className="workout-link__name">{w.name}</span>
-                <span className="muted">Tap to edit exercises →</span>
+                <span className="muted">Tap to edit exercises</span>
               </Link>
               <div className="row-actions">
                 <Button onClick={() => void onStart(w.id)} disabled={start.isPending || !!active}>

@@ -4,7 +4,7 @@
  */
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { Banner, Button, Field, TextInput } from '../../components/ui'
+import { Banner, Brand, Button, Field, TextInput } from '../../components/ui'
 
 type Mode = 'signIn' | 'signUp'
 
@@ -77,12 +77,7 @@ export function AuthScreen() {
 
   return (
     <main className="shell shell--center">
-      <header className="brand">
-        <span className="brand__mark" aria-hidden="true">
-          🏋️
-        </span>
-        <h1>SupaStrength</h1>
-      </header>
+      <Brand />
 
       <section className="card">
         <h2 className="card__title">{mode === 'signIn' ? 'Sign in' : 'Create account'}</h2>

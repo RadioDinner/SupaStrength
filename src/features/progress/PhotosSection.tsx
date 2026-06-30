@@ -4,6 +4,7 @@
  * storage path can't be exercised without a device + live Storage.
  */
 import { useMemo, useRef, useState } from 'react'
+import { Camera, X } from 'lucide-react'
 import { Banner, Button, Card, EmptyState, Select, SkeletonList, TextInput } from '../../components/ui'
 import { useDeletePhoto, usePhotoUrl, useRecentPhotos, useUploadPhoto } from './useProgress'
 import type { PhotoCategory, ProgressPhoto } from '../../data/types'
@@ -88,7 +89,13 @@ export function PhotosSection({ userId }: { userId: string }) {
             id="photopick"
           />
           <Button onClick={() => fileRef.current?.click()} disabled={upload.isPending}>
-            {upload.isPending ? 'Uploading…' : '📸 Take / choose photo'}
+            {upload.isPending ? (
+              'Uploading…'
+            ) : (
+              <>
+                <Camera size={18} aria-hidden="true" /> Take / choose photo
+              </>
+            )}
           </Button>
           {error ? <Banner kind="err">{error}</Banner> : null}
         </div>
@@ -110,7 +117,7 @@ export function PhotosSection({ userId }: { userId: string }) {
         <SkeletonList rows={2} />
       ) : (photos ?? []).length === 0 ? (
         <EmptyState
-          icon="📸"
+          icon={<Camera size={40} aria-hidden="true" />}
           title="No photos yet"
           hint="Snap a front/side/back photo to track visual progress over time."
         />
@@ -159,7 +166,7 @@ function PhotoThumb({
         <span className="mono">{photo.taken_on.slice(5)}</span>
       </figcaption>
       <button type="button" className="photothumb__del" aria-label="Delete photo" onClick={onDelete}>
-        ✕
+        <X size={18} aria-hidden="true" />
       </button>
     </figure>
   )

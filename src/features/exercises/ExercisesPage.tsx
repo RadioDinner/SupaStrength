@@ -4,6 +4,7 @@
  * detail (muscles + instructions), and a custom-exercise creator.
  */
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Search } from 'lucide-react'
 import { Banner, Button, Card, EmptyState, Field, Select, SkeletonList, TextInput } from '../../components/ui'
 import {
   useCreateCustomExercise,
@@ -99,12 +100,12 @@ export function ExercisesPage() {
         <SkeletonList rows={4} />
       ) : exercises && exercises.length === 0 ? (
         <EmptyState
-          icon="🔍"
+          icon={<Search size={40} aria-hidden="true" />}
           title={search || movement ? 'No matches' : 'No exercises yet'}
           hint={
             search || movement
               ? 'Try a different search or movement filter — or add a custom exercise with “New”.'
-              : 'The 873-exercise library loads once you run supabase/seed/exercises_seed.sql. You can also add your own with “New”.'
+              : 'Your exercise library is still loading. Pull to refresh, or add your own with “New”.'
           }
         />
       ) : (
