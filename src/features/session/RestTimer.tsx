@@ -38,7 +38,13 @@ export function RestTimer({ seconds }: { seconds: number }) {
     <div
       className={`resttimer ${done ? 'resttimer--done' : ''} ${running ? 'resttimer--running' : ''}`}
     >
-      <span className="resttimer__time mono">{fmt(remaining)}</span>
+      <span
+        className="resttimer__time mono"
+        role="timer"
+        aria-label={`Rest timer, ${fmt(remaining)} remaining`}
+      >
+        {fmt(remaining)}
+      </span>
       <Button
         variant="ghost"
         onClick={() => {

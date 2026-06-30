@@ -1,15 +1,18 @@
 /**
- * In-gym live session (BUILD_PLAN M5c). For each exercise: one working weight
- * (with the inline plate calculator), a rest timer, and per-set rep logging with
- * a done toggle. Completing the session advances the routine and makes it
- * immutable. Weight auto-progression is M5d.
+ * In-gym live session (BUILD_PLAN M5c) — redesigned per the impeccable critique.
+ *
+ * One exercise at a time: a current-exercise HERO (big tabular weight + ± stepper,
+ * prominent plate load, one-tap set logging with a rep stepper, rest timer), a
+ * compact "up next" strip for the rest, a session progress header, and a guarded
+ * bottom "Complete" that confirms with an end-of-session summary. "The set is the
+ * hero; numbers read at arm's length."
  */
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Banner, Button, Card, SkeletonList, TextInput } from '../../components/ui'
+import { Banner, Button, Card, SkeletonList } from '../../components/ui'
 import { useAuth } from '../../hooks/useAuth'
 import { useExercisesByIds } from '../workouts/useWorkouts'
-import { PlateCalculator } from './PlateCalculator'
+import { solvePlates, type PlateStock } from '../../engine/plates'
 import { RestTimer } from './RestTimer'
 import {
   useCompleteSession,
@@ -19,7 +22,21 @@ import {
   useSetLogs,
   useUpdateSetLog,
 } from './useSession'
-import type { Barbell, EquipmentPreferences, Exercise, PlateInventory, SessionEntry, SetLog } from '../../data/types'
+import type {
+  Barbell,
+  EquipmentPreferences,
+  Exercise,
+  PlateInventory,
+  SessionEntry,
+  SetLog,
+} from '../../data/types'
+
+const PLATE_LOADED = new Set(['barbell', 'plate_loaded'])
+
+function schemeText(e: SessionEntry): string {
+  if (e.planned_rep_scheme === 'double') return `${e.planned_sets} × ${e.planned_rep_low}–${e.planned_rep_high}`
+  return `${e.planned_sets} × ${e.planned_rep_target ?? '?'}`
+}
 
 export function SessionPage() {
   const { id = '' } = useParams()
@@ -32,21 +49,43 @@ export function SessionPage() {
   const entryIds = useMemo(() => (entries ?? []).map((e) => e.id), [entries])
   const { data: setLogs } = useSetLogs(id, entryIds)
   const { data: equipment } = useSessionEquipment(session?.location_id ?? null, user!.id)
+  const update = useUpdateSetLog()
   const complete = useCompleteSession()
 
-  const exById = useMemo(
-    () => new Map((exercises ?? []).map((e) => [e.id, e])),
-    [exercises],
-  )
+  const exById = useMemo(() => new Map((exercises ?? []).map((e) => [e.id, e])), [exercises])
   const logsByEntry = useMemo(() => {
     const m = new Map<string, SetLog[]>()
     for (const l of setLogs ?? []) {
-      const arr = m.get(l.session_entry_id) ?? []
-      arr.push(l)
-      m.set(l.session_entry_id, arr)
+      const a = m.get(l.session_entry_id) ?? []
+      a.push(l)
+      m.set(l.session_entry_id, a)
     }
     return m
   }, [setLogs])
+
+  // Local edit overlays (persist across exercise navigation; fall back to data).
+  const [weights, setWeights] = useState<Record<string, string>>({})
+  const [reps, setReps] = useState<Record<string, string>>({})
+  const [doneSet, setDoneSet] = useState<Record<string, boolean>>({})
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [confirming, setConfirming] = useState(false)
+
+  const ordered = useMemo(() => entries ?? [], [entries])
+  const weightOf = (e: SessionEntry) =>
+    weights[e.id] ?? (e.planned_weight != null ? String(e.planned_weight) : '')
+  const repsOf = (s: SetLog) => reps[s.id] ?? String(s.actual_reps ?? s.planned_reps ?? '')
+  const isDone = (s: SetLog) => doneSet[s.id] ?? s.is_completed
+
+  const totals = useMemo(() => {
+    let total = 0
+    let done = 0
+    for (const e of ordered) {
+      const ls = logsByEntry.get(e.id) ?? []
+      total += ls.length
+      done += ls.filter((s) => doneSet[s.id] ?? s.is_completed).length
+    }
+    return { total, done }
+  }, [ordered, logsByEntry, doneSet])
 
   if (isLoading) return <SkeletonList rows={3} />
   if (!session) return <Banner kind="err">Session not found.</Banner>
@@ -59,6 +98,25 @@ export function SessionPage() {
     )
   }
 
+  function toggleSet(entry: SessionEntry, s: SetLog) {
+    const next = !isDone(s)
+    setDoneSet((d) => ({ ...d, [s.id]: next }))
+    const r = reps[s.id] ?? String(s.actual_reps ?? s.planned_reps ?? '')
+    const w = weights[entry.id] ?? (entry.planned_weight != null ? String(entry.planned_weight) : '')
+    update.mutate({
+      id: s.id,
+      patch: {
+        is_completed: next,
+        completed_at: next ? new Date().toISOString() : null,
+        actual_reps: r ? Number(r) : null,
+        actual_weight: w ? Number(w) : null,
+        amrap_reps: s.is_amrap && r ? Number(r) : null,
+      },
+    })
+  }
+
+  const active = ordered[activeIndex]
+
   async function onComplete() {
     if (!session) return
     await complete.mutateAsync(session)
@@ -66,152 +124,316 @@ export function SessionPage() {
   }
 
   return (
-    <div className="page">
-      <Card title="Today's session" subtitle={`Started ${session.started_at?.slice(11, 16) ?? ''}`}>
-        <Button onClick={() => void onComplete()} disabled={complete.isPending}>
-          {complete.isPending ? 'Finishing…' : 'Complete workout'}
-        </Button>
-      </Card>
+    <div className="session">
+      <ProgressHeader
+        exerciseIndex={activeIndex}
+        exerciseCount={ordered.length}
+        setsDone={totals.done}
+        setsTotal={totals.total}
+      />
 
-      {(entries ?? []).map((entry) => (
-        <EntryCard
-          key={entry.id}
-          entry={entry}
-          exercise={exById.get(entry.exercise_id) ?? null}
-          sets={logsByEntry.get(entry.id) ?? []}
+      {active ? (
+        <ActiveExercise
+          entry={active}
+          exercise={exById.get(active.exercise_id) ?? null}
+          sets={logsByEntry.get(active.id) ?? []}
+          weight={weightOf(active)}
+          onWeight={(v) => setWeights((w) => ({ ...w, [active.id]: v }))}
+          repsOf={repsOf}
+          onReps={(s, v) => setReps((r) => ({ ...r, [s.id]: v }))}
+          isDone={isDone}
+          onToggle={(s) => toggleSet(active, s)}
           bar={equipment?.bar ?? null}
           plates={equipment?.plates ?? []}
           prefs={equipment?.prefs ?? null}
+          hasPrev={activeIndex > 0}
+          hasNext={activeIndex < ordered.length - 1}
+          onPrev={() => setActiveIndex((i) => Math.max(0, i - 1))}
+          onNext={() => setActiveIndex((i) => Math.min(ordered.length - 1, i + 1))}
         />
-      ))}
+      ) : null}
+
+      {ordered.length > 1 ? (
+        <div className="upnext">
+          <p className="upnext__label">Workout</p>
+          <ul className="upnext__list">
+            {ordered.map((e, i) => {
+              const ls = logsByEntry.get(e.id) ?? []
+              const d = ls.filter((s) => isDone(s)).length
+              const allDone = ls.length > 0 && d === ls.length
+              return (
+                <li key={e.id}>
+                  <button
+                    type="button"
+                    className={`upnext__item ${i === activeIndex ? 'is-active' : ''} ${allDone ? 'is-done' : ''}`}
+                    onClick={() => setActiveIndex(i)}
+                  >
+                    <span className="upnext__name">{exById.get(e.exercise_id)?.name ?? '…'}</span>
+                    <span className="upnext__meta mono">
+                      {allDone ? '✓ done' : `${d}/${ls.length}`}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ) : null}
+
+      <div className="session__finish">
+        <Button onClick={() => setConfirming(true)} disabled={complete.isPending}>
+          {complete.isPending ? 'Finishing…' : 'Complete workout'}
+        </Button>
+      </div>
+
+      {confirming ? (
+        <CompleteSheet
+          setsDone={totals.done}
+          setsTotal={totals.total}
+          exerciseCount={ordered.length}
+          pending={complete.isPending}
+          onCancel={() => setConfirming(false)}
+          onConfirm={() => void onComplete()}
+        />
+      ) : null}
     </div>
   )
 }
 
-function plannedText(e: SessionEntry): string {
-  if (e.planned_rep_scheme === 'double') return `${e.planned_sets} × ${e.planned_rep_low}–${e.planned_rep_high}`
-  return `${e.planned_sets} × ${e.planned_rep_target ?? '?'}`
+function ProgressHeader({
+  exerciseIndex,
+  exerciseCount,
+  setsDone,
+  setsTotal,
+}: {
+  exerciseIndex: number
+  exerciseCount: number
+  setsDone: number
+  setsTotal: number
+}) {
+  const pct = setsTotal ? Math.round((setsDone / setsTotal) * 100) : 0
+  return (
+    <div className="sprogress">
+      <div className="sprogress__row">
+        <span className="sprogress__lift">
+          Exercise <strong>{exerciseIndex + 1}</strong>/{exerciseCount}
+        </span>
+        <span className="sprogress__sets mono">
+          {setsDone}/{setsTotal} sets
+        </span>
+      </div>
+      <div className="sprogress__bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+        <span className="sprogress__fill" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  )
 }
 
-const PLATE_LOADED = new Set(['barbell', 'plate_loaded'])
-
-function EntryCard({
+function ActiveExercise({
   entry,
   exercise,
   sets,
+  weight,
+  onWeight,
+  repsOf,
+  onReps,
+  isDone,
+  onToggle,
   bar,
   plates,
   prefs,
+  hasPrev,
+  hasNext,
+  onPrev,
+  onNext,
 }: {
   entry: SessionEntry
   exercise: Exercise | null
   sets: SetLog[]
+  weight: string
+  onWeight: (v: string) => void
+  repsOf: (s: SetLog) => string
+  onReps: (s: SetLog, v: string) => void
+  isDone: (s: SetLog) => boolean
+  onToggle: (s: SetLog) => void
   bar: Barbell | null
   plates: PlateInventory[]
   prefs: EquipmentPreferences | null
+  hasPrev: boolean
+  hasNext: boolean
+  onPrev: () => void
+  onNext: () => void
 }) {
-  const update = useUpdateSetLog()
-  // Prefill the prescribed (engine-climbed) weight; the lifter can still adjust.
-  const [weight, setWeight] = useState(() =>
-    entry.planned_weight != null ? String(entry.planned_weight) : '',
-  )
-  const usesPlates = exercise ? PLATE_LOADED.has(exercise.loading_style) : true
+  const usesPlates = exercise ? PLATE_LOADED.has(exercise.loading_style) : false
+  const w = Number(weight)
+  const currentIdx = sets.findIndex((s) => !isDone(s))
+
+  const solution = useMemo(() => {
+    if (!usesPlates || !bar || !w) return null
+    const inventory: PlateStock[] = plates.map((p) => ({
+      denominationLb: p.denomination_lb,
+      quantity: p.quantity,
+    }))
+    return solvePlates(w, bar.weight_lb, inventory, {
+      rounding: prefs?.rounding_direction ?? 'down',
+      microPlatesEnabled: prefs?.micro_plates_enabled ?? false,
+    })
+  }, [usesPlates, bar, w, plates, prefs])
+
+  function bump(delta: number) {
+    const next = Math.max(0, (Number(weight) || 0) + delta)
+    onWeight(String(next))
+  }
 
   return (
-    <Card title={exercise?.name ?? '…'} subtitle={plannedText(entry)}>
-      <div className="form">
-        <div className="weightrow">
-          <label className="field__label" htmlFor={`w_${entry.id}`}>
-            Working weight (lb)
-          </label>
-          <TextInput
-            id={`w_${entry.id}`}
+    <Card>
+      <div className="hero__head">
+        <h2 className="hero__name">{exercise?.name ?? '…'}</h2>
+        <span className="hero__scheme mono">{schemeText(entry)}</span>
+      </div>
+
+      <div className="weighthero">
+        <button className="weighthero__step" onClick={() => bump(-5)} aria-label="Decrease weight 5 lb">
+          −
+        </button>
+        <div className="weighthero__value">
+          <input
+            className="weighthero__input mono"
             type="number"
             inputMode="decimal"
             step="2.5"
             value={weight}
-            onChange={(e) => setWeight(e.target.value)}
-            placeholder="e.g. 185"
+            onChange={(e) => onWeight(e.target.value)}
+            aria-label="Working weight in pounds"
           />
+          <span className="weighthero__unit">lb</span>
         </div>
+        <button className="weighthero__step" onClick={() => bump(5)} aria-label="Increase weight 5 lb">
+          +
+        </button>
+      </div>
 
-        {usesPlates && weight ? (
-          <PlateCalculator targetLb={Number(weight)} bar={bar} plates={plates} prefs={prefs} />
-        ) : null}
+      {usesPlates ? (
+        <div className="plateload">
+          {!bar ? (
+            <span className="muted">Set a default barbell to see the plate load.</span>
+          ) : solution ? (
+            <>
+              <div className="plateload__plates">
+                {solution.perSide.length === 0 ? (
+                  <span className="muted">empty bar</span>
+                ) : (
+                  solution.perSide.map((p) => (
+                    <span key={p.denominationLb} className="plate plate--lg">
+                      {p.count}×{p.denominationLb}
+                    </span>
+                  ))
+                )}
+              </div>
+              <p className="plateload__total mono">
+                {bar.name} · loads <strong>{solution.loadedTotalLb} lb</strong>
+                {solution.exact ? '' : ` (${solution.deltaLb > 0 ? '+' : ''}${solution.deltaLb})`}
+                {solution.ceilingReached ? ' · max' : ''} per side
+              </p>
+            </>
+          ) : (
+            <span className="muted">Enter a weight.</span>
+          )}
+        </div>
+      ) : null}
 
-        <ul className="setlist">
-          {sets.map((s) => (
-            <SetRow
-              key={s.id}
-              set={s}
-              weight={weight ? Number(weight) : null}
-              onSave={(patch) => update.mutate({ id: s.id, patch })}
-            />
-          ))}
-        </ul>
+      <ul className="sets">
+        {sets.map((s, i) => {
+          const done = isDone(s)
+          const current = i === currentIdx
+          return (
+            <li key={s.id} className={`setcard ${done ? 'is-done' : ''} ${current ? 'is-current' : ''}`}>
+              <span className="setcard__n">Set {s.set_index}</span>
+              <span className="setcard__reps">
+                <button
+                  className="repstep"
+                  aria-label="Fewer reps"
+                  onClick={() => onReps(s, String(Math.max(0, (Number(repsOf(s)) || 0) - 1)))}
+                >
+                  −
+                </button>
+                <span className="repstep__n mono">{repsOf(s) || '0'}</span>
+                <button
+                  className="repstep"
+                  aria-label="More reps"
+                  onClick={() => onReps(s, String((Number(repsOf(s)) || 0) + 1))}
+                >
+                  +
+                </button>
+                <span className="setcard__unit">{s.is_amrap ? 'AMRAP' : 'reps'}</span>
+              </span>
+              <button
+                className={`logbtn ${done ? 'is-done' : ''}`}
+                aria-pressed={done}
+                aria-label={`${done ? 'Undo' : 'Log'} set ${s.set_index}`}
+                onClick={() => onToggle(s)}
+              >
+                {done ? '✓' : 'Log'}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
 
-        {entry.planned_rest_seconds ? <RestTimer seconds={entry.planned_rest_seconds} /> : null}
+      {entry.planned_rest_seconds ? <RestTimer seconds={entry.planned_rest_seconds} /> : null}
+
+      <div className="hero__nav">
+        <Button variant="ghost" disabled={!hasPrev} onClick={onPrev}>
+          ‹ Prev
+        </Button>
+        <Button variant="ghost" disabled={!hasNext} onClick={onNext}>
+          Next ›
+        </Button>
       </div>
     </Card>
   )
 }
 
-function SetRow({
-  set,
-  weight,
-  onSave,
+function CompleteSheet({
+  setsDone,
+  setsTotal,
+  exerciseCount,
+  pending,
+  onCancel,
+  onConfirm,
 }: {
-  set: SetLog
-  weight: number | null
-  onSave: (patch: Partial<SetLog>) => void
+  setsDone: number
+  setsTotal: number
+  exerciseCount: number
+  pending: boolean
+  onCancel: () => void
+  onConfirm: () => void
 }) {
-  const [reps, setReps] = useState((set.actual_reps ?? set.planned_reps ?? '').toString())
-  const [amrap, setAmrap] = useState((set.amrap_reps ?? '').toString())
-  const [done, setDone] = useState(set.is_completed)
-
-  function toggleDone() {
-    const next = !done
-    setDone(next)
-    onSave({
-      is_completed: next,
-      completed_at: next ? new Date().toISOString() : null,
-      actual_reps: reps ? Number(reps) : null,
-      actual_weight: weight,
-      amrap_reps: set.is_amrap && amrap ? Number(amrap) : null,
-    })
-  }
-
+  const nothingLogged = setsDone === 0
   return (
-    <li className={`setrow ${done ? 'setrow--done' : ''}`}>
-      <span className="setrow__idx mono">{set.set_index}</span>
-      <div className="setrow__field">
-        <TextInput
-          type="number"
-          inputMode="numeric"
-          aria-label={`Reps for set ${set.set_index}`}
-          value={reps}
-          onChange={(e) => setReps(e.target.value)}
-          onBlur={() => onSave({ actual_reps: reps ? Number(reps) : null })}
-        />
-        <span className="muted">reps{set.planned_reps ? ` /${set.planned_reps}` : ''}</span>
-      </div>
-      {set.is_amrap ? (
-        <div className="setrow__field">
-          <TextInput
-            type="number"
-            inputMode="numeric"
-            aria-label={`AMRAP reps for set ${set.set_index}`}
-            value={amrap}
-            onChange={(e) => setAmrap(e.target.value)}
-            onBlur={() => onSave({ amrap_reps: amrap ? Number(amrap) : null })}
-            placeholder="AMRAP"
-          />
-          <span className="muted">AMRAP</span>
+    <div className="sheet" role="dialog" aria-modal="true" aria-label="Complete workout">
+      <div className="sheet__backdrop" onClick={onCancel} />
+      <div className="sheet__panel">
+        <h3 className="sheet__title">Finish &amp; lock?</h3>
+        {nothingLogged ? (
+          <Banner kind="warn">You haven&apos;t logged any sets yet. Log at least one before finishing.</Banner>
+        ) : (
+          <p className="sheet__summary">
+            <strong className="mono">{setsDone}</strong> of {setsTotal} sets logged across{' '}
+            <strong className="mono">{exerciseCount}</strong>{' '}
+            {exerciseCount === 1 ? 'exercise' : 'exercises'}. Completing locks this session and
+            advances your routine — the weights climb next time.
+          </p>
+        )}
+        <div className="sheet__actions">
+          <Button variant="ghost" onClick={onCancel} disabled={pending}>
+            Keep going
+          </Button>
+          <Button onClick={onConfirm} disabled={pending || nothingLogged}>
+            {pending ? 'Finishing…' : 'Finish & lock'}
+          </Button>
         </div>
-      ) : null}
-      <Button variant={done ? 'primary' : 'ghost'} onClick={toggleDone}>
-        {done ? '✓' : 'Done'}
-      </Button>
-    </li>
+      </div>
+    </div>
   )
 }

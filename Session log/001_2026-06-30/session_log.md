@@ -133,6 +133,20 @@ After the engine + M1 commits, the user hit live-auth friction and we kept going
   pop, running rest-timer pulse. Bumped the theme-toggle to a 42px touch target.
   Verified empty/skeleton in both themes via headless Chromium. Gate green.
 
+## Continued — $impeccable critique + full session-screen redesign
+
+- Ran `$impeccable critique` on the live-session screen as **two isolated
+  sub-agents** (design review + deterministic detector) per the skill. Score
+  **20/40** — verdict "AI made this": tokens A-tier but the screen was a generic
+  stacked-card form with the working weight as a 16px field, no focal point, and
+  an unguarded immutable "Complete" at the top. Snapshot in `.impeccable/critique/`.
+- User chose **full reimagining**. Rebuilt `SessionPage.tsx`: current-exercise
+  **hero** (huge tabular weight + ± stepper, prominent plate load), one-tap set
+  logging with a rep stepper (≥44px targets, aria-pressed), a session progress
+  header, an "up next" strip, and a guarded **bottom** Complete with an
+  end-of-session summary sheet. RestTimer got `role="timer"`. Deleted the orphaned
+  PlateCalculator. Verified both themes via headless Chromium. Gate green.
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh
