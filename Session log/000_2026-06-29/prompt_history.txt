@@ -109,3 +109,9 @@ LINE 1159:   select user_id, time_window, 'workout'::text as dimension,
 
 --- 2026-06-29 19:58 ---
 lets set up the vercel project
+
+--- 2026-06-29 20:18 ---
+Project setup, migration deployed, environment variables created. Evertyhing green on my side
+
+--- 2026-06-29 20:24 ---
+lets take a break

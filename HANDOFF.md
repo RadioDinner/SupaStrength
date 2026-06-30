@@ -5,11 +5,30 @@
 
 ## Where the project is
 
-**Phase 0 — scaffold in progress.** Spec, data model, migration, and build plan
-are done. The Vite + React + TS app is scaffolded and **builds + lints clean**
-locally (PWA shell, Supabase wired via the data seam, connection-status home
-screen). Remaining Phase-0 setup is account-side (user): create the Vercel
-project, create the Supabase project, set env vars, run the migration.
+**Phase 0 — DONE. M1 — in progress (paused mid-build).** Spec, data model,
+migration, build plan done. App scaffolded, builds + lints clean. User completed
+account setup: Vercel project created, migration run, env vars set — reported
+"everything green." M1 (auth + profile + equipment) has begun.
+
+### M1 — in progress (resume here)
+Done: `src/data/types.ts` (row types for profile/equipment tables).
+Remaining (in order):
+1. Expand the seam: `src/data/client.ts` (`list/getOne/insert/update/upsert/
+   remove/rpc`) + implement in `src/data/online/supabaseDataClient.ts`.
+2. `src/data/auth.ts` (wraps `supabase.auth`) + `src/hooks/useAuth.tsx`
+   (context: status/user/session + signIn/signUp/signOut).
+3. `src/data/repos/profileRepo.ts`, `equipmentRepo.ts`, and
+   `bootstrap.ts::ensureUserSetup(userId)` — idempotent; seeds the real home gym
+   (plates 2.5/5/10/15/25/35/45 ×2, dumbbells 15/20/25 ×2, one 45 Olympic bar,
+   default location "Home Gym"). No DB signup trigger exists, so this runs on
+   first login. User-owned inserts may omit `user_id` (defaults to `auth.uid()`).
+4. Screens: `features/auth/AuthScreen`, `features/settings/ProfilePage`,
+   `features/equipment/EquipmentPage`, a `routes` app-shell w/ nav, auth gate +
+   bootstrap gate in `App.tsx`, wrap `AuthProvider` in `main.tsx`.
+Acceptance: sign in, see/edit profile, see/edit the seeded gym.
+Note: email confirmation may be ON in Supabase Auth — if sign-up stalls, disable
+"Confirm email" (Auth → Providers → Email) for this personal app, or click the
+emailed link.
 
 ## Source-of-truth documents (authority chain)
 
