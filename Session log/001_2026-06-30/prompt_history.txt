@@ -65,3 +65,6 @@ Lets do the impeccable thing
 --- 2026-06-30 18:00 ---
 that design is still rubbish
 $impeccable critique the live-session screen
+
+--- 2026-06-30 18:20 (AskUserQuestion answer) ---
+Redesign scope: Full reimagining (current-exercise hero, big weight, one-tap logging, up-next strip, guarded bottom Complete + summary)
