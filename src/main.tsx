@@ -6,6 +6,10 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import { AuthProvider } from './hooks/useAuth'
 import { ThemeProvider } from './hooks/useTheme'
+// Self-hosted variable fonts (offline-friendly PWA, no FOUT). Archivo carries the
+// bold display + tabular figures; Inter is the UI workhorse.
+import '@fontsource-variable/archivo/index.css'
+import '@fontsource-variable/inter/index.css'
 import './styles/index.css'
 
 // Auto-update the service worker (app-shell only for now).

@@ -33,12 +33,16 @@ hue) — explicitly **not** warm cream.
 
 ## Typography
 
-One family: a system/grotesque sans (`-apple-system`/Segoe/Roboto stack) — product
-register, no display pairing. **Fixed rem scale** (ratio ~1.2), not fluid.
-`font-variant-numeric: tabular-nums` on all weights/reps/timers/counts so digits
-don't reflow. Numbers can go big and heavy (the working weight, the rest timer);
-labels stay quiet (uppercase micro-labels used sparingly, not as per-section
-eyebrows).
+**Self-hosted variable type system, driven by three tokens** (swap a direction by
+changing only these): `--font-display` = **Archivo Variable** (the bold,
+high-energy voice — headings, brand, big figures), `--font-num` = Archivo Variable
+with `tabular-nums` (weights / reps / timer / counts), `--font-body` = **Inter
+Variable** (UI/body workhorse). Archivo (mechanical grotesque) over Inter (humanist
+grotesque) is a deliberate contrast-axis pairing, not two look-alikes. Bundled via
+`@fontsource-variable/*` so the PWA works offline with no FOUT. **Fixed rem scale**
+(ratio ~1.2), not fluid. Display letter-spacing held at −0.015 to −0.03em (≥ −0.04em
+floor). Numbers go big and heavy (the working weight, the rest timer); labels stay
+quiet (uppercase micro-labels used sparingly, never as per-section eyebrows).
 
 Scale: `--fs-xs` 0.75 · `--fs-sm` 0.8125 · `--fs-base` 1 · `--fs-md` 1.0625 ·
 `--fs-lg` 1.25 · `--fs-xl` 1.5 · `--fs-2xl` 2 · `--fs-stat` 2.75rem (hero figures).
