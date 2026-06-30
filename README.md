@@ -72,6 +72,11 @@ trigger a redeploy.
    It's re-runnable (delete-by-source + insert) — novice→elite thresholds for the
    five main lifts (ratio-of-bodyweight form) that power the Stats screen's
    "vs standards" panel.
+7. **Schedule media retention** (M8, optional): paste
+   `supabase/migrations/9998_purge_media_cron.sql` to run `purge_expired_media()`
+   daily via pg_cron (deletes expired form-videos / progress photos + their
+   storage objects). Re-runnable. Alternative: deploy the
+   `supabase/functions/purge-media` Edge Function and schedule it instead.
 
 When configured, the home screen shows **"Connected ✓ — schema live"** with the
 seeded muscle-group count.

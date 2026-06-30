@@ -5,7 +5,23 @@
 
 ## Where the project is
 
-**🎉 PHASE 1 COMPLETE — M1–M8 all DONE. Design system — DONE.** The user can run
+**🎉 PHASE 1 COMPLETE — M1–M8 all DONE. Design system — DONE.**
+
+> **Post-Phase-1 polish (this session, on `main`):**
+> - **Real type system** — replaced `system-ui` with self-hosted **Archivo +
+>   Inter** (token-driven `--font-display`/`--font-num`/`--font-body`; swap a
+>   direction by changing 3 tokens). The biggest single visual upgrade; the slop
+>   detector was already clean, the missing font identity was the real issue.
+> - **Warm-up ramp in the live session** — wired the tested `engine/warmups`
+>   (empty bar → 55/70/85%, plate-rounded) as tappable guidance above the working
+>   sets (not persisted). Closes the M5 "warmups not auto-generated" gap.
+> - **Workout exercise reorder (↑/↓)** — `workoutsRepo.swapPositions` via a
+>   collision-free 3-write temp-sentinel swap. Closes the M3 "append+delete only"
+>   gap.
+> - **Media-retention purge scheduled** — `9998_purge_media_cron.sql` (pg_cron
+>   daily) + a `supabase/functions/purge-media` Edge Function alternative. Closes
+>   the M8 "purge not scheduled" gap. (pg_cron isn't in the local PG build, so the
+>   cron migration is unvalidated-locally but standard Supabase usage.) The user can run
 real workouts on their phone end to end: build templates → schedule rotations →
 log live sessions with auto-progression + plate calc + rest timer → see radar
 analytics → capture form videos → track photos/measurements/reminders — all
