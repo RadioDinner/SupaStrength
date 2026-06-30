@@ -127,14 +127,16 @@ function PlatesCard({ locationId, userId }: { locationId: string; userId: string
   }, [plates, defaultBar, prefs])
 
   return (
-    <Card
-      title="Plates"
-      subtitle={
-        loadable != null
-          ? `Max loadable on the ${defaultBar?.name}: ${loadable} lb`
-          : 'Individual plate counts — pairs are derived.'
-      }
-    >
+    <Card title="Plates" subtitle="Individual plate counts — pairs are derived.">
+      {loadable != null ? (
+        <div className="stat">
+          <div className="stat__value">
+            {loadable}
+            <span className="stat__unit">lb</span>
+          </div>
+          <span className="stat__label">max loadable on {defaultBar?.name}</span>
+        </div>
+      ) : null}
       <ul className="list">
         {(plates ?? []).map((p) => (
           <li key={p.id} className="list__row">

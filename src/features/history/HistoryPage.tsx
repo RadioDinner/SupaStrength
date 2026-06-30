@@ -19,6 +19,22 @@ function prettyDate(d: string): string {
   }
 }
 
+/**
+ * Quiet tabular summary for a collapsed row. Per-set data (working sets, volume)
+ * isn't loaded at the list level — it's fetched lazily on expand — so derive the
+ * session's real duration from the started/completed timestamps already on the row
+ * instead of fabricating set/volume figures or adding a per-row query.
+ */
+function durationLabel(s: Session): string | null {
+  if (!s.started_at || !s.completed_at) return null
+  const ms = parseISO(s.completed_at).getTime() - parseISO(s.started_at).getTime()
+  if (!Number.isFinite(ms) || ms <= 0) return null
+  const mins = Math.round(ms / 60000)
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return h ? `${h}h ${m}m` : `${m} min`
+}
+
 export function HistoryPage() {
   const { data: sessions, isLoading } = useRecentSessions(30)
 
@@ -57,6 +73,9 @@ function HistoryRow({ session }: { session: Session }) {
         onClick={() => setOpen((o) => !o)}
       >
         <span className="historyrow__date">{prettyDate(session.performed_on)}</span>
+        {durationLabel(session) ? (
+          <span className="rowstat">{durationLabel(session)}</span>
+        ) : null}
         <span className="historyrow__chev" aria-hidden="true">
           {open ? <ChevronDown size={18} aria-hidden /> : <ChevronRight size={18} aria-hidden />}
         </span>

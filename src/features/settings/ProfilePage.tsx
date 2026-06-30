@@ -136,31 +136,32 @@ export function ProfilePage() {
         </form>
       </Card>
 
-      <Card title="Equipment">
-        <Link to="/equipment" className="navrow">
-          <span>
-            <span className="workout-link__name">Gym, plates &amp; preferences</span>
-            <span className="muted">Bars, plate inventory, dumbbells, rounding</span>
-          </span>
-          <ChevronRight size={18} aria-hidden="true" className="navrow__icon" />
-        </Link>
+      <Card title="More">
+        <ul className="list">
+          <li className="list__row">
+            <Link to="/equipment" className="navrow">
+              <span>
+                <span className="workout-link__name">Gym, plates &amp; preferences</span>
+                <span className="muted">Bars, plate inventory, dumbbells, rounding</span>
+              </span>
+              <ChevronRight size={18} aria-hidden="true" className="navrow__icon" />
+            </Link>
+          </li>
+          <li className="list__row">
+            <Link to="/progress" className="navrow">
+              <span>
+                <span className="workout-link__name">Measurements, photos &amp; reminders</span>
+                <span className="muted">Track bodyweight + girths, progress photos, check-ins</span>
+              </span>
+              <ChevronRight size={18} aria-hidden="true" className="navrow__icon" />
+            </Link>
+          </li>
+        </ul>
       </Card>
 
-      <Card title="Progress">
-        <Link to="/progress" className="navrow">
-          <span>
-            <span className="workout-link__name">Measurements, photos &amp; reminders</span>
-            <span className="muted">Track bodyweight + girths, progress photos, check-ins</span>
-          </span>
-          <ChevronRight size={18} aria-hidden="true" className="navrow__icon" />
-        </Link>
-      </Card>
-
-      <Card>
-        <Button variant="ghost" onClick={() => void signOut()}>
-          Sign out
-        </Button>
-      </Card>
+      <Button variant="ghost" className="btn--block" onClick={() => void signOut()}>
+        Sign out
+      </Button>
     </div>
   )
 }

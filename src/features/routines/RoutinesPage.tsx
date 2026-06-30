@@ -45,24 +45,26 @@ export function RoutinesPage() {
           hint="A routine is your schedule — rotations of workouts that cycle (A → B → A) plus always-on days. Name one above to start."
         />
       ) : (
-        (routines ?? []).map((r) => (
-          <Card key={r.id}>
-            <div className="list__row">
-              <Link to={`/routines/${r.id}`} className="workout-link">
-                <span className="workout-link__name">
-                  {r.name}
-                  {r.is_active ? <span className="badge">active</span> : null}
-                </span>
-                <span className="muted">Tap to build rotations</span>
-              </Link>
-              {!r.is_active ? (
-                <Button variant="ghost" onClick={() => setActive.mutate(r.id)}>
-                  Make active
-                </Button>
-              ) : null}
-            </div>
-          </Card>
-        ))
+        <Card>
+          <ul className="list">
+            {(routines ?? []).map((r) => (
+              <li key={r.id} className="list__row">
+                <Link to={`/routines/${r.id}`} className="workout-link">
+                  <span className="workout-link__name">
+                    {r.name}
+                    {r.is_active ? <span className="badge">active</span> : null}
+                  </span>
+                  <span className="muted">Tap to build rotations</span>
+                </Link>
+                {!r.is_active ? (
+                  <Button variant="ghost" onClick={() => setActive.mutate(r.id)}>
+                    Make active
+                  </Button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
   )

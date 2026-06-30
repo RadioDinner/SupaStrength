@@ -71,3 +71,9 @@ tab/route change, timer tick). No page-load choreography. Full
 
 No side-stripe borders, no gradient text, no default glassmorphism, no hero-metric
 template, no cream body, no over-rounded cards, no 1px-border+wide-shadow combo.
+
+**Cards** carry a single elevation: a hairline `--border` plus a tight contact
+`--shadow` (≤ 8px blur) — not the wide-blur "ghost card". **Backdrop-blur** is a
+deliberate, functional exception limited to sticky chrome (app bar, bottom tab bar,
+the in-session progress header) where content scrolls beneath; it is never used as
+decorative glass on cards or surfaces.

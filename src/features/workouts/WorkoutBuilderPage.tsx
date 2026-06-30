@@ -46,7 +46,11 @@ export function WorkoutBuilderPage() {
                 <span>
                   <span className="workout-link__name">{nameById.get(e.exercise_id) ?? '…'}</span>
                   <br />
-                  <span className="muted">{prescriptionText(e)}</span>
+                  <span className="mono">{prescriptionMain(e)}</span>
+                  {e.rest_seconds ? (
+                    <span className="muted"> · rest <span className="mono">{e.rest_seconds}</span>s</span>
+                  ) : null}
+                  {e.last_set_amrap ? <span className="muted"> · last set AMRAP</span> : null}
                 </span>
                 <span className="rowactions">
                   <button
@@ -94,14 +98,14 @@ export function WorkoutBuilderPage() {
   )
 }
 
-function prescriptionText(e: WorkoutEntry): string {
+/** Numeric prescription core ("sets × reps") — the hero figures. Rest/AMRAP
+ * qualifiers are rendered as muted text alongside this in the row. */
+function prescriptionMain(e: WorkoutEntry): string {
   let reps: string
   if (e.rep_scheme === 'double') reps = `${e.rep_range_low ?? '?'}–${e.rep_range_high ?? '?'}`
   else if (e.rep_scheme === 'rpe') reps = `RPE ${e.target_rpe ?? '?'}`
   else reps = `${e.rep_target ?? '?'}`
-  const rest = e.rest_seconds ? ` · rest ${e.rest_seconds}s` : ''
-  const amrap = e.last_set_amrap ? ' · last set AMRAP' : ''
-  return `${e.sets} × ${reps}${rest}${amrap}`
+  return `${e.sets} × ${reps}`
 }
 
 function AddEntryForm({ workoutId }: { workoutId: string }) {

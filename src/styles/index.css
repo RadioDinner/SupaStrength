@@ -28,7 +28,7 @@
   --bad: oklch(0.7 0.19 22);
   --bad-tint: oklch(0.7 0.19 22 / 0.18);
 
-  --shadow: 0 8px 28px -10px oklch(0 0 0 / 0.55);
+  --shadow: 0 2px 6px -2px oklch(0 0 0 / 0.45);
   color-scheme: dark;
 }
 
@@ -55,7 +55,7 @@
   --bad: oklch(0.54 0.21 25);
   --bad-tint: oklch(0.54 0.21 25 / 0.1);
 
-  --shadow: 0 8px 22px -12px oklch(0.25 0.04 264 / 0.28);
+  --shadow: 0 2px 6px -2px oklch(0.25 0.04 264 / 0.16);
   color-scheme: light;
 }
 
@@ -210,8 +210,8 @@ h3,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--r-md);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -512,6 +512,9 @@ h3,
   background: var(--bad-tint);
   color: var(--bad);
 }
+.btn--block {
+  width: 100%;
+}
 .linkbtn {
   background: none;
   border: none;
@@ -543,6 +546,8 @@ h3,
   gap: var(--s-2);
 }
 .stepper .btn {
+  min-width: 44px;
+  min-height: 44px;
   padding: var(--s-1) var(--s-3);
   font-size: 18px;
   line-height: 1;
@@ -680,6 +685,9 @@ h3,
   cursor: pointer;
   font: inherit;
   font-size: var(--fs-sm);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 .chip--toggle:disabled {
   opacity: 0.4;
@@ -890,8 +898,8 @@ h3,
   flex: 1;
 }
 .repstep {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   border-radius: var(--r-sm);
   border: 1px solid var(--border-strong);
@@ -1076,11 +1084,13 @@ h3,
   border-top: 1px solid var(--border);
 }
 .resttimer__time {
-  font-size: var(--fs-2xl);
+  font-family: var(--font-num);
+  font-size: var(--fs-stat);
   font-weight: 800;
   font-variant-numeric: var(--tnum);
   letter-spacing: -0.02em;
-  min-width: 80px;
+  line-height: 1;
+  min-width: 96px;
 }
 .resttimer--done .resttimer__time {
   color: var(--good);
@@ -1225,6 +1235,53 @@ h3,
   color: var(--muted);
   flex: none;
 }
+/* a navrow used as the sole content of a list row fills the row width */
+.list__row .navrow {
+  flex: 1;
+}
+
+/* compact numeric stat (smaller sibling of .herostat) — value + micro-label */
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat__value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-1);
+  font-family: var(--font-num);
+  font-variant-numeric: var(--tnum);
+  font-weight: 800;
+  font-size: var(--fs-xl);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.stat__unit {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--muted);
+}
+.stat__label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.herostat__delta {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--muted);
+}
+/* quiet tabular summary on a collapsed list row */
+.rowstat {
+  font-family: var(--font-num);
+  font-variant-numeric: var(--tnum);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--muted);
+}
 
 /* ── micro-interactions ──────────────────────────────────────────────────── */
 @keyframes pop {
@@ -1325,8 +1382,8 @@ h3,
   flex: none;
 }
 .reorderbtn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--r-sm);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -1404,8 +1461,8 @@ h3,
 /* ── form video (M7) ─────────────────────────────────────────────────────────── */
 .setvid {
   flex-shrink: 0;
-  width: 36px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--r-md);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -1538,8 +1595,8 @@ h3,
   flex: 1 1 100%;
 }
 .reminder__actions .btn {
-  padding: 6px 12px;
-  min-height: 36px;
+  padding: 8px 14px;
+  min-height: 44px;
 }
 .badge--due {
   background: var(--warn-tint);
@@ -1632,8 +1689,11 @@ h3,
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 24px;
-  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: none;
   background: oklch(0 0 0 / 0.55);
@@ -1697,8 +1757,8 @@ h3,
   font: inherit;
   font-size: var(--fs-sm);
   font-weight: 650;
-  padding: 6px 12px;
-  min-height: 34px;
+  padding: 8px 14px;
+  min-height: 44px;
   border-radius: var(--r-pill);
   cursor: pointer;
   transition: color var(--dur) var(--ease), background var(--dur) var(--ease);

@@ -63,24 +63,26 @@ export function WorkoutsPage() {
           hint="A workout is a training day — like Workout A or a shoulder finisher. Name one above, then add exercises to it."
         />
       ) : (
-        (workouts ?? []).map((w) => (
-          <Card key={w.id}>
-            <div className="list__row">
-              <Link to={`/workouts/${w.id}`} className="workout-link">
-                <span className="workout-link__name">{w.name}</span>
-                <span className="muted">Tap to edit exercises</span>
-              </Link>
-              <div className="row-actions">
-                <Button onClick={() => void onStart(w.id)} disabled={start.isPending || !!active}>
-                  Start
-                </Button>
-                <Button variant="ghost" onClick={() => archive.mutate(w.id)} aria-label={`Archive ${w.name}`}>
-                  Archive
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))
+        <Card>
+          <ul className="list">
+            {(workouts ?? []).map((w) => (
+              <li key={w.id} className="list__row">
+                <Link to={`/workouts/${w.id}`} className="workout-link">
+                  <span className="workout-link__name">{w.name}</span>
+                  <span className="muted">Tap to edit exercises</span>
+                </Link>
+                <div className="row-actions">
+                  <Button onClick={() => void onStart(w.id)} disabled={start.isPending || !!active}>
+                    Start
+                  </Button>
+                  <Button variant="ghost" onClick={() => archive.mutate(w.id)} aria-label={`Archive ${w.name}`}>
+                    Archive
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
   )

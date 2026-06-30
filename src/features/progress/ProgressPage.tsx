@@ -66,6 +66,13 @@ function MeasurementsSection() {
 
   const editing = useMemo(() => (rows ?? []).find((r) => r.taken_on === date), [rows, date])
 
+  // Latest bodyweight hero: rows are sorted by date desc, so the first row WITH a
+  // bodyweight is the latest; the next such row gives the delta. (No extra query.)
+  const bwRows = useMemo(() => (rows ?? []).filter((r) => r.bodyweight != null), [rows])
+  const latestBw = bwRows[0]?.bodyweight ?? null
+  const prevBw = bwRows[1]?.bodyweight ?? null
+  const bwDelta = latestBw != null && prevBw != null ? Math.round((latestBw - prevBw) * 10) / 10 : null
+
   function loadRow(r: BodyMeasurement) {
     setDate(r.taken_on)
     const f: Record<string, string> = {}
@@ -182,7 +189,23 @@ function MeasurementsSection() {
           hint="Log your bodyweight and a few girths above — or import a CSV with a date column."
         />
       ) : (
-        <Card title="History" subtitle={`${rows!.length} day${rows!.length === 1 ? '' : 's'}`}>
+        <>
+          {latestBw != null ? (
+            <section className="card herostat">
+              <p className="herostat__label">Bodyweight</p>
+              <p className="herostat__value">
+                {latestBw}
+                <span className="herostat__unit">lb</span>
+                {bwDelta != null ? (
+                  <span className="herostat__delta">
+                    {bwDelta > 0 ? '+' : bwDelta < 0 ? '−' : '±'}
+                    {Math.abs(bwDelta)} lb
+                  </span>
+                ) : null}
+              </p>
+            </section>
+          ) : null}
+          <Card title="History" subtitle={`${rows!.length} day${rows!.length === 1 ? '' : 's'}`}>
           <div className="mtable">
             <table>
               <thead>
@@ -213,7 +236,8 @@ function MeasurementsSection() {
               </tbody>
             </table>
           </div>
-        </Card>
+          </Card>
+        </>
       )}
     </>
   )

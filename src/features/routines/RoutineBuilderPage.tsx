@@ -118,15 +118,17 @@ export function RoutineBuilderPage() {
         />
       ))}
 
-      <Card>
-        <Button onClick={() => addRotation.mutate(null)} disabled={addRotation.isPending}>
-          + Add rotation
-        </Button>
+      <div>
+        <div className="row-actions">
+          <Button onClick={() => addRotation.mutate(null)} disabled={addRotation.isPending}>
+            + Add rotation
+          </Button>
+        </div>
         <p className="muted" style={{ marginTop: 10 }}>
           One rotation cycles its workouts (e.g. A → B → A). A length-1 rotation
           (e.g. a shoulder finisher) runs every day.
         </p>
-      </Card>
+      </div>
     </div>
   )
 }
