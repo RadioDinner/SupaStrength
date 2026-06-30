@@ -51,3 +51,6 @@ Theme: Dark for now, but I want a light and dark theme toggle
 --- 2026-06-30 16:55 ---
 /impeccable init
 how does the impeccable skill work?
+
+--- 2026-06-30 17:05 ---
+So how do I use $impeccable in this session
