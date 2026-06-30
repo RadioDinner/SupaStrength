@@ -97,6 +97,18 @@ After the engine + M1 commits, the user hit live-auth friction and we kept going
   in this ephemeral env. Available to invoke for a UI-polish pass (the "really
   sweet workout app" goal).
 
+## Continued — impeccable design pass (dark + light themes)
+
+- User ran `npx impeccable install` (no-op) and `npx skills add pbakaus/impeccable`
+  again. Followed the skill's flow: interview (AskUserQuestion) → **bold &
+  high-energy**, **Hevy/Strong** reference, **dark now + light/dark toggle**.
+- Wrote `PRODUCT.md` + `DESIGN.md`; rewrote `index.css` as a tokenized OKLCH
+  design system with first-class dark + light themes; `useTheme` (persisted,
+  pre-paint script) + app-bar toggle. Elevated app bar / tab bar / cards /
+  buttons / inputs / set rows / plate readout / rest timer.
+- Verified by headless-Chromium screenshots of the session screen in both themes
+  (sent to the user). `Design: bold dark+light theme system...`.
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh

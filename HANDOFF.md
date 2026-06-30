@@ -26,6 +26,16 @@ end-to-end workout logger. typecheck + lint + build + test all green.
 - **Weight is entered manually this slice** (the plate calc assists); engine
   auto-progression is M5d. **Not run against the live DB from here.**
 
+### Design system — DONE (impeccable pass)
+`PRODUCT.md` + `DESIGN.md` (register: product; vibe bold/high-energy; ref
+Hevy/Strong). `src/styles/index.css` is a tokenized **OKLCH** system with
+first-class **dark + light** themes (`useTheme`, persisted, pre-paint inline
+script in `index.html`, toggle in the app bar). One electric-indigo accent,
+tabular numerals, AA contrast, reduced-motion fallback, no AI-slop tells.
+Verified by rendering the session screen in both themes via headless Chromium.
+The `impeccable` skill lives in `.agents/skills/impeccable` — run
+`$impeccable polish <screen>` / `critique` / `live` for further per-screen work.
+
 ### M5d — TODO (engine auto-progression)
 On `complete`, for each entry compute success/failure and run
 `engine/applyProgression`/`applyFailure` over `progression_state` +
