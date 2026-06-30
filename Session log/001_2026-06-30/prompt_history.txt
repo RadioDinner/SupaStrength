@@ -24,3 +24,6 @@ I clicked the "Send password recovery" button in supabase and got "Failed to sen
 
 --- 2026-06-30 14:45 ---
 I turned off confirm email but I can't send a password recovery. I got to this url "https://bloatrwocytaviwuhfwx.supabase.co/auth/v1/verify?token=2dae699379188b7585c279ef58570940e515594547d00cb16b25a777&type=recovery&redirect_to=http://supa-strength.vercel.app:3000" and it just sits there
+
+--- 2026-06-30 15:05 ---
+Lets keep hauling

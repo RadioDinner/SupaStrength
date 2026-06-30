@@ -63,8 +63,11 @@ trigger a redeploy.
    Settings → SMTP — e.g. Resend/SendGrid/SES), then raise the caps under Auth →
    Rate Limits. Forgot a password and can't wait for the reset? Just delete the
    user (Auth → Users) and sign up again — the bootstrap re-seeds the home gym.
-5. Seed data (exercise library, strength standards) lands later via
-   `supabase/seed/` (see `BUILD_PLAN.md` M2).
+5. **Seed the exercise library** (M2): paste `supabase/seed/exercises_seed.sql`
+   into the SQL Editor and run it (after the migration). It's re-runnable —
+   873 global exercises + their muscle map. Regenerate it from the vendored
+   dataset with `node supabase/seed/build-exercise-seed.mjs`. Strength-standards
+   seed lands with M6.
 
 When configured, the home screen shows **"Connected ✓ — schema live"** with the
 seeded muscle-group count.
