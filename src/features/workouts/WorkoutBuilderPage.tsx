@@ -12,6 +12,7 @@ import { useDebounced } from '../../hooks/useDebounced'
 import {
   useAddEntry,
   useExercisesByIds,
+  useMoveEntry,
   useRemoveEntry,
   useWorkout,
   useWorkoutEntries,
@@ -29,6 +30,7 @@ export function WorkoutBuilderPage() {
     [exercises],
   )
   const remove = useRemoveEntry(id)
+  const move = useMoveEntry(id)
 
   if (isLoading) return <Spinner label="Loading workout…" />
   if (!workout) return <Banner kind="err">Workout not found.</Banner>
@@ -38,16 +40,46 @@ export function WorkoutBuilderPage() {
       <Card title={workout.name} subtitle="Exercises in this workout" actions={<Link className="linkbtn" to="/workouts">← All</Link>}>
         {entries && entries.length > 0 ? (
           <ul className="list">
-            {entries.map((e) => (
+            {entries.map((e, i) => (
               <li key={e.id} className="list__row">
                 <span>
                   <span className="workout-link__name">{nameById.get(e.exercise_id) ?? '…'}</span>
                   <br />
                   <span className="muted">{prescriptionText(e)}</span>
                 </span>
-                <Button variant="ghost" onClick={() => remove.mutate(e.id)} aria-label="Remove">
-                  ✕
-                </Button>
+                <span className="rowactions">
+                  <button
+                    type="button"
+                    className="reorderbtn"
+                    aria-label={`Move ${nameById.get(e.exercise_id) ?? 'exercise'} up`}
+                    disabled={i === 0 || move.isPending}
+                    onClick={() =>
+                      move.mutate({
+                        a: { id: e.id, position: e.position },
+                        b: { id: entries[i - 1]!.id, position: entries[i - 1]!.position },
+                      })
+                    }
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="reorderbtn"
+                    aria-label={`Move ${nameById.get(e.exercise_id) ?? 'exercise'} down`}
+                    disabled={i === entries.length - 1 || move.isPending}
+                    onClick={() =>
+                      move.mutate({
+                        a: { id: e.id, position: e.position },
+                        b: { id: entries[i + 1]!.id, position: entries[i + 1]!.position },
+                      })
+                    }
+                  >
+                    ↓
+                  </button>
+                  <Button variant="ghost" onClick={() => remove.mutate(e.id)} aria-label="Remove">
+                    ✕
+                  </Button>
+                </span>
               </li>
             ))}
           </ul>

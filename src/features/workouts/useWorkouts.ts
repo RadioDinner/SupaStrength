@@ -58,3 +58,12 @@ export function useRemoveEntry(workoutId: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['workout_entries', workoutId] }),
   })
 }
+
+export function useMoveEntry(workoutId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: { a: { id: string; position: number }; b: { id: string; position: number } }) =>
+      workoutsRepo.swapPositions(v.a, v.b),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['workout_entries', workoutId] }),
+  })
+}

@@ -1185,6 +1185,30 @@ h3,
   }
 }
 
+/* ── reorder controls (workout builder) ──────────────────────────────────────── */
+.rowactions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  flex: none;
+}
+.reorderbtn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+.reorderbtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 /* ── warm-up ramp (session guidance) ─────────────────────────────────────────── */
 .warmups {
   margin-bottom: var(--s-3);

@@ -80,4 +80,24 @@ export const workoutsRepo = {
   removeEntry(entryId: string): Promise<void> {
     return onlineDataClient.remove('workout_entries', [{ column: 'id', op: 'eq', value: entryId }])
   },
+
+  /**
+   * Swap two entries' positions. The (workout_id, position) unique index is
+   * DEFERRABLE, but the seam runs each update in its own transaction, so a
+   * direct two-write swap would collide at commit. Route through a temporary
+   * negative sentinel so every write is collision-free on its own.
+   */
+  async swapPositions(
+    a: { id: string; position: number },
+    b: { id: string; position: number },
+  ): Promise<void> {
+    const TEMP = -1
+    const set = (id: string, position: number) =>
+      onlineDataClient.update<WorkoutEntry>('workout_entries', { position }, [
+        { column: 'id', op: 'eq', value: id },
+      ])
+    await set(a.id, TEMP)
+    await set(b.id, a.position)
+    await set(a.id, b.position)
+  },
 }
