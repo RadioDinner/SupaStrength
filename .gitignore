@@ -1,0 +1,22 @@
+# dependencies
+node_modules
+
+# build output
+dist
+dist-ssr
+dev-dist
+
+# env (keep .env.example tracked)
+.env
+.env.*
+!.env.example
+
+# vercel
+.vercel
+
+# misc
+*.local
+*.log
+.DS_Store
+coverage
+tests/e2e/playwright-report

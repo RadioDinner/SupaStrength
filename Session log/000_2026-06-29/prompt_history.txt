@@ -106,3 +106,6 @@ Failed to run sql query: ERROR:  42702: column reference "user_id" is ambiguous
 LINE 1159:   select user_id, time_window, 'workout'::text as dimension,
 
 ```
+
+--- 2026-06-29 19:58 ---
+lets set up the vercel project
