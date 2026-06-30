@@ -47,3 +47,7 @@ npx skills add pbakaus/impeccable
 Vibe: Bold & high-energy
 References: Hevy / Strong
 Theme: Dark for now, but I want a light and dark theme toggle
+
+--- 2026-06-30 16:55 ---
+/impeccable init
+how does the impeccable skill work?
