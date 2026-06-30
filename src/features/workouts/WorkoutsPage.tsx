@@ -3,15 +3,24 @@
  * Blowup", …). Create one, then open it to build its exercise list.
  */
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Banner, Button, Card, Spinner, TextInput } from '../../components/ui'
 import { useArchiveWorkout, useCreateWorkout, useWorkouts } from './useWorkouts'
+import { useActiveSession, useStartFromWorkout } from '../session/useSession'
 
 export function WorkoutsPage() {
+  const navigate = useNavigate()
   const { data: workouts, isLoading } = useWorkouts()
+  const { data: active } = useActiveSession()
   const create = useCreateWorkout()
   const archive = useArchiveWorkout()
+  const start = useStartFromWorkout()
   const [name, setName] = useState('')
+
+  async function onStart(workoutId: string) {
+    const sessionId = await start.mutateAsync(workoutId)
+    navigate(`/session/${sessionId}`)
+  }
 
   async function onCreate(e: FormEvent) {
     e.preventDefault()
@@ -22,6 +31,15 @@ export function WorkoutsPage() {
 
   return (
     <div className="page">
+      {active ? (
+        <Card>
+          <div className="list__row">
+            <span className="workout-link__name">A session is in progress</span>
+            <Button onClick={() => navigate(`/session/${active.id}`)}>Resume</Button>
+          </div>
+        </Card>
+      ) : null}
+
       <Card title="Workouts" subtitle="Reusable templates — the days you train.">
         <form className="inline-form" onSubmit={onCreate}>
           <TextInput
@@ -47,9 +65,14 @@ export function WorkoutsPage() {
                 <span className="workout-link__name">{w.name}</span>
                 <span className="muted">Tap to edit exercises →</span>
               </Link>
-              <Button variant="ghost" onClick={() => archive.mutate(w.id)} aria-label={`Archive ${w.name}`}>
-                Archive
-              </Button>
+              <div className="row-actions">
+                <Button onClick={() => void onStart(w.id)} disabled={start.isPending || !!active}>
+                  Start
+                </Button>
+                <Button variant="ghost" onClick={() => archive.mutate(w.id)} aria-label={`Archive ${w.name}`}>
+                  Archive
+                </Button>
+              </div>
             </div>
           </Card>
         ))

@@ -83,6 +83,20 @@ After the engine + M1 commits, the user hit live-auth friction and we kept going
 - Nav reorganized to 5 tabs (Home / Workouts / Routines / Exercises / Profile);
   Equipment moved under Profile.
 
+## Continued — M5b/M5c live session + impeccable skill
+
+- **M5b/M5c shipped** (`M5b/M5c: live session logging`): `sessionsRepo`
+  (start from workout / next gym day → session_entries + set_logs; complete →
+  advance rotation via engine/schedule); `features/session/` SessionPage with the
+  **inline plate calculator** (engine `solvePlates`), **rest timer**, per-set rep
+  logging + done toggle + AMRAP; Start buttons + resume banner; `/session/:id`.
+  The app is now a real end-to-end workout logger. Weight is manual this slice;
+  engine auto-progression = M5d.
+- User ran `npx skills add pbakaus/impeccable` — installed the **impeccable**
+  frontend-design skill to `.agents/skills/impeccable/`; committed so it persists
+  in this ephemeral env. Available to invoke for a UI-polish pass (the "really
+  sweet workout app" goal).
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh

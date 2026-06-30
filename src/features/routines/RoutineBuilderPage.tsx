@@ -4,10 +4,11 @@
  * pointer math is the pure, tested `engine/schedule`.
  */
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Banner, Button, Card, Select, Spinner } from '../../components/ui'
 import { nextGymDay, type EngineRotation } from '../../data/repos/routinesRepo'
 import { useWorkouts } from '../workouts/useWorkouts'
+import { useActiveSession, useStartNextGymDay } from '../session/useSession'
 import {
   useAddRotation,
   useAddRotationWorkout,
@@ -22,12 +23,20 @@ import {
 
 export function RoutineBuilderPage() {
   const { id = '' } = useParams()
+  const navigate = useNavigate()
   const { data: routine, isLoading } = useRoutine(id)
   const { data: schedule } = useRoutineSchedule(id)
   const { data: workouts } = useWorkouts()
+  const { data: active } = useActiveSession()
   const addRotation = useAddRotation(id)
   const advance = useAdvanceRoutine(id)
   const setActive = useSetActiveRoutine()
+  const startDay = useStartNextGymDay()
+
+  async function onStartDay() {
+    const sessionId = await startDay.mutateAsync(id)
+    navigate(`/session/${sessionId}`)
+  }
 
   const workoutName = useMemo(
     () => new Map((workouts ?? []).map((w) => [w.id, w.name])),
@@ -81,13 +90,18 @@ export function RoutineBuilderPage() {
                 </li>
               ))}
             </ul>
-            <Button
-              variant="ghost"
-              onClick={() => advance.mutate(engineRotations)}
-              disabled={advance.isPending}
-            >
-              Advance to next day (skip) →
-            </Button>
+            <div className="row-actions">
+              <Button onClick={() => void onStartDay()} disabled={startDay.isPending || !!active}>
+                {active ? 'Session in progress' : 'Start this day →'}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => advance.mutate(engineRotations)}
+                disabled={advance.isPending}
+              >
+                Skip
+              </Button>
+            </div>
           </>
         )}
       </Card>

@@ -5,14 +5,35 @@
 
 ## Where the project is
 
-**Phase 0 — DONE. M1 — DONE. M2 — DONE. M3 — DONE. M4 — DONE. M5a engine — DONE
-(built early, fully tested).** Spec, data model, migration, build plan done. User
-completed account setup (Vercel project, migration run, env vars). Session 001
-shipped the pure progression engine + plate calculator (the headline,
-`src/engine/*`) with 59 adversarially-verified unit tests, completed M1 (auth,
-profile, equipment, app shell) + auth-redirect/recovery fixes, M2 (exercise
-library seed + browser UI), M3 (workout builder), and M4 (routine/rotation
-scheduler). typecheck + lint + build + test all green.
+**Phase 0 — DONE. M1–M4 — DONE. M5a engine — DONE. M5b/M5c (live session) — DONE.
+M5d (engine auto-progression) — TODO.** Spec, data model, migration, build plan
+done. User completed account setup. Session 001 shipped the pure progression
+engine + plate calculator (`src/engine/*`, 59 adversarially-verified tests), M1
+(auth/profile/equipment/shell) + auth fixes, M2 (exercise library seed + browser),
+M3 (workout builder), M4 (routine scheduler), and M5b/M5c (live session logging
+with the inline plate calculator + rest timer). The app is now a usable
+end-to-end workout logger. typecheck + lint + build + test all green.
+
+### M5b/M5c — DONE (live session logging)
+- `sessionsRepo`: `startFromWorkout` / `startNextGymDay` (snapshot entries →
+  `session_entries` + `set_logs`), `updateSetLog`, `complete` (advances the
+  routine's rotation pointers via `engine/schedule`, flips session to completed).
+- `features/session/`: SessionPage (entry-level working weight, **inline plate
+  calculator** = `engine/solvePlates` over the location's bar+inventory+prefs,
+  **rest timer**, per-set rep logging + done toggle, AMRAP field), Start buttons
+  on Workouts (single) + Routine builder ("Start this day"), resume-active banner,
+  `/session/:id` route.
+- **Weight is entered manually this slice** (the plate calc assists); engine
+  auto-progression is M5d. **Not run against the live DB from here.**
+
+### M5d — TODO (engine auto-progression)
+On `complete`, for each entry compute success/failure and run
+`engine/applyProgression`/`applyFailure` over `progression_state` +
+`progression_entry_state` (default pipeline derived from `rep_scheme`: straight →
+linear +5, double → double-progression), init those rows on first encounter,
+dedupe the weight advance per (session, exercise), write `audit_log`, honor
+consolidation. Then prescribe `planned_weight` from `progression_state` at
+session build (currently null → manual). Follow the "Engine encoding notes".
 
 ### M4 — DONE
 - `routinesRepo`: routines (≤1 active via deactivate-then-activate), rotations,

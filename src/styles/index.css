@@ -449,6 +449,100 @@ body {
   padding-bottom: 11px;
 }
 
+.row-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── live session ─────────────────────────────────────────────────────────── */
+.weightrow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.setlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.setrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+.setrow--done {
+  background: var(--ok-bg);
+  border-color: transparent;
+}
+.setrow__idx {
+  width: 20px;
+  text-align: center;
+  color: var(--muted);
+}
+.setrow__field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+.setrow__field .input {
+  width: 72px;
+}
+
+.platecalc {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #0e1420;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+.platecalc__bar {
+  color: var(--muted);
+  font-size: 12px;
+}
+.platecalc__plates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.plate {
+  font-variant-numeric: tabular-nums;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(79, 140, 255, 0.16);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+}
+.warntext {
+  color: var(--warn-fg);
+}
+
+.resttimer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 6px;
+}
+.resttimer__time {
+  font-size: 20px;
+  min-width: 56px;
+}
+.resttimer--done .resttimer__time {
+  color: var(--ok-fg);
+}
+
 /* ── exercise browser ─────────────────────────────────────────────────────── */
 .exrow {
   border-bottom: 1px solid var(--border);

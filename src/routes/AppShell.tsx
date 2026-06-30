@@ -11,6 +11,7 @@ import { WorkoutsPage } from '../features/workouts/WorkoutsPage'
 import { WorkoutBuilderPage } from '../features/workouts/WorkoutBuilderPage'
 import { RoutinesPage } from '../features/routines/RoutinesPage'
 import { RoutineBuilderPage } from '../features/routines/RoutineBuilderPage'
+import { SessionPage } from '../features/session/SessionPage'
 
 const TABS = [
   { to: '/', label: 'Home', icon: '🏠', end: true },
@@ -37,6 +38,7 @@ export function AppShell() {
           <Route path="/workouts/:id" element={<WorkoutBuilderPage />} />
           <Route path="/routines" element={<RoutinesPage />} />
           <Route path="/routines/:id" element={<RoutineBuilderPage />} />
+          <Route path="/session/:id" element={<SessionPage />} />
           <Route path="/exercises" element={<ExercisesPage />} />
           <Route path="/equipment" element={<EquipmentPage />} />
           <Route path="/profile" element={<ProfilePage />} />
