@@ -1185,6 +1185,66 @@ h3,
   }
 }
 
+/* ── warm-up ramp (session guidance) ─────────────────────────────────────────── */
+.warmups {
+  margin-bottom: var(--s-3);
+}
+.warmups__label {
+  margin: 0 0 var(--s-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.warmups__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.warmup {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 44px;
+  padding: 6px 14px;
+  border-radius: var(--r-md);
+  border: 1.5px dashed var(--border-strong);
+  background: var(--inset);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
+}
+.warmup.is-done {
+  background: var(--good-tint);
+  border-style: solid;
+  border-color: var(--good);
+  opacity: 0.75;
+}
+.warmup__pct {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--muted);
+}
+.warmup__wt {
+  font-weight: 800;
+  font-size: var(--fs-md);
+}
+.warmup__unit {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--muted);
+  margin-left: 2px;
+}
+.warmup__check {
+  color: var(--good);
+  font-weight: 800;
+}
+
 /* ── form video (M7) ─────────────────────────────────────────────────────────── */
 .setvid {
   flex-shrink: 0;

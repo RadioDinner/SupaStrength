@@ -13,6 +13,7 @@ import { Banner, Button, Card, SkeletonList } from '../../components/ui'
 import { useAuth } from '../../hooks/useAuth'
 import { useExercisesByIds } from '../workouts/useWorkouts'
 import { solvePlates, type PlateStock } from '../../engine/plates'
+import { generateWarmups } from '../../engine/warmups'
 import { RestTimer } from './RestTimer'
 import { VideoSheet } from './VideoSheet'
 import {
@@ -294,6 +295,22 @@ function ActiveExercise({
     })
   }, [usesPlates, bar, w, plates, prefs])
 
+  // Warm-up ramp (engine-generated guidance, not logged): only for a loaded
+  // barbell carrying meaningfully more than the bar itself.
+  const warmups = useMemo(() => {
+    if (!usesPlates || !bar || !w) return []
+    return generateWarmups({
+      workingWeightLb: w,
+      barbellLb: bar.weight_lb,
+      inventory: plates.map((p) => ({ denominationLb: p.denomination_lb, quantity: p.quantity })),
+      microPlatesEnabled: prefs?.micro_plates_enabled ?? false,
+      roundingDirection: prefs?.rounding_direction ?? 'down',
+      thresholdBasis: 'working_weight',
+      thresholdValue: bar.weight_lb + 30,
+    })
+  }, [usesPlates, bar, w, plates, prefs])
+  const [warmDone, setWarmDone] = useState<Record<number, boolean>>({})
+
   function bump(delta: number) {
     const next = Math.max(0, (Number(weight) || 0) + delta)
     onWeight(String(next))
@@ -353,6 +370,32 @@ function ActiveExercise({
           ) : (
             <span className="muted">Enter a weight.</span>
           )}
+        </div>
+      ) : null}
+
+      {warmups.length > 0 ? (
+        <div className="warmups">
+          <p className="warmups__label">Warm-up</p>
+          <ul className="warmups__list">
+            {warmups.map((wu, i) => (
+              <li key={`${wu.pct}-${wu.weightLb}`}>
+                <button
+                  type="button"
+                  className={`warmup ${warmDone[i] ? 'is-done' : ''}`}
+                  aria-pressed={!!warmDone[i]}
+                  aria-label={`Warm-up ${wu.pct === 0 ? 'empty bar' : `${wu.pct} percent`}, ${wu.weightLb} pounds`}
+                  onClick={() => setWarmDone((d) => ({ ...d, [i]: !d[i] }))}
+                >
+                  <span className="warmup__pct">{wu.pct === 0 ? 'Bar' : `${wu.pct}%`}</span>
+                  <span className="warmup__wt mono">
+                    {wu.weightLb}
+                    <span className="warmup__unit">lb</span>
+                  </span>
+                  {warmDone[i] ? <span className="warmup__check" aria-hidden="true">✓</span> : null}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       ) : null}
 
