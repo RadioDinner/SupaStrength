@@ -217,6 +217,32 @@ calc, rest timer, auto-progression, form video) → analytics radar → body
 tracking + reminders. Remaining: a live smoke-test against the real Supabase
 project, scheduling the media-purge job, then Phase 2 (offline) or more polish.
 
+## Continued — design reckoning + post-Phase-1 gap-closing
+
+User was (rightly) frustrated: couldn't tell how to drive `$impeccable`, felt I
+was "bodging" it, said the design still looked awful. Followed the skill properly
+this time: ran `context.mjs` + the real `detect.mjs` (essentially **clean** — not
+slop). Found the actual culprit: the app rendered everything in **`system-ui`**.
+
+- **Real type system** (`Type system: real self-hosted fonts…`): self-hosted
+  **Archivo + Inter** via `@fontsource-variable/*`, driven by three tokens
+  (`--font-display`/`--font-num`/`--font-body`) so a direction swap is one line.
+  Rendered 3 directions (Archivo / Oswald / Space Grotesk+JetBrains Mono) for the
+  user; the AskUserQuestion picker hit an infra error so I committed Archivo (the
+  bold/Hevy-Strong-aligned default) and noted the swap path. Biggest visual win.
+- Then closed deferred gaps the M-plan left (user: "just keep building the M
+  steps, I'll fix design with impeccable later"):
+  - **Warm-up ramp** in the live session from `engine/warmups` (guidance, tappable).
+  - **Workout exercise reorder ↑/↓** (`workoutsRepo.swapPositions`, collision-free
+    3-write temp-sentinel swap — no migration).
+  - **Media purge scheduled** — `9998_purge_media_cron.sql` (pg_cron) + a
+    `supabase/functions/purge-media` Edge Function; eslint ignores Deno functions.
+  - **Workout history screen** (`/history`, linked from Home) — past sessions,
+    expand to see logged sets; reuses session repos read-only.
+- How `$impeccable` works here documented for the user: no `/` commands in this
+  hosted session (that needs `npx impeccable install`, Node ≥24, locally); here I
+  drive it by running its scripts + following the references.
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh
