@@ -74,6 +74,15 @@ After the engine + M1 commits, the user hit live-auth friction and we kept going
   rest/AMRAP, client validation), "Workouts" nav tab, shared `useDebounced` hook.
   Home checklist updated to reflect M2 done + link to the builder.
 
+## Continued — M4 routine scheduler
+
+- **M4 shipped** (`M4: routine/rotation scheduler`): `routinesRepo` (routines ≤1
+  active, rotations, rotation_workouts) delegating next-day/advance to the pure,
+  tested `engine/schedule`; `features/routines/` list + builder showing the
+  computed "next gym day" + a skip/advance button that wraps the pointers.
+- Nav reorganized to 5 tabs (Home / Workouts / Routines / Exercises / Profile);
+  Equipment moved under Profile.
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh

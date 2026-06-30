@@ -5,14 +5,26 @@
 
 ## Where the project is
 
-**Phase 0 — DONE. M1 — DONE. M2 — DONE. M3 — DONE. M5a engine — DONE (built
-early, fully tested).** Spec, data model, migration, build plan done. User
+**Phase 0 — DONE. M1 — DONE. M2 — DONE. M3 — DONE. M4 — DONE. M5a engine — DONE
+(built early, fully tested).** Spec, data model, migration, build plan done. User
 completed account setup (Vercel project, migration run, env vars). Session 001
 shipped the pure progression engine + plate calculator (the headline,
 `src/engine/*`) with 59 adversarially-verified unit tests, completed M1 (auth,
 profile, equipment, app shell) + auth-redirect/recovery fixes, M2 (exercise
-library seed + browser UI), and M3 (workout builder). typecheck + lint + build +
-test all green.
+library seed + browser UI), M3 (workout builder), and M4 (routine/rotation
+scheduler). typecheck + lint + build + test all green.
+
+### M4 — DONE
+- `routinesRepo`: routines (≤1 active via deactivate-then-activate), rotations,
+  rotation_workouts; `advanceAll` + `nextGymDay` delegate to the pure, tested
+  `engine/schedule`.
+- `features/routines/`: Routines list (create / make-active) + builder
+  (`/routines/:id`) — add rotations, add workouts to each, see the computed
+  "next gym day" (head of every rotation) with the current pointer highlighted,
+  and an "Advance to next day (skip)" button that persists the wrapped pointers.
+- Nav: added "Routines" tab; **dropped Equipment from the tab bar** (5-tab cap) —
+  it's now reached from the Profile page. Append+delete only (no reorder yet).
+- **Caveat:** not run against the live DB from here.
 
 ### M3 — DONE
 - `workoutsRepo` (workouts + workout_entries: ordered prescription, NO weight).
@@ -112,13 +124,26 @@ one real bug fixed (warmup rungs could meet/exceed working weight) + one doc fix
 ## Next step
 
 **Run `supabase/seed/exercises_seed.sql`** in the SQL Editor so the Exercises tab
-populates, and smoke-test M1–M3 against the live project (sign up, profile/gym
-edit, search exercises, build a workout with squat/bench/row). Then **M4 —
-routine/rotation scheduler** (`routines` → `rotations` → `rotation_workouts`; use
-the built `engine/schedule` for next-day/advance), then **M5b–M5d** (rebuild
-`sessionsRepo` engine-wired: session build from the next gym day → live logging
-with the inline plate calculator + rest timer → commit + advance driving
-`progression_state`/`progression_entry_state`), then M6 (radar) → M7/M8.
+populates, and smoke-test M1–M4 against the live project (build a workout, make a
+routine with rotations, see the next gym day cycle on "Advance"). Then the
+headline: **M5b–M5d** — `sessionsRepo` (engine-wired):
+- **M5b session build:** "Start next gym day" → create a `sessions` row, snapshot
+  each head workout's entries into `session_entries` (resolve weight from
+  `progression_state`, reps/sets from `progression_entry_state`, knobs via the
+  `progression_settings` scope chain), generate warmups + working `set_logs`.
+- **M5c in-gym UI:** per-set logging (actual reps/weight/RPE/AMRAP), **inline
+  plate calculator** (`engine/solvePlates` over the session location's bar +
+  inventory + prefs), **rest timer**, on-the-fly edits → `session_overrides`.
+- **M5d commit + advance:** `engine/applyProgression` + `applyFailure` write
+  `progression_state`/`progression_entry_state`, consolidation holds, audit rows,
+  advance every rotation pointer (`engine/advanceRotations`), flip session
+  `completed` (immutable).
+Then M6 (radar) → M7/M8. The engine functions are done + tested — M5 is the DB
+orchestration around them (follow the "Engine encoding notes").
+
+Note: M5 needs `progression_settings` / pipelines / failure rules rows to exist
+per entry. Decide the default-progression seeding (e.g. a default "+5 every time"
+pipeline at routine scope on first session) as part of M5b.
 
 Engine reuse: M4/M5 should import `src/engine` and follow the "Engine encoding
 notes" above — the pure functions are done and tested; the remaining work is the

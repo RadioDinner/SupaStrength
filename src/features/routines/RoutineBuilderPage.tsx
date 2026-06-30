@@ -1,0 +1,189 @@
+/**
+ * Routine builder (BUILD_PLAN M4). Assemble rotations (independent tracks) of
+ * workouts and see the computed "next gym day" — the head of every rotation. The
+ * pointer math is the pure, tested `engine/schedule`.
+ */
+import { useMemo, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { Banner, Button, Card, Select, Spinner } from '../../components/ui'
+import { nextGymDay, type EngineRotation } from '../../data/repos/routinesRepo'
+import { useWorkouts } from '../workouts/useWorkouts'
+import {
+  useAddRotation,
+  useAddRotationWorkout,
+  useAdvanceRoutine,
+  useRemoveRotation,
+  useRemoveRotationWorkout,
+  useRoutine,
+  useRoutineSchedule,
+  useSetActiveRoutine,
+  type ScheduleRow,
+} from './useRoutines'
+
+export function RoutineBuilderPage() {
+  const { id = '' } = useParams()
+  const { data: routine, isLoading } = useRoutine(id)
+  const { data: schedule } = useRoutineSchedule(id)
+  const { data: workouts } = useWorkouts()
+  const addRotation = useAddRotation(id)
+  const advance = useAdvanceRoutine(id)
+  const setActive = useSetActiveRoutine()
+
+  const workoutName = useMemo(
+    () => new Map((workouts ?? []).map((w) => [w.id, w.name])),
+    [workouts],
+  )
+
+  const engineRotations: EngineRotation[] = useMemo(
+    () =>
+      (schedule ?? []).map((s) => ({
+        id: s.rotation.id,
+        currentIndex: s.rotation.current_index,
+        workoutIds: s.workouts.map((w) => w.workout_id),
+      })),
+    [schedule],
+  )
+  const today = nextGymDay(engineRotations)
+
+  if (isLoading) return <Spinner label="Loading routine…" />
+  if (!routine) return <Banner kind="err">Routine not found.</Banner>
+
+  return (
+    <div className="page">
+      <Card
+        title={
+          <>
+            {routine.name}
+            {routine.is_active ? <span className="badge">active</span> : null}
+          </>
+        }
+        actions={<Link className="linkbtn" to="/routines">← All</Link>}
+      >
+        {!routine.is_active ? (
+          <Button variant="ghost" onClick={() => setActive.mutate(id)}>
+            Make this routine active
+          </Button>
+        ) : (
+          <span className="muted">This is your active routine.</span>
+        )}
+      </Card>
+
+      <Card title="Next gym day" subtitle="The head of every rotation, combined.">
+        {today.length === 0 ? (
+          <Banner kind="info">Add rotations and workouts below to schedule a day.</Banner>
+        ) : (
+          <>
+            <ul className="list">
+              {today.map((d) => (
+                <li key={d.rotationId} className="list__row">
+                  <span className="workout-link__name">{workoutName.get(d.workoutId) ?? '…'}</span>
+                  <span className="muted mono">#{d.position + 1}</span>
+                </li>
+              ))}
+            </ul>
+            <Button
+              variant="ghost"
+              onClick={() => advance.mutate(engineRotations)}
+              disabled={advance.isPending}
+            >
+              Advance to next day (skip) →
+            </Button>
+          </>
+        )}
+      </Card>
+
+      {(schedule ?? []).map((s, i) => (
+        <RotationCard
+          key={s.rotation.id}
+          routineId={id}
+          row={s}
+          index={i}
+          workoutName={workoutName}
+          workouts={(workouts ?? []).map((w) => ({ id: w.id, name: w.name }))}
+        />
+      ))}
+
+      <Card>
+        <Button onClick={() => addRotation.mutate(null)} disabled={addRotation.isPending}>
+          + Add rotation
+        </Button>
+        <p className="muted" style={{ marginTop: 10 }}>
+          One rotation cycles its workouts (e.g. A → B → A). A length-1 rotation
+          (e.g. a shoulder finisher) runs every day.
+        </p>
+      </Card>
+    </div>
+  )
+}
+
+function RotationCard({
+  routineId,
+  row,
+  index,
+  workoutName,
+  workouts,
+}: {
+  routineId: string
+  row: ScheduleRow
+  index: number
+  workoutName: Map<string, string>
+  workouts: { id: string; name: string }[]
+}) {
+  const addWorkout = useAddRotationWorkout(routineId)
+  const removeWorkout = useRemoveRotationWorkout(routineId)
+  const removeRotation = useRemoveRotation(routineId)
+  const [pick, setPick] = useState('')
+  const current = row.workouts.length ? row.rotation.current_index % row.workouts.length : 0
+
+  return (
+    <Card
+      title={row.rotation.name ?? `Rotation ${index + 1}`}
+      actions={
+        <Button variant="ghost" onClick={() => removeRotation.mutate(row.rotation.id)} aria-label="Remove rotation">
+          ✕
+        </Button>
+      }
+    >
+      {row.workouts.length > 0 ? (
+        <ul className="list">
+          {row.workouts.map((rw, i) => (
+            <li key={rw.id} className="list__row">
+              <span>
+                <span className={i === current ? 'workout-link__name' : 'muted'}>
+                  {workoutName.get(rw.workout_id) ?? '…'}
+                </span>
+                {i === current ? <span className="badge">next</span> : null}
+              </span>
+              <Button variant="ghost" onClick={() => removeWorkout.mutate(rw.id)} aria-label="Remove">
+                ✕
+              </Button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="muted">Empty — add a workout.</p>
+      )}
+
+      <div className="inline-form">
+        <Select value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Pick a workout">
+          <option value="">Add a workout…</option>
+          {workouts.map((w) => (
+            <option key={w.id} value={w.id}>
+              {w.name}
+            </option>
+          ))}
+        </Select>
+        <Button
+          disabled={!pick || addWorkout.isPending}
+          onClick={() => {
+            if (!pick) return
+            addWorkout.mutate({ rotationId: row.rotation.id, workoutId: pick })
+            setPick('')
+          }}
+        >
+          Add
+        </Button>
+      </div>
+    </Card>
+  )
+}

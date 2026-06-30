@@ -3,6 +3,7 @@
  * bodyweight (stamps bodyweight_updated_at), unit system (display-only).
  */
 import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { Banner, Button, Card, Field, Select, Spinner, TextInput } from '../../components/ui'
 import { useProfile, useUpdateProfile } from './useProfile'
@@ -132,6 +133,13 @@ export function ProfilePage() {
             {update.isPending ? 'Saving…' : 'Save profile'}
           </Button>
         </form>
+      </Card>
+
+      <Card title="Equipment">
+        <Link to="/equipment" className="workout-link">
+          <span className="workout-link__name">Gym, plates &amp; preferences →</span>
+          <span className="muted">Bars, plate inventory, dumbbells, rounding</span>
+        </Link>
       </Card>
 
       <Card>

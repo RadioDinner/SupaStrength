@@ -68,6 +68,38 @@ export interface ExerciseMuscle {
 export type RepScheme = 'straight' | 'double' | 'rpe'
 export type SessionStatus = 'in_progress' | 'completed' | 'abandoned'
 
+export interface Routine {
+  id: string
+  user_id: string
+  name: string
+  is_active: boolean
+  notes: string | null
+  archived_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Rotation {
+  id: string
+  user_id: string
+  routine_id: string
+  position: number
+  name: string | null
+  current_index: number
+  created_at: string
+  updated_at: string
+}
+
+export interface RotationWorkout {
+  id: string
+  user_id: string
+  rotation_id: string
+  workout_id: string
+  position: number
+  created_at: string
+  updated_at: string
+}
+
 export interface Workout {
   id: string
   user_id: string
