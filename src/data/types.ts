@@ -100,6 +100,43 @@ export interface RotationWorkout {
   updated_at: string
 }
 
+export type ProgressionMode = 'weight' | 'reps_fallback'
+
+export interface ProgressionState {
+  id: string
+  user_id: string
+  routine_id: string
+  exercise_id: string
+  current_weight: number | null
+  target_line_weight: number | null
+  pipeline_step_index: number
+  step_completion_counter: number
+  failure_counter: number
+  current_failure_response_index: number
+  consolidation_counter: number
+  progression_mode: ProgressionMode
+  weight_frozen: boolean
+  last_session_entry_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ProgressionEntryState {
+  id: string
+  user_id: string
+  routine_id: string
+  workout_entry_id: string
+  current_rep_target: number | null
+  current_rep_range_low: number | null
+  current_rep_range_high: number | null
+  current_set_count: number | null
+  repset_pipeline_step_index: number
+  repset_step_completion_counter: number
+  last_session_entry_id: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface Workout {
   id: string
   user_id: string

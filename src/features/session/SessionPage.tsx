@@ -111,7 +111,10 @@ function EntryCard({
   prefs: EquipmentPreferences | null
 }) {
   const update = useUpdateSetLog()
-  const [weight, setWeight] = useState('')
+  // Prefill the prescribed (engine-climbed) weight; the lifter can still adjust.
+  const [weight, setWeight] = useState(() =>
+    entry.planned_weight != null ? String(entry.planned_weight) : '',
+  )
   const usesPlates = exercise ? PLATE_LOADED.has(exercise.loading_style) : true
 
   return (

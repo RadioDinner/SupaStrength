@@ -109,6 +109,21 @@ After the engine + M1 commits, the user hit live-auth friction and we kept going
 - Verified by headless-Chromium screenshots of the session screen in both themes
   (sent to the user). `Design: bold dark+light theme system...`.
 
+## Continued — grill-me skill + M5d engine auto-progression
+
+- Installed the **grill-me** + **grilling** skills (mattpocock/skills) into
+  `.agents/skills/`. Clarified at length how skills work here: they're not `/`
+  slash commands in this managed env (the official `npx impeccable install` is
+  blocked by a 403 + Node-version mismatch); they work by me reading the files
+  when asked. `$impeccable <cmd>` / "grill me" = just chat messages to me.
+- **M5d shipped** (`M5d: engine auto-progression`): `engine/presets.defaultPipeline`
+  (straight→linear+5, double→double-prog, rpe→none) + `data/repos/sessionCommit`
+  (verdict eval → applyProgression/applyFailure over progression_state +
+  progression_entry_state, weight deduped per exercise, cold-start from the lifted
+  weight, consolidation hold consume) + `sessionsRepo.startNextGymDay` prescribing
+  the climbed weight/reps + SessionPage prefill. 3 preset tests (62 total).
+  **Engine is the soul of the app; this wiring is NOT yet live-DB-verified.**
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh
