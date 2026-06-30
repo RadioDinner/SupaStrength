@@ -44,7 +44,7 @@ export function AppShell() {
     <div className="app">
       <header className="appbar">
         <Logo size={22} />
-        <span className="appbar__title">SupaStrength</span>
+        <h1 className="appbar__title">SupaStrength</h1>
         <span className="appbar__spacer" />
         <button
           type="button"

@@ -37,7 +37,7 @@ export function HomePage() {
     <div className="page">
       <DueNudges />
 
-      <h1 className="home__title">{name ? `Welcome back, ${name}` : 'Welcome'}</h1>
+      <h2 className="home__title">{name ? `Welcome back, ${name}` : 'Welcome'}</h2>
 
       {active.data ? (
         <Link to={`/session/${active.data.id}`} className="btn btn--primary home__resume">

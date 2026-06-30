@@ -264,7 +264,11 @@ export function AnalyticsPage() {
                 </li>
               ))}
           </ul>
-          <p className="muted radarlegend__cap">Your 3 lowest-volume areas right now.</p>
+          <p className="muted radarlegend__cap">
+            {prefs.radar_mode === 'strength'
+              ? 'Your 3 weakest areas by estimated 1RM.'
+              : 'Your 3 lowest-volume areas right now.'}
+          </p>
         </Card>
       )}
 

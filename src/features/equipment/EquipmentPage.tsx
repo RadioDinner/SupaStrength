@@ -67,6 +67,7 @@ export function EquipmentPage() {
         >
           <TextInput
             placeholder="New location name"
+            aria-label="New location name"
             value={newLocation}
             onChange={(e) => setNewLocation(e.target.value)}
           />

@@ -147,5 +147,13 @@ export function EmptyState({
 }
 
 export function Banner({ kind, children }: { kind: 'ok' | 'warn' | 'err' | 'info'; children: ReactNode }) {
-  return <div className={`status status--${kind === 'info' ? 'wait' : kind}`}>{children}</div>
+  const live =
+    kind === 'err'
+      ? { role: 'alert' as const }
+      : { role: 'status' as const, 'aria-live': 'polite' as const }
+  return (
+    <div className={`status status--${kind === 'info' ? 'wait' : kind}`} {...live}>
+      {children}
+    </div>
+  )
 }

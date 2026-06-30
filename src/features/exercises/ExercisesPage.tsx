@@ -125,7 +125,12 @@ function ExerciseRow({ exercise, groups }: { exercise: Exercise; groups: MuscleG
   const [open, setOpen] = useState(false)
   return (
     <li className="exrow">
-      <button type="button" className="exrow__head" onClick={() => setOpen((o) => !o)}>
+      <button
+        type="button"
+        className="exrow__head"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
         <span className="exrow__name">{exercise.name}</span>
         <span className="exrow__tags">
           <span className="tagchip">{movementLabel(exercise.movement_type)}</span>

@@ -45,6 +45,7 @@ export function WorkoutsPage() {
         <form className="inline-form" onSubmit={onCreate}>
           <TextInput
             placeholder="New workout (e.g. Workout A)"
+            aria-label="New workout name"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />

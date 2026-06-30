@@ -133,7 +133,7 @@ h3,
 }
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--accent-tint);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
   border-color: var(--accent) !important;
 }
 
@@ -187,6 +187,7 @@ h3,
   border-bottom: 1px solid var(--border);
 }
 .appbar__title {
+  margin: 0;
   font-weight: 800;
   letter-spacing: -0.02em;
   font-size: var(--fs-md);
@@ -247,8 +248,8 @@ h3,
   gap: 3px;
   padding: var(--s-2) 2px var(--s-1);
   text-decoration: none;
-  color: var(--faint);
-  font-size: 10.5px;
+  color: var(--muted);
+  font-size: var(--fs-xs);
   font-weight: 600;
   position: relative;
   transition: color var(--dur) var(--ease);
@@ -430,7 +431,7 @@ h3,
 }
 .field__hint {
   font-size: var(--fs-xs);
-  color: var(--faint);
+  color: var(--muted);
 }
 .input {
   width: 100%;
@@ -837,10 +838,11 @@ h3,
 }
 .plate {
   font-variant-numeric: var(--tnum);
-  padding: 3px 10px;
+  padding: var(--s-1) var(--s-3);
   border-radius: var(--r-sm);
-  background: var(--accent-tint);
-  color: var(--accent);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--ink);
   font-weight: 700;
   font-size: var(--fs-sm);
 }
@@ -1853,7 +1855,7 @@ h3,
   display: block;
   height: 100%;
   border-radius: var(--r-pill);
-  background: linear-gradient(90deg, var(--accent), var(--accent-strong, var(--accent)));
+  background: var(--accent);
   transition: width var(--dur) var(--ease);
 }
 .bar__val {
