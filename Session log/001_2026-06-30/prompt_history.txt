@@ -18,3 +18,6 @@ What can you do about it?
 " 
 
 after clicking the magic link from supabase
+
+--- 2026-06-30 14:25 ---
+I clicked the "Send password recovery" button in supabase and got "Failed to send password recovery: Failed to make POST request to "https://bloatrwocytaviwuhfwx.supabase.co/auth/v1/recover". Check your project's Auth logs for more information. Error message: email rate limit exceeded"

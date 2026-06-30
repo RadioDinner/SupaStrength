@@ -55,7 +55,15 @@ trigger a redeploy.
    to wherever you launched it — as long as that origin is in this allowlist.
    For a single-user personal app you can also just turn **off** "Confirm email"
    (Auth → Providers → Email) and use password sign-in.
-4. Seed data (exercise library, strength standards) lands later via
+4. **Email rate limits.** Supabase's built-in email service is for testing only
+   and is throttled to a few messages per hour — sending several magic
+   links / confirmations / recoveries trips `email rate limit exceeded`. For a
+   personal app, prefer email+password (no emails needed once "Confirm email" is
+   off). To actually send auth emails reliably, set up **custom SMTP** (Auth →
+   Settings → SMTP — e.g. Resend/SendGrid/SES), then raise the caps under Auth →
+   Rate Limits. Forgot a password and can't wait for the reset? Just delete the
+   user (Auth → Users) and sign up again — the bootstrap re-seeds the home gym.
+5. Seed data (exercise library, strength standards) lands later via
    `supabase/seed/` (see `BUILD_PLAN.md` M2).
 
 When configured, the home screen shows **"Connected ✓ — schema live"** with the
