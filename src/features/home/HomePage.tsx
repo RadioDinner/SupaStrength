@@ -47,12 +47,11 @@ export function HomePage() {
         </ul>
       </Card>
 
-      <Card title="Engine ready">
-        <p className="muted">
-          The progression engine (progressive overload, plate calculator, warmups,
-          rotation scheduler) is built and unit-tested. It powers live sessions once
-          the workout builder (M3–M5) lands.
-        </p>
+      <Card title="Review">
+        <Link to="/history" className="workout-link">
+          <span className="workout-link__name">Workout history →</span>
+          <span className="muted">Every completed session and the sets you logged</span>
+        </Link>
       </Card>
     </div>
   )

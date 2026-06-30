@@ -1185,6 +1185,72 @@ h3,
   }
 }
 
+/* ── workout history ─────────────────────────────────────────────────────────── */
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.historyrow {
+  border-bottom: 1px solid var(--border);
+}
+.historyrow:last-child {
+  border-bottom: none;
+}
+.historyrow__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) 0;
+  background: none;
+  border: none;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+.historyrow__date {
+  font-family: var(--font-display);
+}
+.historyrow__chev {
+  color: var(--muted);
+}
+.historyrow__detail {
+  display: grid;
+  gap: var(--s-2);
+  padding: 0 0 var(--s-3);
+}
+.histex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2) var(--s-3);
+}
+.histex__name {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  min-width: 9ch;
+}
+.histex__sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+.histset {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+  background: color-mix(in oklch, var(--ink) 6%, transparent);
+}
+.histset__x {
+  color: var(--muted);
+  margin: 0 1px;
+  font-weight: 500;
+}
+
 /* ── reorder controls (workout builder) ──────────────────────────────────────── */
 .rowactions {
   display: flex;

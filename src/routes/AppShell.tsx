@@ -14,6 +14,7 @@ import { RoutineBuilderPage } from '../features/routines/RoutineBuilderPage'
 import { SessionPage } from '../features/session/SessionPage'
 import { AnalyticsPage } from '../features/analytics/AnalyticsPage'
 import { ProgressPage } from '../features/progress/ProgressPage'
+import { HistoryPage } from '../features/history/HistoryPage'
 import { useTheme } from '../hooks/useTheme'
 
 const TABS = [
@@ -55,6 +56,7 @@ export function AppShell() {
           <Route path="/routines/:id" element={<RoutineBuilderPage />} />
           <Route path="/session/:id" element={<SessionPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/history" element={<HistoryPage />} />
           <Route path="/progress" element={<ProgressPage />} />
           <Route path="/exercises" element={<ExercisesPage />} />
           <Route path="/equipment" element={<EquipmentPage />} />
