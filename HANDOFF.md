@@ -5,30 +5,55 @@
 
 ## Where the project is
 
-**Phase 0 — DONE. M1 — in progress (paused mid-build).** Spec, data model,
-migration, build plan done. App scaffolded, builds + lints clean. User completed
-account setup: Vercel project created, migration run, env vars set — reported
-"everything green." M1 (auth + profile + equipment) has begun.
+**Phase 0 — DONE. M1 — DONE. M5a engine — DONE (built early, fully tested).**
+Spec, data model, migration, build plan done. User completed account setup
+(Vercel project, migration run, env vars). This session (001) shipped the pure
+progression engine + plate calculator (the headline, `src/engine/*`) with 59
+adversarially-verified unit tests, AND completed M1 end-to-end (auth, profile,
+equipment, app shell). typecheck + lint + build + test all green.
 
-### M1 — in progress (resume here)
-Done: `src/data/types.ts` (row types for profile/equipment tables).
-Remaining (in order):
-1. Expand the seam: `src/data/client.ts` (`list/getOne/insert/update/upsert/
-   remove/rpc`) + implement in `src/data/online/supabaseDataClient.ts`.
-2. `src/data/auth.ts` (wraps `supabase.auth`) + `src/hooks/useAuth.tsx`
-   (context: status/user/session + signIn/signUp/signOut).
-3. `src/data/repos/profileRepo.ts`, `equipmentRepo.ts`, and
-   `bootstrap.ts::ensureUserSetup(userId)` — idempotent; seeds the real home gym
-   (plates 2.5/5/10/15/25/35/45 ×2, dumbbells 15/20/25 ×2, one 45 Olympic bar,
-   default location "Home Gym"). No DB signup trigger exists, so this runs on
-   first login. User-owned inserts may omit `user_id` (defaults to `auth.uid()`).
-4. Screens: `features/auth/AuthScreen`, `features/settings/ProfilePage`,
-   `features/equipment/EquipmentPage`, a `routes` app-shell w/ nav, auth gate +
-   bootstrap gate in `App.tsx`, wrap `AuthProvider` in `main.tsx`.
-Acceptance: sign in, see/edit profile, see/edit the seeded gym.
-Note: email confirmation may be ON in Supabase Auth — if sign-up stalls, disable
-"Confirm email" (Auth → Providers → Email) for this personal app, or click the
-emailed link.
+### M1 — DONE
+- Data seam expanded: `src/data/client.ts` (`list/getOne/insert/update/upsert/
+  remove/rpc`) + `src/data/online/supabaseDataClient.ts`.
+- Auth: `src/data/auth.ts` (wraps `supabase.auth`) + `src/hooks/useAuth.tsx`
+  (`AuthProvider` + `useAuth`: status/user/session + signIn/signUp/magic-link/out).
+- Repos + bootstrap: `profileRepo`, `equipmentRepo`,
+  `bootstrap.ts::ensureUserSetup` (idempotent; seeds the home gym — 45 bar, plates
+  2.5/5/10/15/25/35/45 ×2, dumbbells 15/20/25 ×2, default "Home Gym").
+- Screens: `features/auth/AuthScreen`, `features/settings/ProfilePage`,
+  `features/equipment/EquipmentPage` (plate quantities → derived pairs, prefs,
+  live max-loadable readout from the engine), `routes/AppShell` (bottom-tab nav),
+  `routes/BootstrapGate`, auth+bootstrap gates in `App.tsx`, `AuthProvider` in
+  `main.tsx`.
+- **Caveat:** built structurally + typechecked/built clean, but NOT yet run
+  against the live Supabase project from this session (no env here). First real
+  login should be smoke-tested. Email confirmation may be ON — if sign-up stalls,
+  disable "Confirm email" (Auth → Providers → Email) or click the emailed link.
+
+### M5a engine — DONE (`src/engine/*`, pure, no I/O)
+`weight` (exact centi-pound math), `plates` (solvePlates exact subset-sum,
+dumbbell snap, maxLoadable), `pipeline` (resolvePipeline + applyProgression state
+machine), `failure` (chainable responses), `warmups`, `schedule`, `prescribe`
+(consolidation hold). 59 tests in `tests/engine/` cover every SPEC §4 / §6
+scenario; engine coverage ~98%. A 4-agent adversarial pass confirmed correctness;
+one real bug fixed (warmup rungs could meet/exceed working weight) + one doc fix.
+
+### Engine encoding notes (read before wiring M5b–M5d)
+- **`reset` applies at step FIRE, not at a cap transition** — atomic with the
+  step's own effect. Double progression resets reps on its *weight* step; the
+  shoulders ladder resets reps on its *sets* step. DATA_MODEL §6 "Shoulders" was
+  corrected to put `reset:reps_to_base` on the sets step (the literal old
+  encoding on the reps step would reset every completion and break the ramp).
+- **Failure cursor advances PAST an applied deload**, so a long chain
+  `[repeat3, deload, repeat3, deload]` holds at the next response instead of
+  double-deloading.
+- **Consolidation compares the pound delta** (computed lb increment), not the raw
+  `step.amount` (which is a % for pct modes).
+- **Multi-entry same-day weight dedupe is NOT in the pure engine** — it is
+  session-commit orchestration (M5d): one weight advance per (session, exercise)
+  via the driving entry; rep/set advances per entry.
+- The engine works on a single entry's resolved pipeline + states; M5b–M5d wire it
+  to `progression_state` / `progression_entry_state` / sessions.
 
 ## Source-of-truth documents (authority chain)
 
@@ -59,15 +84,21 @@ emailed link.
 
 ## Next step
 
-Finish Phase-0 account setup (user-side, see README "Deploy to Vercel" +
-"Supabase setup"): create Vercel project (import repo, Vite preset), create
-Supabase project, set `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` in Vercel,
-run `supabase/migrations/9999_init.sql` in the SQL Editor. Home screen should
-then show "Connected ✓". After that, start **M1** (auth + profile + equipment)
-and the **M2** exercise-library seed (BUILD_PLAN recommends a dataset).
+**Smoke-test M1 against the live project** (sign up, log in, refresh persists,
+profile edit, see/edit the seeded gym, RLS check with a 2nd user). Then **M2 —
+seed the exercise library** (~800 from `yuhonas/free-exercise-db`; BUILD_PLAN
+"Exercise library seeding strategy"): a Node script in `supabase/seed/` run with
+the service-role key, mapping equipment→movement_type/loading_style and source
+muscles→our 12 groups, + the exercise browser UI. Then M3 (workout builder) →
+M4 (scheduler) → **M5b–M5d** (wire the now-built engine into session build / live
+logging / commit+advance) → M6 (radar) → M7/M8.
+
+Engine reuse: M5b–M5d should import `src/engine` and follow the "Engine encoding
+notes" above — the pure functions are done and tested; the remaining work is the
+DB orchestration around them.
 
 ## House rules (from new_session_instructions.md)
 
 - Session log folder + `prompt_history.txt` every session (log every prompt).
 - Migrations: descending 4-digit numbering, re-runnable. Next file: `9998_*`.
-- This session works on `main` (per user's session-000 instruction).
+- Work commits directly to `main` (per the user's standing instruction).

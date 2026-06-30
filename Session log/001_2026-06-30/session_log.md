@@ -1,0 +1,69 @@
+# Session 001 — 2026-06-30
+
+Kicked off Phase 1 ("build the MVP"). Working on `main` per the user's standing
+instruction ("Always commit directly to main"; remote `main` was at the same
+commit as the provisioned working branch). Big build session: shipped the pure
+progression **engine (M5a)** with exhaustive tests + an adversarial verification
+pass, and completed **M1** (auth + profile + equipment + app shell) end to end.
+
+## What shipped (commits, newest first)
+
+- `M1: auth + profile + equipment + app shell` — data seam (list/getOne/insert/
+  update/upsert/remove/rpc) + Supabase impl; `auth.ts` + `useAuth` context;
+  `profileRepo`/`equipmentRepo`/`bootstrap.ensureUserSetup` (idempotent home-gym
+  seed); AuthScreen, ProfilePage, EquipmentPage, AppShell (bottom-tab nav),
+  BootstrapGate, gates in `App.tsx`, `AuthProvider` in `main.tsx`, UI primitives,
+  CSS. HANDOFF + this session log.
+- `Engine: warmup-ceiling fix + plate cleanup` — adversarial-verification
+  outcomes: warmups no longer emit rungs ≥ working weight / duplicates; plate
+  `loadedTotalLb` computed one way; DATA_MODEL §6 "Shoulders" reset-placement
+  corrected.
+- `37754c3 M5a: pure progression engine + plate calc + exhaustive tests` — the
+  headline `src/engine/*` (weight/plates/pipeline/failure/warmups/schedule/
+  prescribe) + vitest infra + 58→59 table-driven tests covering every SPEC §4 /
+  DATA_MODEL §6 scenario; engine coverage ~98%.
+
+## Directional decisions
+
+- **Built the engine first, before the rest of Phase 1.** It's pure and the most
+  verifiable thing in the app (no DB needed), so it banks a high-confidence,
+  fully-tested core. M1 followed (structurally correct; not yet run against the
+  live DB from here — no env in this environment).
+- **Engine encoding rules settled** (now in HANDOFF "Engine encoding notes"):
+  `reset` applies at step *fire* (atomic with effect), not at a cap transition;
+  the failure cursor advances *past* an applied deload; consolidation compares the
+  pound delta not `step.amount`; multi-entry same-day weight dedupe is M5d
+  orchestration, not in the pure engine.
+- **Adversarial verification via 4 parallel subagents** (one per scenario
+  cluster), each hand-tracing the actual code vs the locked spec (not the tests,
+  to avoid shared blind spots). Verdict: engine is spec-correct everywhere; found
+  & fixed one real bug (warmup rungs ≥ working weight) and one doc bug (shoulders
+  reset placement). The Workflow tool hit a permission-stream hiccup, so this ran
+  as background Agents instead.
+- **Branch:** committed directly to `main` (user instruction + project
+  convention). The provisioned `claude/mvp-phase-1-94oidw` branch and `main` were
+  the same commit at session start.
+
+## Open questions / next step
+
+- **Smoke-test M1 against the live Supabase project** (sign up / login / refresh
+  persistence / profile + gym edit / RLS with a 2nd user). Not runnable from this
+  environment (no env vars / DB).
+- Next milestone: **M2** — seed the ~800-exercise library (`free-exercise-db`)
+  via a `supabase/seed/` Node script + exercise browser UI. Then M3/M4, then wire
+  the built engine into **M5b–M5d** (session build / live logging / commit+
+  advance), then M6 radar.
+
+## Project notes for future-me
+
+- Engine is pure + done; M5b–M5d is DB orchestration around it. Follow the
+  "Engine encoding notes" in HANDOFF.
+- Test infra: `npm test` (vitest run), `npm run coverage` (engine thresholds
+  90/90/90/85, excludes index/types barrels). `npm run typecheck` now also checks
+  `tests/` via `tsconfig.test.json`.
+- `src/data/online/supabaseDataClient.ts` is the one deliberately loosely-typed
+  boundary (no generated `Database` type yet — Phase 0.3 swaps in
+  `supabase gen types`).
+- Subagents inherit the standing orders and created a stray `001_2026-06-30b`
+  session folder during verification; removed it. Watch for this when fanning out
+  agents in this repo.
