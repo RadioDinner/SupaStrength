@@ -5,8 +5,11 @@
 
 ## Where the project is
 
-**Phase: planning complete → ready to build.** No app code yet. The repo holds
-the locked spec, the verified data model + migration, and the build plan.
+**Phase 0 — scaffold in progress.** Spec, data model, migration, and build plan
+are done. The Vite + React + TS app is scaffolded and **builds + lints clean**
+locally (PWA shell, Supabase wired via the data seam, connection-status home
+screen). Remaining Phase-0 setup is account-side (user): create the Vercel
+project, create the Supabase project, set env vars, run the migration.
 
 ## Source-of-truth documents (authority chain)
 
@@ -37,10 +40,12 @@ the locked spec, the verified data model + migration, and the build plan.
 
 ## Next step
 
-Get user sign-off on `DATA_MODEL.md` + `BUILD_PLAN.md`, then execute
-**Phase 0 scaffold** (Vite/TS app, Supabase project, Vercel, env, PWA, clean
-data-access layer for future offline). Exercise library seed dataset TBD
-(BUILD_PLAN recommends one).
+Finish Phase-0 account setup (user-side, see README "Deploy to Vercel" +
+"Supabase setup"): create Vercel project (import repo, Vite preset), create
+Supabase project, set `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` in Vercel,
+run `supabase/migrations/9999_init.sql` in the SQL Editor. Home screen should
+then show "Connected ✓". After that, start **M1** (auth + profile + equipment)
+and the **M2** exercise-library seed (BUILD_PLAN recommends a dataset).
 
 ## House rules (from new_session_instructions.md)
 
