@@ -50,6 +50,20 @@ export const auth = {
     if (error) throw new Error(error.message)
   },
 
+  /** Request a password-recovery email (lands back on the app's recovery flow). */
+  async sendPasswordRecovery(email: string): Promise<void> {
+    const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl(),
+    })
+    if (error) throw new Error(error.message)
+  },
+
+  /** Set a new password for the currently-authenticated (or recovery) session. */
+  async updatePassword(newPassword: string): Promise<void> {
+    const { error } = await getSupabase().auth.updateUser({ password: newPassword })
+    if (error) throw new Error(error.message)
+  },
+
   async signOut(): Promise<void> {
     const { error } = await getSupabase().auth.signOut()
     if (error) throw new Error(error.message)

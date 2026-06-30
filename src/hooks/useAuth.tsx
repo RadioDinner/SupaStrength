@@ -21,9 +21,13 @@ interface AuthContextValue {
   status: AuthStatus
   user: User | null
   session: Session | null
+  /** True after a recovery link lands — the app should prompt for a new password. */
+  recoveryMode: boolean
   signIn: (c: Credentials) => Promise<void>
   signUp: (c: Credentials) => Promise<{ needsEmailConfirmation: boolean }>
   signInWithMagicLink: (email: string) => Promise<void>
+  sendPasswordRecovery: (email: string) => Promise<void>
+  updatePassword: (newPassword: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -32,6 +36,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>(env.isConfigured ? 'loading' : 'unconfigured')
   const [session, setSession] = useState<Session | null>(null)
+  const [recoveryMode, setRecoveryMode] = useState(false)
 
   useEffect(() => {
     if (!env.isConfigured) return
@@ -48,7 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (active) setStatus('signedOut')
       })
 
-    const unsubscribe = auth.onAuthStateChange((_event, s) => {
+    const unsubscribe = auth.onAuthStateChange((event, s) => {
+      // A recovery link lands as a PASSWORD_RECOVERY event with a live session —
+      // route into the "set a new password" screen instead of straight into the app.
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true)
       setSession(s)
       setStatus(s ? 'signedIn' : 'signedOut')
     })
@@ -72,8 +80,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await auth.signInWithMagicLink(email)
   }, [])
 
+  const sendPasswordRecovery = useCallback(async (email: string) => {
+    await auth.sendPasswordRecovery(email)
+  }, [])
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    await auth.updatePassword(newPassword)
+    setRecoveryMode(false)
+  }, [])
+
   const signOut = useCallback(async () => {
     await auth.signOut()
+    setRecoveryMode(false)
   }, [])
 
   const value = useMemo<AuthContextValue>(
@@ -81,12 +99,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       user: session?.user ?? null,
       session,
+      recoveryMode,
       signIn,
       signUp,
       signInWithMagicLink,
+      sendPasswordRecovery,
+      updatePassword,
       signOut,
     }),
-    [status, session, signIn, signUp, signInWithMagicLink, signOut],
+    [
+      status,
+      session,
+      recoveryMode,
+      signIn,
+      signUp,
+      signInWithMagicLink,
+      sendPasswordRecovery,
+      updatePassword,
+      signOut,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

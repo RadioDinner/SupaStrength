@@ -9,7 +9,7 @@ import { Banner, Button, Field, TextInput } from '../../components/ui'
 type Mode = 'signIn' | 'signUp'
 
 export function AuthScreen() {
-  const { signIn, signUp, signInWithMagicLink } = useAuth()
+  const { signIn, signUp, signInWithMagicLink, sendPasswordRecovery } = useAuth()
   const [mode, setMode] = useState<Mode>('signIn')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -50,6 +50,24 @@ export function AuthScreen() {
     try {
       await signInWithMagicLink(email)
       setNotice('Magic link sent — check your email.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function onForgotPassword() {
+    setError(null)
+    setNotice(null)
+    if (!email) {
+      setError('Enter your email first.')
+      return
+    }
+    setBusy(true)
+    try {
+      await sendPasswordRecovery(email)
+      setNotice('Password-reset link sent — check your email.')
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -102,6 +120,11 @@ export function AuthScreen() {
           <Button type="button" variant="ghost" disabled={busy} onClick={onMagicLink}>
             Email me a magic link
           </Button>
+          {mode === 'signIn' ? (
+            <button type="button" className="linkbtn linkbtn--center" disabled={busy} onClick={onForgotPassword}>
+              Forgot password?
+            </button>
+          ) : null}
         </form>
       </section>
 

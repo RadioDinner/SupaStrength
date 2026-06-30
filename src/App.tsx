@@ -5,11 +5,16 @@
  */
 import { useAuth } from './hooks/useAuth'
 import { AuthScreen } from './features/auth/AuthScreen'
+import { ResetPasswordScreen } from './features/auth/ResetPasswordScreen'
 import { BootstrapGate } from './routes/BootstrapGate'
 import { Banner, Spinner } from './components/ui'
 
 export default function App() {
-  const { status } = useAuth()
+  const { status, recoveryMode } = useAuth()
+
+  // A recovery link lands as a signed-in session — intercept it to set a new
+  // password before entering the app.
+  if (recoveryMode) return <ResetPasswordScreen />
 
   switch (status) {
     case 'unconfigured':
