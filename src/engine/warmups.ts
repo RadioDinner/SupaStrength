@@ -56,18 +56,26 @@ export function generateWarmups(ctx: WarmupContext): WarmupSet[] {
   const ramp = ctx.rampPcts && ctx.rampPcts.length > 0 ? ctx.rampPcts : [...DEFAULT_RAMP_PCTS]
 
   const out: WarmupSet[] = []
+  const seen = new Set<number>()
   for (const pct of ramp) {
-    if (pct >= 100) continue // a "warmup" at/above working weight is not a warmup
+    if (pct >= 100) continue
+    let weightLb: number
     if (pct <= 0) {
-      out.push({ pct: 0, weightLb: ctx.barbellLb })
-      continue
+      weightLb = ctx.barbellLb
+    } else {
+      const sol = solvePlates((working * pct) / 100, ctx.barbellLb, ctx.inventory, {
+        rounding: ctx.roundingDirection,
+        microPlatesEnabled: ctx.microPlatesEnabled,
+      })
+      weightLb = sol.loadedTotalLb
     }
-    const target = (working * pct) / 100
-    const sol = solvePlates(target, ctx.barbellLb, ctx.inventory, {
-      rounding: ctx.roundingDirection,
-      microPlatesEnabled: ctx.microPlatesEnabled,
-    })
-    out.push({ pct, weightLb: sol.loadedTotalLb })
+    // A "warmup" must be genuinely lighter than the working weight (the percent
+    // gate isn't enough — plate rounding / a heavy empty bar can land a low-%
+    // rung at or above the work weight). Drop those and de-dup collapsed rungs.
+    if (weightLb >= working) continue
+    if (seen.has(weightLb)) continue
+    seen.add(weightLb)
+    out.push({ pct, weightLb })
   }
   return out
 }

@@ -17,7 +17,7 @@
  * (denominations and pair counts are tiny — at most a handful), so we never rely
  * on greedy heuristics that can miss the closest combination for odd plate sets.
  */
-import { fromLb, toLb, type Weight, type RoundDir } from './weight'
+import type { RoundDir, Weight } from './weight'
 
 export interface PlateStock {
   /** Plate denomination in pounds (e.g. 45, 2.5, 1.25). */
@@ -150,7 +150,7 @@ export function solvePlates(
       targetLb,
       barbellLb,
       perSide: [],
-      loadedTotalLb: toLb(fromLb(loadedCp / 100)),
+      loadedTotalLb: round2(loadedCp / 100),
       deltaLb: round2((loadedCp - targetCp) / 100),
       exact: loadedCp === targetCp,
       ceilingReached: false,

@@ -933,13 +933,22 @@ ticks the "every 2nd" parity. On any weight-step transition the counter resets t
 
 **Shoulders: +1 rep/set until X, then add sets [Q-B].** Two steps:
 1. `{reps, all_sets, amount:1, cap_type:rep_count, cap_value:X, on_cap:next_step,
-   reset:reps_to_base}` (default reset-reps-to-base per §13) — drives
-   `progression_entry_state.current_rep_target`.
-2. `{sets, amount:1, cap_type:set_count, cap_value:Y}` — drives
-   `progression_entry_state.current_set_count`. Because the shoulder workout is a
-   length-1 rotation (always-on), it appears every gym day and so progresses
-   every session. Both steps are rep/set-dimension, so they live entirely in the
-   per-entry state; no other entry using the same exercise is affected.
+   reset:none}` — drives `progression_entry_state.current_rep_target` (8→X).
+2. `{sets, amount:1, cap_type:set_count, cap_value:Y, reset:reps_to_base}`
+   (default reset-reps-to-base per §13) — drives
+   `progression_entry_state.current_set_count`, **and resets reps to base
+   atomically with each +1 set**. Because the shoulder workout is a length-1
+   rotation (always-on), it appears every gym day and so progresses every session.
+   Both steps are rep/set-dimension, so they live entirely in the per-entry state;
+   no other entry using the same exercise is affected.
+
+   > **Reset placement (engine-verified correction).** `reset:reps_to_base` must
+   > ride on the **sets** step, not the reps step. The engine applies `reset` when
+   > a step *fires* (atomic with its effect — mirroring how double progression
+   > resets reps on its weight step). Putting the reset on the climbing reps step
+   > would reset reps to base on *every* reps completion, so reps could never
+   > climb; putting it on the sets step yields the clean repeating ladder
+   > `3×8…3×12, 4×8…4×12, 5×8…` with no regressed/dip session.
 
 **+1 rep to last set only.** One step:
 `{reps, applies_to:last_set, amount:1}` → advances only the last working set's

@@ -70,4 +70,15 @@ describe('generateWarmups', () => {
   it('zero working weight → no warmups', () => {
     expect(generateWarmups({ ...base, workingWeightLb: 0 })).toEqual([])
   })
+
+  it('never emits a rung at/above the working weight, nor duplicates (F1)', () => {
+    // Working weight at/below the bar: every rung would collapse to the 45 bar.
+    expect(generateWarmups({ ...base, workingWeightLb: 44 })).toEqual([])
+
+    // Just above the bar: rungs collapse to 45 — keep one, drop the duplicates,
+    // and only because 45 < 50.
+    const low = generateWarmups({ ...base, workingWeightLb: 50 })
+    expect(low.every((s) => s.weightLb < 50)).toBe(true)
+    expect(new Set(low.map((s) => s.weightLb)).size).toBe(low.length) // no dups
+  })
 })
