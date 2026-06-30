@@ -3,6 +3,7 @@
  * next milestones. The real dashboard (radar, reminders) lands in M6/M8.
  */
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { Banner, Card, Spinner } from '../../components/ui'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../settings/useProfile'
@@ -33,8 +34,13 @@ export function HomePage() {
         <ul className="checklist">
           <li className="done">Account &amp; auth</li>
           <li className="done">Home gym seeded (bar, plates, dumbbells)</li>
-          <li>Exercise library (next: M2)</li>
-          <li>Build a workout → routine → log a session</li>
+          <li className="done">Exercise library (873 exercises)</li>
+          <li>
+            <Link to="/workouts" className="linkbtn">
+              Build a workout
+            </Link>{' '}
+            → schedule → log a session
+          </li>
         </ul>
       </Card>
 

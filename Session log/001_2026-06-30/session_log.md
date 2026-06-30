@@ -63,6 +63,17 @@ After the engine + M1 commits, the user hit live-auth friction and we kept going
   movement filter, expandable muscles/instructions) + custom-exercise creator +
   "Exercises" nav tab; `ilike` op added to the DataClient seam.
 
+## Continued — M3 workout builder
+
+- User flagged the app "looks like a setup list," then clarified: **don't change
+  the M-plan, keep building it in order** — "sweet workout app" polish comes as
+  the milestones land. I briefly started an out-of-order M5 session slice + home
+  reframe, then reverted both and stayed on plan.
+- **M3 shipped** (`M3: workout builder`): `workoutsRepo` + `features/workouts/`
+  (list/create/archive + builder with exercise search picker, sets/rep-scheme/
+  rest/AMRAP, client validation), "Workouts" nav tab, shared `useDebounced` hook.
+  Home checklist updated to reflect M2 done + link to the builder.
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh

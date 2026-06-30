@@ -5,13 +5,26 @@
 
 ## Where the project is
 
-**Phase 0 — DONE. M1 — DONE. M2 — DONE. M5a engine — DONE (built early, fully
-tested).** Spec, data model, migration, build plan done. User completed account
-setup (Vercel project, migration run, env vars). Session 001 shipped the pure
-progression engine + plate calculator (the headline, `src/engine/*`) with 59
-adversarially-verified unit tests, completed M1 end-to-end (auth, profile,
-equipment, app shell) + auth-redirect/recovery fixes, and shipped M2 (exercise
-library seed + browser UI). typecheck + lint + build + test all green.
+**Phase 0 — DONE. M1 — DONE. M2 — DONE. M3 — DONE. M5a engine — DONE (built
+early, fully tested).** Spec, data model, migration, build plan done. User
+completed account setup (Vercel project, migration run, env vars). Session 001
+shipped the pure progression engine + plate calculator (the headline,
+`src/engine/*`) with 59 adversarially-verified unit tests, completed M1 (auth,
+profile, equipment, app shell) + auth-redirect/recovery fixes, M2 (exercise
+library seed + browser UI), and M3 (workout builder). typecheck + lint + build +
+test all green.
+
+### M3 — DONE
+- `workoutsRepo` (workouts + workout_entries: ordered prescription, NO weight).
+- `features/workouts/`: Workouts list (create/archive) + builder (`/workouts/:id`)
+  — add exercises via a search picker, set sets / rep scheme (straight | double) /
+  rest / last-set AMRAP, with client validation (straight needs rep_target;
+  double needs low ≤ high). "Workouts" nav tab; Home checklist links to it.
+- **Caveat:** not run against the live DB from here. Reorder of entries was left
+  out of the MVP (append + delete only) to avoid the deferred-unique dance —
+  add via a swap-RPC or temp-position shuffle later.
+- Per user (session 001): keep to the M-plan order; "really sweet workout app"
+  polish comes as the milestones land, not by reordering them.
 
 ### M2 — DONE
 - Seed: `supabase/seed/` — vendored, pinned free-exercise-db (Unlicense);
@@ -99,13 +112,13 @@ one real bug fixed (warmup rungs could meet/exceed working weight) + one doc fix
 ## Next step
 
 **Run `supabase/seed/exercises_seed.sql`** in the SQL Editor so the Exercises tab
-populates, and smoke-test M1+M2 against the live project (sign up, profile/gym
-edit, search "squat" → barbell squat, create a custom exercise, RLS with a 2nd
-user). Then **M3 — workout builder** (`workouts` + `workout_entries`: ordered
-prescription — sets, rep scheme, rest, AMRAP — NO weight field), then **M4 —
-routine/rotation scheduler** (use the built `engine/schedule`), then **M5b–M5d**
-(wire the built engine into session build / live logging / commit+advance),
-then M6 (radar) → M7/M8.
+populates, and smoke-test M1–M3 against the live project (sign up, profile/gym
+edit, search exercises, build a workout with squat/bench/row). Then **M4 —
+routine/rotation scheduler** (`routines` → `rotations` → `rotation_workouts`; use
+the built `engine/schedule` for next-day/advance), then **M5b–M5d** (rebuild
+`sessionsRepo` engine-wired: session build from the next gym day → live logging
+with the inline plate calculator + rest timer → commit + advance driving
+`progression_state`/`progression_entry_state`), then M6 (radar) → M7/M8.
 
 Engine reuse: M4/M5 should import `src/engine` and follow the "Engine encoding
 notes" above — the pure functions are done and tested; the remaining work is the

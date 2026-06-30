@@ -7,9 +7,12 @@ import { HomePage } from '../features/home/HomePage'
 import { ProfilePage } from '../features/settings/ProfilePage'
 import { EquipmentPage } from '../features/equipment/EquipmentPage'
 import { ExercisesPage } from '../features/exercises/ExercisesPage'
+import { WorkoutsPage } from '../features/workouts/WorkoutsPage'
+import { WorkoutBuilderPage } from '../features/workouts/WorkoutBuilderPage'
 
 const TABS = [
   { to: '/', label: 'Home', icon: '🏠', end: true },
+  { to: '/workouts', label: 'Workouts', icon: '📋', end: false },
   { to: '/exercises', label: 'Exercises', icon: '📚', end: false },
   { to: '/equipment', label: 'Equipment', icon: '🏋️', end: false },
   { to: '/profile', label: 'Profile', icon: '👤', end: false },
@@ -28,6 +31,8 @@ export function AppShell() {
       <main className="app__main">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/workouts" element={<WorkoutsPage />} />
+          <Route path="/workouts/:id" element={<WorkoutBuilderPage />} />
           <Route path="/exercises" element={<ExercisesPage />} />
           <Route path="/equipment" element={<EquipmentPage />} />
           <Route path="/profile" element={<ProfilePage />} />

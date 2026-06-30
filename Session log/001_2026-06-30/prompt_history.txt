@@ -27,3 +27,9 @@ I turned off confirm email but I can't send a password recovery. I got to this u
 
 --- 2026-06-30 15:05 ---
 Lets keep hauling
+
+--- 2026-06-30 15:40 ---
+I'm a little confused. I want this to be a workout app. Currently it looks like a setup list
+
+--- 2026-06-30 15:50 ---
+wait

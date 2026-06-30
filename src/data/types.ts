@@ -65,6 +65,99 @@ export interface ExerciseMuscle {
   weight: number
 }
 
+export type RepScheme = 'straight' | 'double' | 'rpe'
+export type SessionStatus = 'in_progress' | 'completed' | 'abandoned'
+
+export interface Workout {
+  id: string
+  user_id: string
+  name: string
+  notes: string | null
+  archived_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface WorkoutEntry {
+  id: string
+  user_id: string
+  workout_id: string
+  exercise_id: string
+  position: number
+  sets: number
+  rep_scheme: RepScheme
+  rep_target: number | null
+  rep_range_low: number | null
+  rep_range_high: number | null
+  target_rpe: number | null
+  rest_seconds: number | null
+  last_set_amrap: boolean
+  barbell_id_override: string | null
+  ceiling_behavior_override: CeilingBehavior | null
+  consolidation_enabled: boolean
+  consolidation_sessions: number
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Session {
+  id: string
+  user_id: string
+  routine_id: string | null
+  location_id: string | null
+  performed_on: string
+  started_at: string | null
+  completed_at: string | null
+  status: SessionStatus
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SessionEntry {
+  id: string
+  user_id: string
+  session_id: string
+  workout_id: string | null
+  workout_entry_id: string | null
+  exercise_id: string
+  position: number
+  planned_sets: number | null
+  planned_rep_scheme: RepScheme | null
+  planned_rep_target: number | null
+  planned_rep_low: number | null
+  planned_rep_high: number | null
+  planned_weight: number | null
+  planned_rest_seconds: number | null
+  last_set_amrap: boolean
+  was_failure: boolean
+  was_consolidation_hold: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface SetLog {
+  id: string
+  user_id: string
+  session_entry_id: string
+  set_index: number
+  is_warmup: boolean
+  is_completed: boolean
+  planned_reps: number | null
+  actual_reps: number | null
+  planned_weight: number | null
+  actual_weight: number | null
+  rest_taken_seconds: number | null
+  is_amrap: boolean
+  amrap_reps: number | null
+  rpe: number | null
+  completed_at: string | null
+  video_id: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface UserProfile {
   user_id: string
   display_name: string | null

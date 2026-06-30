@@ -52,6 +52,13 @@ export const exercisesRepo = {
     })
   },
 
+  listByIds(ids: string[]): Promise<Exercise[]> {
+    if (ids.length === 0) return Promise.resolve([])
+    return onlineDataClient.list<Exercise>('exercises', {
+      filters: [{ column: 'id', op: 'in', value: ids }],
+    })
+  },
+
   listMuscleGroups(): Promise<MuscleGroup[]> {
     return onlineDataClient.list<MuscleGroup>('muscle_groups', {
       order: [{ column: 'radar_order' }],
