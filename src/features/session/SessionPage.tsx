@@ -6,7 +6,7 @@
  */
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Banner, Button, Card, Spinner, TextInput } from '../../components/ui'
+import { Banner, Button, Card, SkeletonList, TextInput } from '../../components/ui'
 import { useAuth } from '../../hooks/useAuth'
 import { useExercisesByIds } from '../workouts/useWorkouts'
 import { PlateCalculator } from './PlateCalculator'
@@ -48,7 +48,7 @@ export function SessionPage() {
     return m
   }, [setLogs])
 
-  if (isLoading) return <Spinner label="Loading session…" />
+  if (isLoading) return <SkeletonList rows={3} />
   if (!session) return <Banner kind="err">Session not found.</Banner>
   if (session.status !== 'in_progress') {
     return (

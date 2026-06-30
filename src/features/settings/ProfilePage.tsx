@@ -5,7 +5,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
-import { Banner, Button, Card, Field, Select, Spinner, TextInput } from '../../components/ui'
+import { Banner, Button, Card, Field, Select, SkeletonList, TextInput } from '../../components/ui'
 import { useProfile, useUpdateProfile } from './useProfile'
 import type { Sex, UnitSystem } from '../../data/types'
 
@@ -51,7 +51,7 @@ export function ProfilePage() {
     setSaved(true)
   }
 
-  if (isLoading) return <Spinner label="Loading profile…" />
+  if (isLoading) return <SkeletonList rows={2} />
 
   return (
     <div className="page">

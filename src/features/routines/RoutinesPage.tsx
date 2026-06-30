@@ -4,7 +4,7 @@
  */
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { Banner, Button, Card, Spinner, TextInput } from '../../components/ui'
+import { Button, Card, EmptyState, SkeletonList, TextInput } from '../../components/ui'
 import { useCreateRoutine, useRoutines, useSetActiveRoutine } from './useRoutines'
 
 export function RoutinesPage() {
@@ -36,9 +36,13 @@ export function RoutinesPage() {
       </Card>
 
       {isLoading ? (
-        <Spinner label="Loading routines…" />
+        <SkeletonList rows={2} />
       ) : routines && routines.length === 0 ? (
-        <Banner kind="info">No routines yet. Create one, then add rotations of workouts.</Banner>
+        <EmptyState
+          icon="🗓️"
+          title="No routines yet"
+          hint="A routine is your schedule — rotations of workouts that cycle (A → B → A) plus always-on days. Name one above to start."
+        />
       ) : (
         (routines ?? []).map((r) => (
           <Card key={r.id}>

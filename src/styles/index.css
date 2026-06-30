@@ -187,8 +187,8 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--r-md);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -796,6 +796,80 @@ button {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* ── skeletons ────────────────────────────────────────────────────────────── */
+.skeleton {
+  display: block;
+  background: linear-gradient(
+    100deg,
+    color-mix(in oklch, var(--ink) 8%, transparent) 30%,
+    color-mix(in oklch, var(--ink) 16%, transparent) 50%,
+    color-mix(in oklch, var(--ink) 8%, transparent) 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s var(--ease) infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ── empty states ─────────────────────────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+  padding: var(--s-8) var(--s-5);
+}
+.empty__icon {
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: var(--s-1);
+  filter: grayscale(0.15);
+}
+.empty__title {
+  margin: 0;
+  font-weight: 700;
+  font-size: var(--fs-md);
+}
+.empty__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  max-width: 34ch;
+  text-wrap: pretty;
+}
+.empty__action {
+  margin-top: var(--s-3);
+}
+
+/* ── micro-interactions ──────────────────────────────────────────────────── */
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.setrow--done .setrow__idx {
+  animation: pop 240ms var(--ease);
+}
+.resttimer--running .resttimer__time {
+  color: var(--accent);
+  animation: tick-pulse 1s steps(1, end) infinite;
+}
+@keyframes tick-pulse {
+  50% {
+    opacity: 0.55;
   }
 }
 

@@ -6,7 +6,7 @@
  */
 import { useMemo, useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { Banner, Button, Card, Field, Select, Spinner, TextInput } from '../../components/ui'
+import { Banner, Button, Card, Field, Select, SkeletonList, TextInput } from '../../components/ui'
 import { maxLoadableLb, type PlateStock } from '../../engine/plates'
 import {
   useBarbells,
@@ -36,7 +36,7 @@ export function EquipmentPage() {
   )
   const activeId = activeLocation?.id ?? null
 
-  if (locLoading) return <Spinner label="Loading equipment…" />
+  if (locLoading) return <SkeletonList rows={3} />
 
   return (
     <div className="page">

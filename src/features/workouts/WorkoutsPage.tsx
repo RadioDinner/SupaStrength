@@ -4,7 +4,7 @@
  */
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Banner, Button, Card, Spinner, TextInput } from '../../components/ui'
+import { Button, Card, EmptyState, SkeletonList, TextInput } from '../../components/ui'
 import { useArchiveWorkout, useCreateWorkout, useWorkouts } from './useWorkouts'
 import { useActiveSession, useStartFromWorkout } from '../session/useSession'
 
@@ -54,9 +54,13 @@ export function WorkoutsPage() {
       </Card>
 
       {isLoading ? (
-        <Spinner label="Loading workouts…" />
+        <SkeletonList rows={2} />
       ) : workouts && workouts.length === 0 ? (
-        <Banner kind="info">No workouts yet. Create one above to start building.</Banner>
+        <EmptyState
+          icon="📋"
+          title="No workouts yet"
+          hint="A workout is a training day — like Workout A or a shoulder finisher. Name one above, then add exercises to it."
+        />
       ) : (
         (workouts ?? []).map((w) => (
           <Card key={w.id}>

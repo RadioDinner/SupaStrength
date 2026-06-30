@@ -4,7 +4,7 @@
  * detail (muscles + instructions), and a custom-exercise creator.
  */
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Banner, Button, Card, Field, Select, Spinner, TextInput } from '../../components/ui'
+import { Banner, Button, Card, EmptyState, Field, Select, SkeletonList, TextInput } from '../../components/ui'
 import {
   useCreateCustomExercise,
   useExerciseMuscles,
@@ -96,9 +96,17 @@ export function ExercisesPage() {
       ) : null}
 
       {isLoading ? (
-        <Spinner label="Loading exercises…" />
+        <SkeletonList rows={4} />
       ) : exercises && exercises.length === 0 ? (
-        <Banner kind="warn">No exercises match. (Have you run the seed SQL?)</Banner>
+        <EmptyState
+          icon="🔍"
+          title={search || movement ? 'No matches' : 'No exercises yet'}
+          hint={
+            search || movement
+              ? 'Try a different search or movement filter — or add a custom exercise with “New”.'
+              : 'The 873-exercise library loads once you run supabase/seed/exercises_seed.sql. You can also add your own with “New”.'
+          }
+        />
       ) : (
         <Card>
           <ul className="list">

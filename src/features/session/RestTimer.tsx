@@ -35,7 +35,9 @@ export function RestTimer({ seconds }: { seconds: number }) {
   const done = remaining === 0
 
   return (
-    <div className={`resttimer ${done ? 'resttimer--done' : ''}`}>
+    <div
+      className={`resttimer ${done ? 'resttimer--done' : ''} ${running ? 'resttimer--running' : ''}`}
+    >
       <span className="resttimer__time mono">{fmt(remaining)}</span>
       <Button
         variant="ghost"

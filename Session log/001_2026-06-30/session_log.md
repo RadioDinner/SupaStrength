@@ -124,6 +124,15 @@ After the engine + M1 commits, the user hit live-auth friction and we kept going
   the climbed weight/reps + SessionPage prefill. 3 preset tests (62 total).
   **Engine is the soul of the app; this wiring is NOT yet live-DB-verified.**
 
+## Continued — impeccable polish pass
+
+- "$impeccable polish": followed `reference/polish.md`. Added a **skeleton**
+  loader + a welcoming **EmptyState** component (product register: skeletons over
+  spinners, empty states that teach), and applied them across workouts / routines
+  / exercises / session / profile / equipment. **Micro-interactions:** set-done
+  pop, running rest-timer pulse. Bumped the theme-toggle to a 42px touch target.
+  Verified empty/skeleton in both themes via headless Chromium. Gate green.
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh
