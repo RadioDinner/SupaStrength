@@ -12,6 +12,59 @@ export type PhotoCategory = 'front' | 'side' | 'back' | 'custom'
 export type RoundingDirection = 'up' | 'down'
 export type CeilingBehavior = 'hold_warn' | 'auto_switch_reps'
 
+export type MovementType =
+  | 'barbell'
+  | 'dumbbell'
+  | 'machine'
+  | 'cable'
+  | 'bodyweight'
+  | 'weighted_bodyweight'
+  | 'assisted'
+  | 'timed_cardio'
+export type LoadingStyle =
+  | 'barbell'
+  | 'dumbbell'
+  | 'plate_loaded'
+  | 'stack'
+  | 'bodyweight'
+  | 'banded'
+  | 'timed'
+export type LiftKey = 'squat' | 'bench' | 'deadlift' | 'ohp' | 'row'
+export type MuscleRole = 'primary' | 'secondary'
+
+export interface Exercise {
+  id: string
+  user_id: string | null
+  slug: string
+  name: string
+  movement_type: MovementType
+  loading_style: LoadingStyle
+  default_barbell_id: string | null
+  is_loaded: boolean
+  is_unilateral: boolean
+  lift_key: LiftKey | null
+  instructions: string | null
+  default_rest_seconds: number | null
+  is_seed: boolean
+  is_custom: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface MuscleGroup {
+  id: number
+  group_key: string
+  display_name: string
+  radar_order: number
+}
+
+export interface ExerciseMuscle {
+  exercise_id: string
+  muscle_group_id: number
+  role: MuscleRole
+  weight: number
+}
+
 export interface UserProfile {
   user_id: string
   display_name: string | null

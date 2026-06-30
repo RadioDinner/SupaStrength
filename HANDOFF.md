@@ -5,12 +5,26 @@
 
 ## Where the project is
 
-**Phase 0 — DONE. M1 — DONE. M5a engine — DONE (built early, fully tested).**
-Spec, data model, migration, build plan done. User completed account setup
-(Vercel project, migration run, env vars). This session (001) shipped the pure
+**Phase 0 — DONE. M1 — DONE. M2 — DONE. M5a engine — DONE (built early, fully
+tested).** Spec, data model, migration, build plan done. User completed account
+setup (Vercel project, migration run, env vars). Session 001 shipped the pure
 progression engine + plate calculator (the headline, `src/engine/*`) with 59
-adversarially-verified unit tests, AND completed M1 end-to-end (auth, profile,
-equipment, app shell). typecheck + lint + build + test all green.
+adversarially-verified unit tests, completed M1 end-to-end (auth, profile,
+equipment, app shell) + auth-redirect/recovery fixes, and shipped M2 (exercise
+library seed + browser UI). typecheck + lint + build + test all green.
+
+### M2 — DONE
+- Seed: `supabase/seed/` — vendored, pinned free-exercise-db (Unlicense);
+  `build-exercise-seed.mjs` emits a re-runnable `exercises_seed.sql` (873
+  exercises + 2416 muscle links, 5 lift_keys, 0 zero-primary). **Validated on
+  real Postgres, run twice (re-runnable).** User pastes the SQL into the SQL
+  Editor after the migration (README step 5).
+- UI: `exercisesRepo` (ILIKE name search + movement filter + custom-exercise
+  create), `features/exercises/` browser (search/filter/expandable muscles +
+  instructions), custom-exercise form (shadows seed slugs), "Exercises" nav tab.
+  Added `ilike` op to the DataClient seam.
+- **Caveat:** not run against the live DB from here. Browser shows exercises only
+  after the user pastes `exercises_seed.sql`.
 
 ### M1 — DONE
 - Data seam expanded: `src/data/client.ts` (`list/getOne/insert/update/upsert/
@@ -84,16 +98,16 @@ one real bug fixed (warmup rungs could meet/exceed working weight) + one doc fix
 
 ## Next step
 
-**Smoke-test M1 against the live project** (sign up, log in, refresh persists,
-profile edit, see/edit the seeded gym, RLS check with a 2nd user). Then **M2 —
-seed the exercise library** (~800 from `yuhonas/free-exercise-db`; BUILD_PLAN
-"Exercise library seeding strategy"): a Node script in `supabase/seed/` run with
-the service-role key, mapping equipment→movement_type/loading_style and source
-muscles→our 12 groups, + the exercise browser UI. Then M3 (workout builder) →
-M4 (scheduler) → **M5b–M5d** (wire the now-built engine into session build / live
-logging / commit+advance) → M6 (radar) → M7/M8.
+**Run `supabase/seed/exercises_seed.sql`** in the SQL Editor so the Exercises tab
+populates, and smoke-test M1+M2 against the live project (sign up, profile/gym
+edit, search "squat" → barbell squat, create a custom exercise, RLS with a 2nd
+user). Then **M3 — workout builder** (`workouts` + `workout_entries`: ordered
+prescription — sets, rep scheme, rest, AMRAP — NO weight field), then **M4 —
+routine/rotation scheduler** (use the built `engine/schedule`), then **M5b–M5d**
+(wire the built engine into session build / live logging / commit+advance),
+then M6 (radar) → M7/M8.
 
-Engine reuse: M5b–M5d should import `src/engine` and follow the "Engine encoding
+Engine reuse: M4/M5 should import `src/engine` and follow the "Engine encoding
 notes" above — the pure functions are done and tested; the remaining work is the
 DB orchestration around them.
 

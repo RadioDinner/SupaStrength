@@ -44,6 +44,25 @@ pass, and completed **M1** (auth + profile + equipment + app shell) end to end.
   convention). The provisioned `claude/mvp-phase-1-94oidw` branch and `main` were
   the same commit at session start.
 
+## Continued — auth fixes + M2
+
+After the engine + M1 commits, the user hit live-auth friction and we kept going:
+
+- **Auth-redirect fix** (`Fix auth redirect…`): magic-link / confirmation now use
+  `emailRedirectTo = window.location.origin`; Vite dev/preview moved to :3000 to
+  match Supabase's default Site URL; README documents Auth → URL Configuration.
+- **Email rate-limit doc** + **in-app password recovery** (`Add in-app password
+  recovery…`): detect `PASSWORD_RECOVERY` → `ResetPasswordScreen`; "Forgot
+  password?" on the sign-in screen; `sendPasswordRecovery`/`updatePassword`.
+  Root cause of the user's hang was a misconfigured Supabase **Site URL**
+  (`http://…vercel.app:3000` — should be `https://…vercel.app`, no port).
+- **M2 seed** (`M2 seed: generate exercise library SQL…`): vendored
+  free-exercise-db, generator → `exercises_seed.sql` (873 exercises, 2416 muscle
+  links, 5 lift_keys). **Validated on real local Postgres, run twice.**
+- **M2 UI** (`M2 UI: exercise browser…`): exercisesRepo + browser (ILIKE search,
+  movement filter, expandable muscles/instructions) + custom-exercise creator +
+  "Exercises" nav tab; `ilike` op added to the DataClient seam.
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh

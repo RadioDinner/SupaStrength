@@ -41,6 +41,9 @@ function applyFilters(builder: any, filters: QueryFilter[]): any {
       case 'is':
         q = q.is(f.column, f.value)
         break
+      case 'ilike':
+        q = q.ilike(f.column, f.value as string)
+        break
     }
   }
   return q

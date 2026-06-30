@@ -12,7 +12,7 @@ export interface PingResult {
   muscleGroups: number
 }
 
-export type FilterOp = 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'is'
+export type FilterOp = 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'is' | 'ilike'
 
 export interface QueryFilter {
   column: string
