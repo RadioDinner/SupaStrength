@@ -1156,23 +1156,23 @@ scoped as (
   join windows w on c.performed_on >= w.since
 ),
 workout_freq as (
-  select user_id, time_window, 'workout'::text as dimension,
-         workout_id::text as key,
+  select sc.user_id, sc.time_window, 'workout'::text as dimension,
+         sc.workout_id::text as key,
          max(wo.name)     as label,
-         count(distinct session_id) as cnt
+         count(distinct sc.session_id) as cnt
   from scoped sc
   left join workouts wo on wo.id = sc.workout_id
   where sc.workout_id is not null
-  group by user_id, time_window, workout_id
+  group by sc.user_id, sc.time_window, sc.workout_id
 ),
 exercise_freq as (
-  select user_id, time_window, 'exercise'::text as dimension,
-         exercise_id::text as key,
+  select sc.user_id, sc.time_window, 'exercise'::text as dimension,
+         sc.exercise_id::text as key,
          max(ex.name)      as label,
          count(*)          as cnt
   from scoped sc
   join exercises ex on ex.id = sc.exercise_id
-  group by user_id, time_window, exercise_id
+  group by sc.user_id, sc.time_window, sc.exercise_id
 ),
 muscle_freq as (
   select sc.user_id, sc.time_window, 'muscle'::text as dimension,

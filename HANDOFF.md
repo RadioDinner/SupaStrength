@@ -15,6 +15,8 @@ the locked spec, the verified data model + migration, and the build plan.
    with a worked walkthrough of every progression scenario.
 3. `supabase/migrations/9999_init.sql` — single **re-runnable** initial migration
    (paste by hand into the Supabase SQL Editor). Descending-numbered per house rule.
+   ✅ Validated on local PG16 with Supabase stubs: runs clean on a fresh DB and is
+   idempotent on re-run (33 tables / 7 views / 124 policies).
 4. `docs/BUILD_PLAN.md` — phased, ordered roadmap (Phase 0 scaffold → Phase 1 MVP).
 5. `docs/DESIGN_REVIEW.md` — the 22-finding adversarial audit + how each was fixed.
 

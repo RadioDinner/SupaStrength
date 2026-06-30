@@ -95,3 +95,14 @@ I want this thing written in probably a vite typescripti so I can use vercel to 
 #6 V1 Capture is fine. 30 second max attached to a specific set. Store the vids for 30 days. Stills for a year if they pay for it. 
 #7 sync we can skip for now. Put that on a Long term feature backlog
 #8 progress photos we'll spec out later. go with whatever is best for now. I'll refine later, I'm exciting to get building
+
+--- 2026-06-29 19:42 ---
+```
+Failed to run sql query: ERROR:  42702: column reference "user_id" is ambiguous
+```
+
+
+```
+LINE 1159:   select user_id, time_window, 'workout'::text as dimension,
+
+```
