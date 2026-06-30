@@ -299,6 +299,20 @@ export interface Dumbbell {
   updated_at: string
 }
 
+/** Form-video attached to a logged set (BUILD_PLAN M7). Private storage. */
+export interface Video {
+  id: string
+  user_id: string
+  set_log_id: string | null
+  storage_path: string
+  duration_seconds: number
+  mime_type: string | null
+  size_bytes: number | null
+  created_at: string
+  updated_at: string
+  expires_at: string
+}
+
 // ---------------------------------------------------------------------------
 // Analytics (BUILD_PLAN M6). UI state + the read-only shapes of the computed
 // `v_*` analytics views (DATA_MODEL §5). Views are never written to.

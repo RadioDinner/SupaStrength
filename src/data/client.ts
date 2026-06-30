@@ -55,5 +55,18 @@ export interface DataClient {
   remove(table: string, filters: QueryFilter[]): Promise<void>
   rpc<T>(name: string, args?: Record<string, unknown>): Promise<T>
 
+  // --- Storage (private buckets: form-videos, progress-photos) — M7/M8 -------
+  /** Upload a file to a private bucket at `path`. Returns the stored path. */
+  uploadFile(
+    bucket: string,
+    path: string,
+    file: Blob,
+    opts?: { contentType?: string; upsert?: boolean },
+  ): Promise<{ path: string }>
+  /** Time-limited signed URL for reading a private object. */
+  signedUrl(bucket: string, path: string, expiresInSeconds?: number): Promise<string>
+  /** Remove objects from a bucket. */
+  removeFiles(bucket: string, paths: string[]): Promise<void>
+
   // TODO (Phase 2 offline): subscribe(table, cb) for reactive local queries.
 }

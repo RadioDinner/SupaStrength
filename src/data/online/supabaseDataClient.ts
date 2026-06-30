@@ -125,4 +125,34 @@ export const onlineDataClient: DataClient = {
     if (error) throw new Error(error.message)
     return data as T
   },
+
+  async uploadFile(
+    bucket: string,
+    path: string,
+    file: Blob,
+    opts?: { contentType?: string; upsert?: boolean },
+  ): Promise<{ path: string }> {
+    const supabase = getSupabase()
+    const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
+      contentType: opts?.contentType,
+      upsert: opts?.upsert ?? false,
+    })
+    if (error) throw new Error(error.message)
+    return { path: data.path }
+  },
+
+  async signedUrl(bucket: string, path: string, expiresInSeconds = 3600): Promise<string> {
+    const supabase = getSupabase()
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, expiresInSeconds)
+    if (error) throw new Error(error.message)
+    return data.signedUrl
+  },
+
+  async removeFiles(bucket: string, paths: string[]): Promise<void> {
+    const supabase = getSupabase()
+    const { error } = await supabase.storage.from(bucket).remove(paths)
+    if (error) throw new Error(error.message)
+  },
 }

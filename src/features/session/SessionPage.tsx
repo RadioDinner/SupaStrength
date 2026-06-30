@@ -14,6 +14,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useExercisesByIds } from '../workouts/useWorkouts'
 import { solvePlates, type PlateStock } from '../../engine/plates'
 import { RestTimer } from './RestTimer'
+import { VideoSheet } from './VideoSheet'
 import {
   useCompleteSession,
   useSession,
@@ -69,6 +70,7 @@ export function SessionPage() {
   const [doneSet, setDoneSet] = useState<Record<string, boolean>>({})
   const [activeIndex, setActiveIndex] = useState(0)
   const [confirming, setConfirming] = useState(false)
+  const [videoSet, setVideoSet] = useState<SetLog | null>(null)
 
   const ordered = useMemo(() => entries ?? [], [entries])
   const weightOf = (e: SessionEntry) =>
@@ -143,6 +145,7 @@ export function SessionPage() {
           onReps={(s, v) => setReps((r) => ({ ...r, [s.id]: v }))}
           isDone={isDone}
           onToggle={(s) => toggleSet(active, s)}
+          onVideo={(s) => setVideoSet(s)}
           bar={equipment?.bar ?? null}
           plates={equipment?.plates ?? []}
           prefs={equipment?.prefs ?? null}
@@ -196,6 +199,15 @@ export function SessionPage() {
           onConfirm={() => void onComplete()}
         />
       ) : null}
+
+      {videoSet ? (
+        <VideoSheet
+          setLogId={videoSet.id}
+          userId={user!.id}
+          setLabel={`Set ${videoSet.set_index}`}
+          onClose={() => setVideoSet(null)}
+        />
+      ) : null}
     </div>
   )
 }
@@ -239,6 +251,7 @@ function ActiveExercise({
   onReps,
   isDone,
   onToggle,
+  onVideo,
   bar,
   plates,
   prefs,
@@ -256,6 +269,7 @@ function ActiveExercise({
   onReps: (s: SetLog, v: string) => void
   isDone: (s: SetLog) => boolean
   onToggle: (s: SetLog) => void
+  onVideo: (s: SetLog) => void
   bar: Barbell | null
   plates: PlateInventory[]
   prefs: EquipmentPreferences | null
@@ -375,6 +389,16 @@ function ActiveExercise({
               >
                 {done ? '✓' : 'Log'}
               </button>
+              {done ? (
+                <button
+                  className="setvid"
+                  aria-label={`Form video for set ${s.set_index}`}
+                  title="Form video"
+                  onClick={() => onVideo(s)}
+                >
+                  🎥
+                </button>
+              ) : null}
             </li>
           )
         })}

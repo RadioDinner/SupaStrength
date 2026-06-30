@@ -175,6 +175,23 @@ After the engine + M1 commits, the user hit live-auth friction and we kept going
 - Verified the Stats screen design via headless-Chromium static previews in both
   themes (sent). Fixed a `var(--text-dim)`→`var(--muted)` token typo on the radar.
 
+## Continued — M7 form-video bones (scaffold)
+
+- **M7 — DONE** (`M7: form-video bones`): extended the DataClient seam with
+  storage (`uploadFile`/`signedUrl`/`removeFiles`) + Supabase impl; **`videosRepo`**
+  (record ≤30 s clip → private `form-videos/{userId}/{videoId}` → link both ways to
+  the set, with orphan-object rollback; signed-URL playback; delete);
+  **`VideoSheet`** + `useVideos` hooks wired into the live session — a 🎥 button on
+  each **logged** set opens capture (native `<input capture>`, client-side 30 s
+  check) or scrub + slow-mo playback. The `videos`/`set_logs.video_id`/storage
+  buckets + RLS were already in the init migration. CSS: tightened the done-row
+  set card so the extra 🎥 button fits with **zero overflow** (measured in-browser:
+  24px → 0). Gate green; previewed the sheet in both themes.
+- **Storage/capture path can't be tested here** (no device camera, no live
+  Storage) — flagged in HANDOFF for a phone smoke-test. Capture must happen while
+  the session is in progress (completed `set_logs` are frozen by the immutability
+  triggers).
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh

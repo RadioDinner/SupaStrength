@@ -1160,6 +1160,66 @@ button {
   }
 }
 
+/* ── form video (M7) ─────────────────────────────────────────────────────────── */
+.setvid {
+  flex-shrink: 0;
+  width: 36px;
+  height: 40px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.setvid:active {
+  transform: scale(0.92);
+}
+/* When a row also shows the 🎥 button, tighten it so all four items fit. */
+.setcard.is-done {
+  gap: var(--s-2);
+}
+.setcard.is-done .logbtn {
+  min-width: 52px;
+}
+.sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s-3);
+  gap: var(--s-3);
+}
+.vidcapture {
+  display: grid;
+  gap: var(--s-3);
+}
+.vidcapture .btn {
+  width: 100%;
+}
+.vidplay {
+  display: grid;
+  gap: var(--s-3);
+}
+.vidplay__video {
+  width: 100%;
+  max-height: 60vh;
+  border-radius: var(--r-md);
+  background: #000;
+}
+.vidplay__rates {
+  display: inline-flex;
+  align-self: center;
+  background: color-mix(in oklch, var(--ink) 6%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  padding: 3px;
+  gap: 2px;
+}
+.vidplay__meta {
+  font-size: var(--fs-xs);
+  text-align: center;
+}
+
 /* ── analytics (M6) ─────────────────────────────────────────────────────────── */
 .ancontrols {
   display: flex;

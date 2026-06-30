@@ -5,8 +5,9 @@
 
 ## Where the project is
 
-**Phase 0 — DONE. M1–M6 — DONE. M5 (a/b/c/d) — DONE. Design system — DONE.
-Next: M7 (video bones).** Spec, data model, migration, build plan done. User
+**Phase 0 — DONE. M1–M7 — DONE. M5 (a/b/c/d) — DONE. Design system — DONE.
+Next: M8 (photos + measurements + reminders).** Spec, data model, migration,
+build plan done. User
 completed account setup. Session 001 shipped the pure progression engine + plate
 calculator (`src/engine/*`, 62 tests), M1 (auth/profile/equipment/shell) + auth
 fixes, M2 (exercise library seed + browser), M3 (workout builder), M4 (routine
@@ -15,6 +16,31 @@ auto-progression**), a bold dark+light design system, a live-session **redesign*
 (impeccable critique → "the set is the hero"), and **M6 (analytics radar)**. The
 app is a complete end-to-end auto-progressing workout logger with analytics.
 typecheck + lint + build + 62 tests green.
+
+### M7 — DONE (form-video bones — scaffold only)
+- **Storage seam** added to `DataClient` (`uploadFile` / `signedUrl` /
+  `removeFiles`) + Supabase impl — the repo layer stays the only `getSupabase`
+  consumer. The `form-videos` + `progress-photos` private buckets and their RLS
+  (owner = first path segment) were already in `9999_init.sql`.
+- **`videosRepo`**: `recordForSet({userId,setLogId,file,durationSeconds})` →
+  uploads to `form-videos/{userId}/{videoId}.{ext}`, inserts a `videos` row,
+  links it both ways to the set (`set_logs.video_id` + `videos.set_log_id`),
+  and rolls back the orphaned object if the row insert fails. `getForSet`,
+  `signedUrl` (60-min), `delete` (object + row; the `on delete set null` FK
+  clears `set_logs.video_id`). 30 s cap enforced (`MAX_VIDEO_SECONDS`).
+- **`features/session/VideoSheet`** + `useVideos` hooks: per **logged** set a 🎥
+  button opens a sheet — native-camera capture (`<input capture>`, duration read
+  client-side via a throwaway `<video>`, >30 s rejected) when empty, or scrub +
+  **slow-mo** (0.25/0.5/1×) playback + delete when a clip exists. No analysis
+  (clean seam for future pose/form work). CSS: `.setvid` + video sheet; the
+  done-row layout was tightened so the 4th (🎥) button fits without overflow.
+- **CANNOT be live-tested here** (no device camera, no live Supabase Storage):
+  the upload / signed-URL / storage-RLS path is typecheck/build-verified only.
+  **Smoke-test on a phone**: log a set → 🎥 → record ≤30 s → it uploads, attaches,
+  and plays back with scrub + slow-mo; a 2nd user must not be able to fetch the
+  path. Capture must happen **while the session is in progress** (completed-session
+  `set_logs` are frozen by the immutability triggers, so `video_id` can't change
+  after completion — post-completion video management is deferred).
 
 ### M6 — DONE (analytics radar)
 - **Schema was already in `9999_init.sql`** — all 7 `v_*` views
@@ -215,11 +241,14 @@ the `sessionCommit` wiring — watch for upsert/RLS issues.
 **Also paste `supabase/seed/strength_standards_seed.sql`** (new in M6) so the
 Stats screen's "vs standards" panel resolves bands.
 
-M6 is **DONE** (see the M6 section above) — views were already in init; the work
-was the standards seed + repo/hooks + the Recharts Stats screen, all validated on
-real PG16. Next: **M7 (video bones)** — native `<input capture>` ≤30 s clip →
-private `form-videos/{user_id}/…` → link to a `set_logs` row via `videos.set_log_id`
-→ scrub + slow-mo playback (no analysis). Then M8 (photos/measurements/reminders).
+M6 + M7 are **DONE** (see their sections above). Next: **M8 — photos +
+measurements + reminders** (BUILD_PLAN M8): `progress_photos` (private bucket,
+categorized, side-by-side compare) + `body_measurements` (typed columns + jsonb
+tail, one row/day, CSV import) + `reminders` surfaced via the existing
+`reminders_due` view as post-workout nudges + dashboard, plus an Edge Function
+purge job for video/photo retention. All those tables + the view already exist in
+`9999_init.sql`, so M8 (like M6/M7) is mostly repo + UI + the storage/measurement
+wiring. That's the **Phase 1 exit** milestone.
 
 Engine reuse: M4/M5 should import `src/engine` and follow the "Engine encoding
 notes" above — the pure functions are done and tested; the remaining work is the
