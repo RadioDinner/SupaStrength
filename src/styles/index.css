@@ -75,12 +75,17 @@
   --s-4: 16px;
   --s-5: 20px;
   --s-6: 24px;
-  --s-8: 32px;
+  --s-7: 32px;
 
   --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 16px;
   --r-pill: 999px;
+
+  /* scrims / overlays (shared across both themes) */
+  --scrim: oklch(0 0 0 / 0.5);
+  --scrim-strong: oklch(0 0 0 / 0.55);
+  --on-scrim: oklch(1 0 0);
 
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --dur: 180ms;
@@ -1028,7 +1033,7 @@ h3,
 .sheet__backdrop {
   position: absolute;
   inset: 0;
-  background: oklch(0 0 0 / 0.5);
+  background: var(--scrim);
   animation: fade 180ms var(--ease);
 }
 .sheet__panel {
@@ -1146,7 +1151,7 @@ h3,
   align-items: center;
   text-align: center;
   gap: var(--s-2);
-  padding: var(--s-8) var(--s-5);
+  padding: var(--s-7) var(--s-5);
 }
 .empty__icon {
   display: inline-flex;
@@ -1698,8 +1703,8 @@ h3,
   height: 32px;
   border-radius: 50%;
   border: none;
-  background: oklch(0 0 0 / 0.55);
-  color: #fff;
+  background: var(--scrim-strong);
+  color: var(--on-scrim);
   font-size: 12px;
   cursor: pointer;
 }
@@ -1731,8 +1736,8 @@ h3,
   right: 0;
   padding: 4px 6px;
   font-size: var(--fs-xs);
-  color: #fff;
-  background: oklch(0 0 0 / 0.5);
+  color: var(--on-scrim);
+  background: var(--scrim);
 }
 .comparepane__empty {
   font-size: var(--fs-sm);
