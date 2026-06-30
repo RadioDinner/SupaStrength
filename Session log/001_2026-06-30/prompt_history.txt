@@ -36,3 +36,14 @@ wait
 
 --- 2026-06-30 16:10 ---
 Let's keep screaming
+
+--- 2026-06-30 16:30 ---
+npx impeccable install
+
+--- 2026-06-30 16:31 ---
+npx skills add pbakaus/impeccable
+
+--- 2026-06-30 16:35 (AskUserQuestion answers) ---
+Vibe: Bold & high-energy
+References: Hevy / Strong
+Theme: Dark for now, but I want a light and dark theme toggle

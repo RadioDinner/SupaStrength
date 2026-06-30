@@ -12,6 +12,7 @@ import { WorkoutBuilderPage } from '../features/workouts/WorkoutBuilderPage'
 import { RoutinesPage } from '../features/routines/RoutinesPage'
 import { RoutineBuilderPage } from '../features/routines/RoutineBuilderPage'
 import { SessionPage } from '../features/session/SessionPage'
+import { useTheme } from '../hooks/useTheme'
 
 const TABS = [
   { to: '/', label: 'Home', icon: '🏠', end: true },
@@ -22,6 +23,7 @@ const TABS = [
 ]
 
 export function AppShell() {
+  const { resolved, toggle } = useTheme()
   return (
     <div className="app">
       <header className="appbar">
@@ -29,6 +31,16 @@ export function AppShell() {
           🏋️
         </span>
         <span className="appbar__title">SupaStrength</span>
+        <span className="appbar__spacer" />
+        <button
+          type="button"
+          className="iconbtn"
+          onClick={toggle}
+          aria-label={`Switch to ${resolved === 'dark' ? 'light' : 'dark'} theme`}
+          title="Toggle theme"
+        >
+          {resolved === 'dark' ? '☀️' : '🌙'}
+        </button>
       </header>
 
       <main className="app__main">

@@ -12,6 +12,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>SupaStrength</title>
+    <!-- Set the theme before paint to avoid a flash of the wrong theme. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('supastrength-theme')
+          var sys = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+          var resolved = stored === 'light' || stored === 'dark' ? stored : sys
+          document.documentElement.setAttribute('data-theme', resolved)
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
