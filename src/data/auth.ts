@@ -13,9 +13,24 @@ export interface Credentials {
   password: string
 }
 
+/**
+ * Where Supabase should send the user back after a magic-link / confirmation
+ * email. We use the *current* origin so the link returns to wherever the app was
+ * launched (localhost in dev, the Vercel domain in prod) instead of the project's
+ * default Site URL. This origin must also be in Supabase Auth → URL Configuration
+ * → "Redirect URLs"; otherwise Supabase falls back to the Site URL.
+ */
+function redirectUrl(): string | undefined {
+  return typeof window !== 'undefined' ? window.location.origin : undefined
+}
+
 export const auth = {
   async signUp({ email, password }: Credentials): Promise<{ user: User | null; session: Session | null }> {
-    const { data, error } = await getSupabase().auth.signUp({ email, password })
+    const { data, error } = await getSupabase().auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: redirectUrl() },
+    })
     if (error) throw new Error(error.message)
     return { user: data.user, session: data.session }
   },
@@ -28,7 +43,10 @@ export const auth = {
 
   /** Passwordless magic-link sign-in (SPEC §2: email/password and magic-link). */
   async signInWithMagicLink(email: string): Promise<void> {
-    const { error } = await getSupabase().auth.signInWithOtp({ email })
+    const { error } = await getSupabase().auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirectUrl() },
+    })
     if (error) throw new Error(error.message)
   },
 

@@ -3,3 +3,18 @@ Let's kick of Phase 1 and build the MVP. Always commit directly to main.
 
 --- 2026-06-30 13:10 ---
 Continue from where you left off.
+
+--- 2026-06-30 14:05 ---
+I get this error message "
+Unable to connect
+
+Firefox can’t connect to the server at localhost:3000
+What can you do about it?
+
+    The site could be temporarily unavailable or too busy. Try again in a few moments.
+    If you are unable to load any pages, check your computer’s network connection.
+    If your computer or network is protected by a firewall or proxy, make sure that Firefox is permitted to access the web.
+
+" 
+
+after clicking the magic link from supabase
