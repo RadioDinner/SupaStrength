@@ -8,6 +8,7 @@ import { Banner, Card, Spinner } from '../../components/ui'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../settings/useProfile'
 import { pingRepo } from '../../data/repos/pingRepo'
+import { DueNudges } from '../progress/ProgressPage'
 
 export function HomePage() {
   const { user } = useAuth()
@@ -18,6 +19,8 @@ export function HomePage() {
 
   return (
     <div className="page">
+      <DueNudges />
+
       <Card title={name ? `Welcome back, ${name}` : 'Welcome'} subtitle="Phase 1 — online MVP">
         {ping.isLoading ? (
           <Spinner label="Checking the database…" />

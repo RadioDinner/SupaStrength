@@ -299,6 +299,87 @@ export interface Dumbbell {
   updated_at: string
 }
 
+// ---------------------------------------------------------------------------
+// Body progress: photos + measurements + reminders (BUILD_PLAN M8).
+// ---------------------------------------------------------------------------
+
+export type ReminderType = 'weigh_in' | 'measurements' | 'photos'
+
+/** The numeric measurement columns (everything except bodyweight/body_fat_pct). */
+export type GirthField =
+  | 'neck'
+  | 'shoulders'
+  | 'chest'
+  | 'waist'
+  | 'hips'
+  | 'arm_l'
+  | 'arm_r'
+  | 'thigh_l'
+  | 'thigh_r'
+  | 'calf_l'
+  | 'calf_r'
+  | 'forearm_l'
+  | 'forearm_r'
+
+export type MeasurementField = 'bodyweight' | 'body_fat_pct' | GirthField
+
+export interface BodyMeasurement {
+  id: string
+  user_id: string
+  taken_on: string
+  bodyweight: number | null
+  body_fat_pct: number | null
+  neck: number | null
+  shoulders: number | null
+  chest: number | null
+  waist: number | null
+  hips: number | null
+  arm_l: number | null
+  arm_r: number | null
+  thigh_l: number | null
+  thigh_r: number | null
+  calf_l: number | null
+  calf_r: number | null
+  forearm_l: number | null
+  forearm_r: number | null
+  extra: Record<string, number>
+  note: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ProgressPhoto {
+  id: string
+  user_id: string
+  storage_path: string
+  category: PhotoCategory
+  custom_label: string | null
+  taken_on: string
+  mime_type: string | null
+  size_bytes: number | null
+  created_at: string
+  updated_at: string
+  expires_at: string
+}
+
+export interface Reminder {
+  id: string
+  user_id: string
+  type: ReminderType
+  cadence_days: number
+  last_done_at: string | null
+  enabled: boolean
+  snooze_until: string | null
+  created_at: string
+  updated_at: string
+}
+
+/** `reminders_due` view = a Reminder plus the computed due flags. */
+export interface ReminderDue extends Reminder {
+  is_due: boolean
+  due_since: string | null
+}
+
 /** Form-video attached to a logged set (BUILD_PLAN M7). Private storage. */
 export interface Video {
   id: string

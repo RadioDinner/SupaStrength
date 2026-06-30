@@ -5,9 +5,13 @@
 
 ## Where the project is
 
-**Phase 0 — DONE. M1–M7 — DONE. M5 (a/b/c/d) — DONE. Design system — DONE.
-Next: M8 (photos + measurements + reminders).** Spec, data model, migration,
-build plan done. User
+**🎉 PHASE 1 COMPLETE — M1–M8 all DONE. Design system — DONE.** The user can run
+real workouts on their phone end to end: build templates → schedule rotations →
+log live sessions with auto-progression + plate calc + rest timer → see radar
+analytics → capture form videos → track photos/measurements/reminders — all
+online, multi-user-safe via RLS. **Next: live smoke-test against the real Supabase
+project, then Phase 2 (offline/local-first) or polish.** Spec, data model,
+migration, build plan done. User
 completed account setup. Session 001 shipped the pure progression engine + plate
 calculator (`src/engine/*`, 62 tests), M1 (auth/profile/equipment/shell) + auth
 fixes, M2 (exercise library seed + browser), M3 (workout builder), M4 (routine
@@ -16,6 +20,35 @@ auto-progression**), a bold dark+light design system, a live-session **redesign*
 (impeccable critique → "the set is the hero"), and **M6 (analytics radar)**. The
 app is a complete end-to-end auto-progressing workout logger with analytics.
 typecheck + lint + build + 62 tests green.
+
+### M8 — DONE (photos + measurements + reminders — Phase 1 exit)
+- All tables (`body_measurements`, `progress_photos`, `reminders`) + the
+  `reminders_due` view + the bump triggers + `purge_expired_media` RPC were
+  already in `9999_init.sql`. M8 is the repos + UI:
+- **`measurementsRepo`**: one mutable row/day (`upsert` on `user_id,taken_on`),
+  typed girth columns + jsonb `extra`, and a **CSV importer** (header alias
+  `date`/`taken_on`, label↔key mapping, quoted cells, unknown cols ignored).
+  `parseCsv` is pure — **7 unit tests** in `tests/repos/measurementsCsv.test.ts`.
+- **`photosRepo`**: categorized upload to the private `progress-photos` bucket
+  (`{userId}/{photoId}.{ext}`) with orphan-object rollback, signed-URL reads,
+  delete. **`remindersRepo`**: `ensureDefaults` (weigh-in 7d / measurements 14d /
+  photos 28d, insert-if-missing), `listDue` (reads the view), `markDone` / `snooze`
+  / `setEnabled`.
+- **`features/progress/`**: `ProgressPage` (segmented Measurements / Photos /
+  Reminders), `PhotosSection` (capture, grid, **side-by-side two-date compare**),
+  + `DueNudges` exported and dropped at the top of **Home** so a completed session
+  (which navigates to `/`) shows the due check-ins (the "post-workout nudge").
+  Linked from Profile. CSS for the measure grid, history table, switch, photo
+  grid/compare, reminder rows (actions wrap to their own line on mobile).
+- **VALIDATED on PG16**: one-row-per-day upsert (200→199, total_rows=1); the
+  measurement-insert **bump trigger** updates weigh_in + measurements
+  `last_done_at`; `reminders_due` then shows those NOT due and photos (never
+  logged) DUE. Exactly what the repos/hooks expect.
+- **Photos storage path can't be tested here** (no device/live Storage) — same
+  caveat as M7; flagged for a phone smoke-test. The `purge_expired_media` RPC
+  exists but is **not yet scheduled** (needs a Supabase cron / Edge Function — a
+  deploy step, deferred). `tsconfig.test.json` gained `vite/client` types (the new
+  repo test transitively pulls in `import.meta.env`).
 
 ### M7 — DONE (form-video bones — scaffold only)
 - **Storage seam** added to `DataClient` (`uploadFile` / `signedUrl` /
@@ -241,14 +274,20 @@ the `sessionCommit` wiring — watch for upsert/RLS issues.
 **Also paste `supabase/seed/strength_standards_seed.sql`** (new in M6) so the
 Stats screen's "vs standards" panel resolves bands.
 
-M6 + M7 are **DONE** (see their sections above). Next: **M8 — photos +
-measurements + reminders** (BUILD_PLAN M8): `progress_photos` (private bucket,
-categorized, side-by-side compare) + `body_measurements` (typed columns + jsonb
-tail, one row/day, CSV import) + `reminders` surfaced via the existing
-`reminders_due` view as post-workout nudges + dashboard, plus an Edge Function
-purge job for video/photo retention. All those tables + the view already exist in
-`9999_init.sql`, so M8 (like M6/M7) is mostly repo + UI + the storage/measurement
-wiring. That's the **Phase 1 exit** milestone.
+**Phase 1 is COMPLETE (M1–M8).** The remaining work is operational + Phase 2:
+
+1. **Live smoke-test against the real Supabase project** — the single biggest
+   open item. Everything below the engine (M1–M8 DB wiring) is typecheck/build/
+   PG16-validated but has **never run against the live project from here**. Paste
+   the migration + the two seeds (exercises + strength_standards), then exercise
+   the whole loop: sign up → build workout → routine → live session (log sets,
+   plate calc, rest timer, form video) → complete → confirm the weight **climbed**
+   (M5d) → Stats radar → log a measurement/photo → see the reminder bump. Watch
+   RLS with a 2nd user and the upsert on-conflict targets.
+2. **Schedule `purge_expired_media`** (Supabase cron / Edge Function) to enforce
+   the 30-day video / 1-year photo retention — a deploy step, not code.
+3. **Phase 2**: offline/local-first (implement the `DataClient` seam against a
+   local store) → Android (Capacitor). Or more `$impeccable` polish per screen.
 
 Engine reuse: M4/M5 should import `src/engine` and follow the "Engine encoding
 notes" above — the pure functions are done and tested; the remaining work is the

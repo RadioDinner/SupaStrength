@@ -142,6 +142,13 @@ export function ProfilePage() {
         </Link>
       </Card>
 
+      <Card title="Progress">
+        <Link to="/progress" className="workout-link">
+          <span className="workout-link__name">Measurements, photos &amp; reminders →</span>
+          <span className="muted">Track bodyweight + girths, progress photos, check-ins</span>
+        </Link>
+      </Card>
+
       <Card>
         <Button variant="ghost" onClick={() => void signOut()}>
           Sign out

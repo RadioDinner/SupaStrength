@@ -192,6 +192,31 @@ After the engine + M1 commits, the user hit live-auth friction and we kept going
   the session is in progress (completed `set_logs` are frozen by the immutability
   triggers).
 
+## Continued — M8 photos + measurements + reminders (PHASE 1 COMPLETE 🎉)
+
+- **M8 — DONE** (`M8: photos + measurements + reminders`): the Phase-1 exit
+  milestone. Tables + `reminders_due` view + bump triggers + purge RPC were
+  already in init; built the repos + UI:
+  - **measurementsRepo** (one mutable row/day via upsert, typed girths + jsonb
+    extra, **CSV importer** with header aliasing/quoted cells) — `parseCsv` is
+    pure, **+7 unit tests** (69 total). **photosRepo** (private-bucket upload +
+    orphan rollback + signed URLs + delete). **remindersRepo** (ensureDefaults
+    7/14/28d, listDue from the view, markDone/snooze/setEnabled).
+  - **features/progress/ProgressPage** (Measurements / Photos / Reminders tabs),
+    **PhotosSection** (capture + grid + side-by-side compare), **DueNudges** on
+    Home as the post-workout/dashboard nudge. Linked from Profile. New CSS;
+    reminder action buttons wrap to their own line on mobile (fixed a cramped row).
+  - **Validated on PG16**: one-row-per-day upsert, the measurement bump trigger,
+    and `reminders_due` all behave exactly as the repos expect.
+  - `tsconfig.test.json` += `vite/client` (the new repo test pulls in
+    `import.meta.env`). Photos storage path can't be tested here (no device).
+
+**Phase 1 (M1–M8) is complete.** The app is a full end-to-end, auto-progressing,
+multi-user-safe workout platform: templates → rotations → live logging (plate
+calc, rest timer, auto-progression, form video) → analytics radar → body
+tracking + reminders. Remaining: a live smoke-test against the real Supabase
+project, scheduling the media-purge job, then Phase 2 (offline) or more polish.
+
 ## Open questions / next step
 
 - **Smoke-test M1 against the live Supabase project** (sign up / login / refresh
