@@ -54,3 +54,7 @@ how does the impeccable skill work?
 
 --- 2026-06-30 17:05 ---
 So how do I use $impeccable in this session
+
+--- 2026-06-30 17:20 ---
+https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md
+I want this skill too
