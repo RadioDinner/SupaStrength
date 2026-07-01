@@ -436,24 +436,26 @@ function ActiveExercise({
                 </button>
                 <span className="setcard__unit">{s.is_amrap ? 'AMRAP' : 'reps'}</span>
               </span>
-              <button
-                className={`logbtn ${done ? 'is-done' : ''}`}
-                aria-pressed={done}
-                aria-label={`${done ? 'Undo' : 'Log'} set ${s.set_index}`}
-                onClick={() => onToggle(s)}
-              >
-                {done ? <Check size={18} aria-hidden="true" /> : 'Log'}
-              </button>
-              {done ? (
+              <span className="setcard__actions">
                 <button
-                  className="setvid"
-                  aria-label={`Form video for set ${s.set_index}`}
-                  title="Form video"
-                  onClick={() => onVideo(s)}
+                  className={`logbtn ${done ? 'is-done' : ''}`}
+                  aria-pressed={done}
+                  aria-label={`${done ? 'Undo' : 'Log'} set ${s.set_index}`}
+                  onClick={() => onToggle(s)}
                 >
-                  <Video size={18} aria-hidden="true" />
+                  {done ? <Check size={18} aria-hidden="true" /> : 'Log'}
                 </button>
-              ) : null}
+                {done ? (
+                  <button
+                    className="setvid"
+                    aria-label={`Form video for set ${s.set_index}`}
+                    title="Form video"
+                    onClick={() => onVideo(s)}
+                  >
+                    <Video size={18} aria-hidden="true" />
+                  </button>
+                ) : null}
+              </span>
             </li>
           )
         })}

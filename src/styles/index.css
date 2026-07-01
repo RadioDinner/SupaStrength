@@ -626,12 +626,15 @@ h3,
 }
 .picker__item {
   width: 100%;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   text-align: left;
   background: none;
   border: none;
   color: var(--ink);
   font: inherit;
-  padding: var(--s-2);
+  padding: var(--s-2) var(--s-3);
   border-radius: var(--r-sm);
   cursor: pointer;
 }
@@ -824,7 +827,7 @@ h3,
   gap: 4px;
 }
 .weighthero__input {
-  width: 4ch;
+  width: 5ch;
   border: none;
   background: transparent;
   color: var(--ink);
@@ -901,8 +904,9 @@ h3,
 }
 .setcard {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-3);
+  gap: var(--s-2) var(--s-3);
   padding: var(--s-2) var(--s-3);
   border-radius: var(--r-md);
   background: var(--inset);
@@ -928,7 +932,16 @@ h3,
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  flex: 1;
+  flex: 0 0 auto;
+}
+/* Log + form-video group; right-aligned, and wraps to its own line as a unit on
+   narrow phones so nothing is ever pushed off-screen (was a horizontal overflow). */
+.setcard__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 .repstep {
   width: 44px;
@@ -1509,13 +1522,6 @@ h3,
 }
 .setvid:active {
   transform: scale(0.92);
-}
-/* When a row also shows the form-video button, tighten it so all four items fit. */
-.setcard.is-done {
-  gap: var(--s-2);
-}
-.setcard.is-done .logbtn {
-  min-width: 52px;
 }
 .sheet__head {
   display: flex;

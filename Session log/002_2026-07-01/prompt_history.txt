@@ -24,3 +24,6 @@ commit this then continue to harden
 
 --- 2026-07-01 09:55 ---
 commit the harden pass
+
+--- 2026-07-01 10:15 ---
+continue with layout
