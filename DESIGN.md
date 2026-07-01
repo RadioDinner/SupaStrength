@@ -22,10 +22,17 @@ Semantic roles (per theme):
 
 - `--bg` page · `--surface` card · `--surface-2` raised (app bar / tab bar) ·
   `--border` hairline.
-- `--ink` primary text · `--muted` secondary (kept ≥4.5:1, never decorative gray).
+- `--ink` primary text · `--muted` secondary (kept ≥4.5:1, never decorative gray) ·
+  `--faint` least-prominent text (placeholders, section micro-labels, rank
+  counters) — dimmer than `--muted` but still **AA ≥4.5:1 in both themes** (it is a
+  text role, never decorative).
 - `--accent` brand / primary; `--on-accent` text on it.
 - State hues: `--good` (set done / PR), `--warn` (ceiling / stale), `--bad`
-  (error / failure). Each has a low-chroma tint background for fills.
+  (error / failure). Each has a low-chroma tint background for fills, and the hue
+  itself is used as **text on that tint** (status banners, badges, standards
+  bands). So the light-theme `--good`/`--warn`/`--bad` are darkened enough that
+  on-tint text clears AA 4.5:1 (verified: good 4.80, warn 5.00, bad 4.77). Keep
+  that invariant when retuning these hues.
 
 Dark bg sits near OKLCH L0.17 with a faint brand-hue tint (not navy-cliché, not
 neutral-black). Light bg is a cool near-white (L~0.985, chroma toward the brand

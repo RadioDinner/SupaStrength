@@ -10,3 +10,14 @@ my powershell sessions in claude keep crashing :( Tell me where all of our loose
 --- 2026-07-01 08:30 (AskUserQuestion answer) ---
 Q: How should I handle the untracked .claude/ and .cursor/ tooling dirs before pushing?
 A: Commit everything
+
+--- 2026-07-01 08:45 ---
+/effort ultracode
+/model (Opus 4.8 1M context)
+/impeccable audit
+
+--- 2026-07-01 09:10 ---
+/impeccable colorize
+
+--- 2026-07-01 09:30 ---
+commit this then continue to harden
