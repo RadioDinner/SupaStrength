@@ -11,7 +11,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../settings/useProfile'
 import { useRoutines } from '../routines/useRoutines'
 import { sessionsRepo } from '../../data/repos/sessionsRepo'
-import { DueNudges } from '../progress/ProgressPage'
+import { DueNudges } from '../progress/DueNudges'
 
 /** Whole days between a session's `performed_on` (a date) and today. */
 function daysAgo(performedOn: string): number {

@@ -54,8 +54,9 @@ export const photosRepo = {
     }
   },
 
-  signedUrl(storagePath: string): Promise<string> {
-    return onlineDataClient.signedUrl(BUCKET, storagePath, 60 * 60)
+  /** One request for many photos (path → signed url) — avoids an N+1 fan-out. */
+  signedUrls(storagePaths: string[]): Promise<Record<string, string>> {
+    return onlineDataClient.signedUrls(BUCKET, storagePaths, 60 * 60)
   },
 
   async delete(photo: Pick<ProgressPhoto, 'id' | 'storage_path'>): Promise<void> {

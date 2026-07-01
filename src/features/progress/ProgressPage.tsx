@@ -4,7 +4,7 @@
  * reminders surfaced via the `reminders_due` view. Phase-1 exit feature.
  */
 import { useMemo, useRef, useState, type FormEvent } from 'react'
-import { Bell, Camera, Ruler, Scale, type LucideIcon } from 'lucide-react'
+import { Bell, Ruler } from 'lucide-react'
 import { Banner, Button, Card, EmptyState, Field, SkeletonList, TextInput } from '../../components/ui'
 import { useAuth } from '../../hooks/useAuth'
 import { MEASUREMENT_FIELDS, type MeasurementValues } from '../../data/repos/measurementsRepo'
@@ -16,6 +16,7 @@ import {
   useSaveMeasurement,
 } from './useProgress'
 import { PhotosSection } from './PhotosSection'
+import { REMINDER_META } from './reminderMeta'
 import type { BodyMeasurement, MeasurementField } from '../../data/types'
 
 const todayIso = () => new Date().toISOString().slice(0, 10)
@@ -244,12 +245,6 @@ function MeasurementsSection() {
 }
 
 // ── Reminders ─────────────────────────────────────────────────────────────────
-const REMINDER_META: Record<string, { label: string; Icon: LucideIcon }> = {
-  weigh_in: { label: 'Weigh-in', Icon: Scale },
-  measurements: { label: 'Measurements', Icon: Ruler },
-  photos: { label: 'Progress photos', Icon: Camera },
-}
-
 function RemindersSection() {
   const { data: reminders, isLoading } = useDueReminders()
   const { markDone, snooze, setEnabled } = useReminderActions()
@@ -304,39 +299,3 @@ function RemindersSection() {
   )
 }
 
-/** A compact post-workout / dashboard nudge listing the reminders that are due. */
-export function DueNudges() {
-  const { data: reminders } = useDueReminders()
-  const { markDone, snooze } = useReminderActions()
-  const due = (reminders ?? []).filter((r) => r.is_due && r.enabled)
-  if (due.length === 0) return null
-  const snoozeUntil = new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString()
-  return (
-    <Card title="Time for a check-in">
-      <ul className="list">
-        {due.map((r) => {
-          const meta = REMINDER_META[r.type] ?? { label: r.type, Icon: Bell }
-          return (
-            <li key={r.id} className="reminder">
-              <span className="reminder__icon" aria-hidden="true">
-                <meta.Icon size={20} aria-hidden />
-              </span>
-              <div className="reminder__body">
-                <span className="reminder__name">{meta.label} is due</span>
-                <span className="reminder__sub muted">It’s been {r.cadence_days}+ days.</span>
-              </div>
-              <div className="reminder__actions">
-                <Button variant="ghost" onClick={() => markDone.mutate(r.id)}>
-                  Done
-                </Button>
-                <Button variant="ghost" onClick={() => snooze.mutate({ id: r.id, until: snoozeUntil })}>
-                  Later
-                </Button>
-              </div>
-            </li>
-          )
-        })}
-      </ul>
-    </Card>
-  )
-}

@@ -244,7 +244,7 @@ function ProgressHeader({
         </span>
       </div>
       <div className="sprogress__bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-        <span className="sprogress__fill" style={{ width: `${pct}%` }} />
+        <span className="sprogress__fill" style={{ transform: `scaleX(${pct / 100})` }} />
       </div>
     </div>
   )

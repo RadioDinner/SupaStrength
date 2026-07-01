@@ -65,6 +65,12 @@ export interface DataClient {
   ): Promise<{ path: string }>
   /** Time-limited signed URL for reading a private object. */
   signedUrl(bucket: string, path: string, expiresInSeconds?: number): Promise<string>
+  /** Batch signed URLs for many objects in one request (path → url). */
+  signedUrls(
+    bucket: string,
+    paths: string[],
+    expiresInSeconds?: number,
+  ): Promise<Record<string, string>>
   /** Remove objects from a bucket. */
   removeFiles(bucket: string, paths: string[]): Promise<void>
 

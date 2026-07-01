@@ -150,6 +150,24 @@ export const onlineDataClient: DataClient = {
     return data.signedUrl
   },
 
+  async signedUrls(
+    bucket: string,
+    paths: string[],
+    expiresInSeconds = 3600,
+  ): Promise<Record<string, string>> {
+    if (paths.length === 0) return {}
+    const supabase = getSupabase()
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrls(paths, expiresInSeconds)
+    if (error) throw new Error(error.message)
+    const map: Record<string, string> = {}
+    for (const item of data ?? []) {
+      if (item.path && item.signedUrl) map[item.path] = item.signedUrl
+    }
+    return map
+  },
+
   async removeFiles(bucket: string, paths: string[]): Promise<void> {
     const supabase = getSupabase()
     const { error } = await supabase.storage.from(bucket).remove(paths)

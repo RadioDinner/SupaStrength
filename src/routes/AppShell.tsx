@@ -2,6 +2,7 @@
  * Authenticated app shell (BUILD_PLAN M1): routed content + bottom tab nav,
  * mobile-first. New milestones add routes/tabs here.
  */
+import { lazy, Suspense } from 'react'
 import { NavLink, Route, Routes } from 'react-router-dom'
 import {
   Home,
@@ -14,20 +15,24 @@ import {
   Moon,
   type LucideIcon,
 } from 'lucide-react'
-import { Logo } from '../components/ui'
+import { Logo, SkeletonList } from '../components/ui'
 import { HomePage } from '../features/home/HomePage'
-import { ProfilePage } from '../features/settings/ProfilePage'
-import { EquipmentPage } from '../features/equipment/EquipmentPage'
-import { ExercisesPage } from '../features/exercises/ExercisesPage'
-import { WorkoutsPage } from '../features/workouts/WorkoutsPage'
-import { WorkoutBuilderPage } from '../features/workouts/WorkoutBuilderPage'
-import { RoutinesPage } from '../features/routines/RoutinesPage'
-import { RoutineBuilderPage } from '../features/routines/RoutineBuilderPage'
-import { SessionPage } from '../features/session/SessionPage'
-import { AnalyticsPage } from '../features/analytics/AnalyticsPage'
-import { ProgressPage } from '../features/progress/ProgressPage'
-import { HistoryPage } from '../features/history/HistoryPage'
 import { useTheme } from '../hooks/useTheme'
+
+// Route-split every non-landing screen into its own chunk so the initial bundle
+// stays small on the phone/cellular target. AnalyticsPage in particular pulls in
+// Recharts (+ d3), which no longer loads until the Stats tab is opened.
+const WorkoutsPage = lazy(() => import('../features/workouts/WorkoutsPage').then((m) => ({ default: m.WorkoutsPage })))
+const WorkoutBuilderPage = lazy(() => import('../features/workouts/WorkoutBuilderPage').then((m) => ({ default: m.WorkoutBuilderPage })))
+const RoutinesPage = lazy(() => import('../features/routines/RoutinesPage').then((m) => ({ default: m.RoutinesPage })))
+const RoutineBuilderPage = lazy(() => import('../features/routines/RoutineBuilderPage').then((m) => ({ default: m.RoutineBuilderPage })))
+const SessionPage = lazy(() => import('../features/session/SessionPage').then((m) => ({ default: m.SessionPage })))
+const AnalyticsPage = lazy(() => import('../features/analytics/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })))
+const ProgressPage = lazy(() => import('../features/progress/ProgressPage').then((m) => ({ default: m.ProgressPage })))
+const HistoryPage = lazy(() => import('../features/history/HistoryPage').then((m) => ({ default: m.HistoryPage })))
+const ExercisesPage = lazy(() => import('../features/exercises/ExercisesPage').then((m) => ({ default: m.ExercisesPage })))
+const EquipmentPage = lazy(() => import('../features/equipment/EquipmentPage').then((m) => ({ default: m.EquipmentPage })))
+const ProfilePage = lazy(() => import('../features/settings/ProfilePage').then((m) => ({ default: m.ProfilePage })))
 
 const TABS: { to: string; label: string; Icon: LucideIcon; end: boolean }[] = [
   { to: '/', label: 'Home', Icon: Home, end: true },
@@ -58,6 +63,7 @@ export function AppShell() {
       </header>
 
       <main className="app__main">
+        <Suspense fallback={<SkeletonList rows={3} />}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/workouts" element={<WorkoutsPage />} />
@@ -73,6 +79,7 @@ export function AppShell() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<HomePage />} />
         </Routes>
+        </Suspense>
       </main>
 
       <nav className="tabbar">

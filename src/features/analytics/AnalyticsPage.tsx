@@ -320,7 +320,7 @@ function RelativePanel({
         <li key={r.muscle} className="bar">
           <span className="bar__label">{r.muscle}</span>
           <span className="bar__track">
-            <span className="bar__fill" style={{ width: `${r.value}%` }} />
+            <span className="bar__fill" style={{ transform: `scaleX(${Math.min(1, r.value / 100)})` }} />
           </span>
           <span className="bar__val mono">
             {metric === 'hard_sets' && mode === 'volume'

@@ -68,12 +68,17 @@ export function useDeletePhoto() {
   })
 }
 
-export function usePhotoUrl(storagePath: string | null) {
+/** Batch-sign every visible photo in a single request (path → url map). */
+export function usePhotoUrls(storagePaths: string[]) {
+  const key = [...storagePaths].sort().join('|')
   return useQuery({
-    queryKey: ['photo_url', storagePath],
-    queryFn: () => photosRepo.signedUrl(storagePath!),
-    enabled: !!storagePath,
+    queryKey: ['photo_urls', key],
+    queryFn: () => photosRepo.signedUrls(storagePaths),
+    enabled: storagePaths.length > 0,
     staleTime: 1000 * 60 * 50,
+    // Keep the prior map while re-signing after a photo is added/removed so
+    // surviving thumbnails don't flash to their placeholder.
+    placeholderData: (prev) => prev,
   })
 }
 

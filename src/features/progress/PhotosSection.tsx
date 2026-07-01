@@ -6,7 +6,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { Camera, X } from 'lucide-react'
 import { Banner, Button, Card, ConfirmDialog, EmptyState, Select, SkeletonList, TextInput } from '../../components/ui'
-import { useDeletePhoto, usePhotoUrl, useRecentPhotos, useUploadPhoto } from './useProgress'
+import { useDeletePhoto, usePhotoUrls, useRecentPhotos, useUploadPhoto } from './useProgress'
 import type { PhotoCategory, ProgressPhoto } from '../../data/types'
 
 const CATEGORIES: { value: PhotoCategory; label: string }[] = [
@@ -41,6 +41,8 @@ export function PhotosSection({ userId }: { userId: string }) {
   }
 
   const byId = useMemo(() => new Map((photos ?? []).map((p) => [p.id, p])), [photos])
+  const urlPaths = useMemo(() => (photos ?? []).map((p) => p.storage_path), [photos])
+  const { data: urlMap } = usePhotoUrls(urlPaths)
   const [aId, bId] = compare
   const a = aId ? byId.get(aId) ?? null : null
   const b = bId ? byId.get(bId) ?? null : null
@@ -105,8 +107,8 @@ export function PhotosSection({ userId }: { userId: string }) {
       {a || b ? (
         <Card title="Compare" subtitle="Pick two photos below to line them up">
           <div className="comparepair">
-            <ComparePane photo={a} />
-            <ComparePane photo={b} />
+            <ComparePane photo={a} url={a ? urlMap?.[a.storage_path] : undefined} />
+            <ComparePane photo={b} url={b ? urlMap?.[b.storage_path] : undefined} />
           </div>
           <Button variant="ghost" onClick={() => setCompare([null, null])}>
             Clear compare
@@ -129,6 +131,7 @@ export function PhotosSection({ userId }: { userId: string }) {
               <PhotoThumb
                 key={p.id}
                 photo={p}
+                url={urlMap?.[p.storage_path]}
                 selected={aId === p.id || bId === p.id}
                 onSelect={() => toggleCompare(p.id)}
                 onDelete={() => setPendingDelete(p)}
@@ -167,16 +170,17 @@ export function PhotosSection({ userId }: { userId: string }) {
 
 function PhotoThumb({
   photo,
+  url,
   selected,
   onSelect,
   onDelete,
 }: {
   photo: ProgressPhoto
+  url?: string
   selected: boolean
   onSelect: () => void
   onDelete: () => void
 }) {
-  const { data: url } = usePhotoUrl(photo.storage_path)
   return (
     <figure className={`photothumb ${selected ? 'is-selected' : ''}`}>
       <button type="button" className="photothumb__btn" onClick={onSelect}>
@@ -197,8 +201,7 @@ function PhotoThumb({
   )
 }
 
-function ComparePane({ photo }: { photo: ProgressPhoto | null }) {
-  const { data: url } = usePhotoUrl(photo?.storage_path ?? null)
+function ComparePane({ photo, url }: { photo: ProgressPhoto | null; url?: string }) {
   return (
     <div className="comparepane">
       {photo && url ? (
