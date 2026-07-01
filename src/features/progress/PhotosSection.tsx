@@ -147,11 +147,17 @@ export function PhotosSection({ userId }: { userId: string }) {
           pending={del.isPending}
           onCancel={() => setPendingDelete(null)}
           onConfirm={async () => {
-            await del.mutateAsync({
-              id: pendingDelete.id,
-              storage_path: pendingDelete.storage_path,
-            })
-            setPendingDelete(null)
+            const { id, storage_path } = pendingDelete
+            setError(null)
+            try {
+              await del.mutateAsync({ id, storage_path })
+              // Drop the deleted photo from the compare panes if it was picked.
+              setCompare(([x, y]) => [x === id ? null : x, y === id ? null : y])
+            } catch (err) {
+              setError(err instanceof Error ? err.message : String(err))
+            } finally {
+              setPendingDelete(null)
+            }
           }}
         />
       ) : null}

@@ -7,7 +7,7 @@
 import { useEffect, useRef } from 'react'
 
 const FOCUSABLE =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), video[controls], audio[controls], [tabindex]:not([tabindex="-1"])'
 
 export function useDialog<T extends HTMLElement>(onClose: () => void) {
   const panelRef = useRef<T>(null)
@@ -33,6 +33,8 @@ export function useDialog<T extends HTMLElement>(onClose: () => void) {
 
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
+        // Let the browser handle Escape when it's exiting native video fullscreen.
+        if (document.fullscreenElement) return
         e.preventDefault()
         onCloseRef.current()
         return
@@ -46,7 +48,14 @@ export function useDialog<T extends HTMLElement>(onClose: () => void) {
         panel.focus()
         return
       }
-      const active = document.activeElement
+      const active = document.activeElement as HTMLElement | null
+      // Recapture focus that escaped the panel — e.g. the focused control was
+      // disabled mid-action (pending state), dropping focus to <body>.
+      if (!active || !panel.contains(active)) {
+        e.preventDefault()
+        first.focus()
+        return
+      }
       if (e.shiftKey && (active === first || active === panel)) {
         e.preventDefault()
         last.focus()
