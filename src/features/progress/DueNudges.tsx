@@ -31,10 +31,10 @@ export function DueNudges() {
               </div>
               <div className="reminder__actions">
                 <Button variant="ghost" onClick={() => markDone.mutate(r.id)}>
-                  Done
+                  Did it
                 </Button>
                 <Button variant="ghost" onClick={() => snooze.mutate({ id: r.id, until: snoozeUntil })}>
-                  Later
+                  Snooze
                 </Button>
               </div>
             </li>

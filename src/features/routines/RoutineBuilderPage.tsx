@@ -4,9 +4,9 @@
  * pointer math is the pure, tested `engine/schedule`.
  */
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Banner, Button, Card, ConfirmDialog, Select, Spinner } from '../../components/ui'
+import { Banner, Button, Card, ConfirmDialog, Select, SkeletonList } from '../../components/ui'
 import { nextGymDay, type EngineRotation } from '../../data/repos/routinesRepo'
 import { useWorkouts } from '../workouts/useWorkouts'
 import { useActiveSession, useStartNextGymDay } from '../session/useSession'
@@ -55,7 +55,7 @@ export function RoutineBuilderPage() {
   )
   const today = nextGymDay(engineRotations)
 
-  if (isLoading) return <Spinner label="Loading routine…" />
+  if (isLoading) return <SkeletonList rows={2} />
   if (!routine) return <Banner kind="err">Routine not found.</Banner>
 
   return (
@@ -121,7 +121,7 @@ export function RoutineBuilderPage() {
       <div>
         <div className="row-actions">
           <Button onClick={() => addRotation.mutate(null)} disabled={addRotation.isPending}>
-            + Add rotation
+            <Plus size={18} aria-hidden="true" /> Add rotation
           </Button>
         </div>
         <p className="muted" style={{ marginTop: 10 }}>

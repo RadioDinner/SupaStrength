@@ -533,6 +533,7 @@ h3,
   align-items: center;
   gap: var(--s-3);
   font-size: var(--fs-base);
+  cursor: pointer;
 }
 .toggle input {
   width: 18px;
@@ -542,6 +543,13 @@ h3,
 .toggle--field {
   align-self: end;
   padding-bottom: var(--s-3);
+}
+/* compact, spaced variant (e.g. a secondary setting under a control cluster) */
+.toggle--compact {
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+  font-size: var(--fs-sm);
+  color: var(--muted);
 }
 
 /* ── buttons ──────────────────────────────────────────────────────────────── */
@@ -1442,15 +1450,10 @@ h3,
 }
 
 /* ── micro-interactions ──────────────────────────────────────────────────── */
+/* Set-done "pop": a single ease-out scale-up — no >1 overshoot (no-bounce rule). */
 @keyframes pop {
-  0% {
-    transform: scale(0.6);
-  }
-  60% {
-    transform: scale(1.12);
-  }
-  100% {
-    transform: scale(1);
+  from {
+    transform: scale(0.7);
   }
 }
 .setrow--done .setrow__idx {
@@ -1930,21 +1933,6 @@ h3,
   background: var(--accent);
   color: var(--on-accent);
   box-shadow: 0 1px 6px -2px var(--accent);
-}
-.antoggle {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  margin-top: var(--s-3);
-  color: var(--muted);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  cursor: pointer;
-}
-.antoggle input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent);
 }
 
 .radarwrap {

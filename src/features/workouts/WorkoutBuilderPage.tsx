@@ -7,7 +7,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { ChevronDown, ChevronLeft, ChevronUp, X } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { Banner, Button, Card, Field, Select, Spinner, TextInput } from '../../components/ui'
+import { Banner, Button, Card, Field, Select, SkeletonList, TextInput } from '../../components/ui'
 import { useExercises } from '../exercises/useExercises'
 import { useDebounced } from '../../hooks/useDebounced'
 import {
@@ -33,7 +33,7 @@ export function WorkoutBuilderPage() {
   const remove = useRemoveEntry(id)
   const move = useMoveEntry(id)
 
-  if (isLoading) return <Spinner label="Loading workout…" />
+  if (isLoading) return <SkeletonList rows={2} />
   if (!workout) return <Banner kind="err">Workout not found.</Banner>
 
   return (

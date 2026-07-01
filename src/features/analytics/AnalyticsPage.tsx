@@ -199,7 +199,7 @@ export function AnalyticsPage() {
           ) : null}
         </div>
         {prefs.radar_mode === 'volume' ? (
-          <label className="antoggle">
+          <label className="toggle toggle--compact">
             <input
               type="checkbox"
               checked={prefs.count_secondary}

@@ -9,7 +9,7 @@
  */
 import { useId, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Check, Video } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Video } from 'lucide-react'
 import { Banner, Button, Card, SkeletonList } from '../../components/ui'
 import { useDialog } from '../../hooks/useDialog'
 import { useAuth } from '../../hooks/useAuth'
@@ -520,10 +520,10 @@ function ActiveExercise({
 
       <div className="hero__nav">
         <Button variant="ghost" disabled={!hasPrev} onClick={onPrev}>
-          ‹ Prev
+          <ChevronLeft size={18} aria-hidden="true" /> Prev
         </Button>
         <Button variant="ghost" disabled={!hasNext} onClick={onNext}>
-          Next ›
+          Next <ChevronRight size={18} aria-hidden="true" />
         </Button>
       </div>
     </Card>
