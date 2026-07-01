@@ -930,6 +930,21 @@ h3,
   width: 48px;
   flex-shrink: 0;
 }
+/* the load this set records (ramp/back-off visible at a glance) */
+.setcard__wt {
+  flex: none;
+  min-width: 3ch;
+  font-weight: 800;
+  font-size: var(--fs-md);
+  font-variant-numeric: var(--tnum);
+  letter-spacing: -0.01em;
+}
+.setcard__wtunit {
+  margin-left: 1px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--muted);
+}
 .setcard__reps {
   display: flex;
   align-items: center;

@@ -71,6 +71,8 @@ export function SessionPage() {
   const [weights, setWeights] = useState<Record<string, string>>({})
   const [reps, setReps] = useState<Record<string, string>>({})
   const [doneSet, setDoneSet] = useState<Record<string, boolean>>({})
+  const [loggedWeights, setLoggedWeights] = useState<Record<string, number>>({})
+  const [restSignal, setRestSignal] = useState(0)
   const [activeIndex, setActiveIndex] = useState(0)
   const [confirming, setConfirming] = useState(false)
   const [videoSet, setVideoSet] = useState<SetLog | null>(null)
@@ -108,6 +110,18 @@ export function SessionPage() {
     setDoneSet((d) => ({ ...d, [s.id]: next }))
     const r = reps[s.id] ?? String(s.actual_reps ?? s.planned_reps ?? '')
     const w = weights[entry.id] ?? (entry.planned_weight != null ? String(entry.planned_weight) : '')
+    // Capture this set's own load (so ramping/back-off shows per set) and kick
+    // off rest — only when logging, not when undoing.
+    if (next) {
+      if (w) setLoggedWeights((m) => ({ ...m, [s.id]: Number(w) }))
+      setRestSignal((n) => n + 1)
+    } else {
+      setLoggedWeights((m) => {
+        const copy = { ...m }
+        delete copy[s.id]
+        return copy
+      })
+    }
     update.mutate({
       id: s.id,
       patch: {
@@ -149,6 +163,8 @@ export function SessionPage() {
           isDone={isDone}
           onToggle={(s) => toggleSet(active, s)}
           onVideo={(s) => setVideoSet(s)}
+          loggedWeights={loggedWeights}
+          restSignal={restSignal}
           bar={equipment?.bar ?? null}
           plates={equipment?.plates ?? []}
           prefs={equipment?.prefs ?? null}
@@ -261,6 +277,8 @@ function ActiveExercise({
   isDone,
   onToggle,
   onVideo,
+  loggedWeights,
+  restSignal,
   bar,
   plates,
   prefs,
@@ -279,6 +297,8 @@ function ActiveExercise({
   isDone: (s: SetLog) => boolean
   onToggle: (s: SetLog) => void
   onVideo: (s: SetLog) => void
+  loggedWeights: Record<string, number>
+  restSignal: number
   bar: Barbell | null
   plates: PlateInventory[]
   prefs: EquipmentPreferences | null
@@ -415,9 +435,22 @@ function ActiveExercise({
         {sets.map((s, i) => {
           const done = isDone(s)
           const current = i === currentIdx
+          // Each set shows the load it was logged at (ramp/back-off visible);
+          // a pending set previews the current working weight it will capture.
+          const shownWeight = done ? loggedWeights[s.id] ?? s.actual_weight ?? w : w
           return (
             <li key={s.id} className={`setcard ${done ? 'is-done' : ''} ${current ? 'is-current' : ''}`}>
               <span className="setcard__n">Set {s.set_index}</span>
+              <span className="setcard__wt mono">
+                {shownWeight ? (
+                  <>
+                    {shownWeight}
+                    <span className="setcard__wtunit">lb</span>
+                  </>
+                ) : (
+                  '—'
+                )}
+              </span>
               <span className="setcard__reps">
                 <button
                   className="repstep"
@@ -461,7 +494,9 @@ function ActiveExercise({
         })}
       </ul>
 
-      {entry.planned_rest_seconds ? <RestTimer seconds={entry.planned_rest_seconds} /> : null}
+      {entry.planned_rest_seconds ? (
+        <RestTimer seconds={entry.planned_rest_seconds} autoStartSignal={restSignal} />
+      ) : null}
 
       <div className="hero__nav">
         <Button variant="ghost" disabled={!hasPrev} onClick={onPrev}>

@@ -11,10 +11,28 @@ function fmt(total: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-export function RestTimer({ seconds }: { seconds: number }) {
+export function RestTimer({
+  seconds,
+  autoStartSignal = 0,
+}: {
+  seconds: number
+  /** Bump this (e.g. a counter) to auto-start/restart the countdown — fired the
+   *  instant a set is logged so rest begins without a second manual tap. */
+  autoStartSignal?: number
+}) {
   const [remaining, setRemaining] = useState(seconds)
   const [running, setRunning] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Read the current entry's rest length without making it an effect dep (so
+  // navigating exercises doesn't reset a running countdown).
+  const secondsRef = useRef(seconds)
+  secondsRef.current = seconds
+
+  useEffect(() => {
+    if (autoStartSignal <= 0) return
+    setRemaining(secondsRef.current)
+    setRunning(true)
+  }, [autoStartSignal])
 
   useEffect(() => {
     if (!running) return

@@ -42,3 +42,8 @@ list the screen names
 
 --- 2026-07-01 11:36 ---
 /impeccable animate home
+
+--- 2026-07-01 11:50 (AskUserQuestion answers — critique action plan) ---
+Priority: Session loop (both P1s) first
+Weight model: Per-set is the goal — fix it
+Scope: All P1 + P2 (5 issues)
