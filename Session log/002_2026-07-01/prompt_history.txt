@@ -47,3 +47,6 @@ list the screen names
 Priority: Session loop (both P1s) first
 Weight model: Per-set is the goal — fix it
 Scope: All P1 + P2 (5 issues)
+
+--- 2026-07-01 12:05 ---
+update the handoff and log, then continue with the P2s

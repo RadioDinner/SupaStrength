@@ -7,6 +7,34 @@
 
 **🎉 PHASE 1 COMPLETE — M1–M8 all DONE. Design system — DONE.**
 
+> **Session 002 (2026-07-01) — full `impeccable` design-quality pass (on `main`, 9 commits):**
+> - **`/impeccable audit`** → `docs/design-audit-2026-07-01.md` (13/20; 0 P0 / 7
+>   P1 / 9 P2 / 10 P3; NOT AI slop). **All 7 P1s then fixed** across colorize,
+>   harden, layout, optimize.
+> - **colorize** — AA contrast tokens (light `--good`/`--warn` on-tint, `--faint`
+>   as text) fixed via WCAG-scripted OKLCH values.
+> - **harden** — a shared focus-trap dialog (`src/hooks/useDialog.ts`) for both
+>   bottom-sheets; reminder-switch a11y name + 44px + tokenized knob; rest-timer
+>   SR live region; `ConfirmDialog` gating photo delete.
+> - **layout** — the logged-set card no longer overflows (grouped actions +
+>   `flex-wrap`); verified at 320/390px via headless Chrome.
+> - **optimize** — route-split (React.lazy); Recharts deferred to the Analytics
+>   chunk; **initial bundle 267 → 153 kB gzip (−43%)**; photo signed-URLs batched
+>   (N+1→1); progress fills `width`→`scaleX`. (`DueNudges`/`reminderMeta` were
+>   split out of `ProgressPage` so Home's import doesn't defeat the lazy split.)
+> - **animate home** — restrained dashboard entrance + hero-number settle +
+>   nav-row micro-interactions (reduced-motion safe).
+> - **`/impeccable critique`** → `.impeccable/critique/2026-07-01T...__supastrength-app.md`
+>   (**27/40**, dual-agent, NOT AI slop; weakness = domain fluency of the gym
+>   loop). **Both P1s shipped:** rest timer **auto-starts on log**; **per-set
+>   weight** shown on every set card (ramp/back-off now expressible).
+> - **REMAINING critique P2s (next):** (1) optimistic rollback + toast on set-log
+>   failure; (2) confirm-gate Archive/Remove-entry/Remove-rotation (reuse
+>   `ConfirmDialog`); (3) nav **6→5 + a "return to session" affordance** — an IA
+>   fork to decide (fold Exercises vs merge Workouts+Routines into "Plan").
+> - Tests are now **69 green** (was 62). Prereqs for the live smoke-test are done
+>   (migration + both seeds in; Site URL fixed) — the live run is still the gate.
+
 > **Post-Phase-1 polish (this session, on `main`):**
 > - **Real type system** — replaced `system-ui` with self-hosted **Archivo +
 >   Inter** (token-driven `--font-display`/`--font-num`/`--font-body`; swap a
