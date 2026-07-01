@@ -13,6 +13,7 @@ import { Check, Video } from 'lucide-react'
 import { Banner, Button, Card, SkeletonList } from '../../components/ui'
 import { useDialog } from '../../hooks/useDialog'
 import { useAuth } from '../../hooks/useAuth'
+import { useToast } from '../../hooks/useToast'
 import { useExercisesByIds } from '../workouts/useWorkouts'
 import { solvePlates, type PlateStock } from '../../engine/plates'
 import { generateWarmups } from '../../engine/warmups'
@@ -46,6 +47,7 @@ export function SessionPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { toast } = useToast()
   const { data: session, isLoading } = useSession(id)
   const { data: entries } = useSessionEntries(id)
   const exerciseIds = useMemo(() => (entries ?? []).map((e) => e.exercise_id), [entries])
@@ -106,7 +108,9 @@ export function SessionPage() {
   }
 
   function toggleSet(entry: SessionEntry, s: SetLog) {
-    const next = !isDone(s)
+    const prevDone = isDone(s)
+    const prevLogged = loggedWeights[s.id]
+    const next = !prevDone
     setDoneSet((d) => ({ ...d, [s.id]: next }))
     const r = reps[s.id] ?? String(s.actual_reps ?? s.planned_reps ?? '')
     const w = weights[entry.id] ?? (entry.planned_weight != null ? String(entry.planned_weight) : '')
@@ -122,16 +126,32 @@ export function SessionPage() {
         return copy
       })
     }
-    update.mutate({
-      id: s.id,
-      patch: {
-        is_completed: next,
-        completed_at: next ? new Date().toISOString() : null,
-        actual_reps: r ? Number(r) : null,
-        actual_weight: w ? Number(w) : null,
-        amrap_reps: s.is_amrap && r ? Number(r) : null,
+    update.mutate(
+      {
+        id: s.id,
+        patch: {
+          is_completed: next,
+          completed_at: next ? new Date().toISOString() : null,
+          actual_reps: r ? Number(r) : null,
+          actual_weight: w ? Number(w) : null,
+          amrap_reps: s.is_amrap && r ? Number(r) : null,
+        },
       },
-    })
+      {
+        // A basement-gym signal drop must not silently "eat" a logged set: roll
+        // the optimistic UI back to what it was and tell the lifter.
+        onError: () => {
+          setDoneSet((d) => ({ ...d, [s.id]: prevDone }))
+          setLoggedWeights((m) => {
+            const copy = { ...m }
+            if (prevLogged === undefined) delete copy[s.id]
+            else copy[s.id] = prevLogged
+            return copy
+          })
+          toast(next ? "That set didn't save — check your connection." : "Couldn't update that set.", 'err')
+        },
+      },
+    )
   }
 
   const active = ordered[activeIndex]

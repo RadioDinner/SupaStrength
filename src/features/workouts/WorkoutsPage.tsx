@@ -5,9 +5,10 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ClipboardList } from 'lucide-react'
-import { Button, Card, EmptyState, SkeletonList, TextInput } from '../../components/ui'
+import { Button, Card, ConfirmDialog, EmptyState, SkeletonList, TextInput } from '../../components/ui'
 import { useArchiveWorkout, useCreateWorkout, useWorkouts } from './useWorkouts'
 import { useActiveSession, useStartFromWorkout } from '../session/useSession'
+import { useToast } from '../../hooks/useToast'
 
 export function WorkoutsPage() {
   const navigate = useNavigate()
@@ -16,7 +17,9 @@ export function WorkoutsPage() {
   const create = useCreateWorkout()
   const archive = useArchiveWorkout()
   const start = useStartFromWorkout()
+  const { toast } = useToast()
   const [name, setName] = useState('')
+  const [archiving, setArchiving] = useState<{ id: string; name: string } | null>(null)
 
   async function onStart(workoutId: string) {
     const sessionId = await start.mutateAsync(workoutId)
@@ -76,7 +79,11 @@ export function WorkoutsPage() {
                   <Button onClick={() => void onStart(w.id)} disabled={start.isPending || !!active}>
                     Start
                   </Button>
-                  <Button variant="ghost" onClick={() => archive.mutate(w.id)} aria-label={`Archive ${w.name}`}>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setArchiving({ id: w.id, name: w.name })}
+                    aria-label={`Archive ${w.name}`}
+                  >
                     Archive
                   </Button>
                 </div>
@@ -85,6 +92,24 @@ export function WorkoutsPage() {
           </ul>
         </Card>
       )}
+
+      {archiving ? (
+        <ConfirmDialog
+          title={`Archive “${archiving.name}”?`}
+          body="This removes it from your workouts list."
+          confirmLabel="Archive"
+          danger
+          pending={archive.isPending}
+          onCancel={() => setArchiving(null)}
+          onConfirm={() => {
+            const target = archiving
+            archive.mutate(target.id, {
+              onError: () => toast(`Couldn’t archive “${target.name}”.`, 'err'),
+            })
+            setArchiving(null)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

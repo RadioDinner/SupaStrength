@@ -6,6 +6,7 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import { AuthProvider } from './hooks/useAuth'
 import { ThemeProvider } from './hooks/useTheme'
+import { ToastProvider } from './hooks/useToast'
 // Self-hosted variable fonts (offline-friendly PWA, no FOUT). Archivo carries the
 // bold display + tabular figures; Inter is the UI workhorse.
 import '@fontsource-variable/archivo/index.css'
@@ -26,7 +27,9 @@ createRoot(rootEl).render(
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <App />
+            <ToastProvider>
+              <App />
+            </ToastProvider>
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>

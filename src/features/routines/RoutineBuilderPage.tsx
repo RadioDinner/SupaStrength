@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Banner, Button, Card, Select, Spinner } from '../../components/ui'
+import { Banner, Button, Card, ConfirmDialog, Select, Spinner } from '../../components/ui'
 import { nextGymDay, type EngineRotation } from '../../data/repos/routinesRepo'
 import { useWorkouts } from '../workouts/useWorkouts'
 import { useActiveSession, useStartNextGymDay } from '../session/useSession'
@@ -150,13 +150,15 @@ function RotationCard({
   const removeWorkout = useRemoveRotationWorkout(routineId)
   const removeRotation = useRemoveRotation(routineId)
   const [pick, setPick] = useState('')
+  const [confirmRemove, setConfirmRemove] = useState(false)
   const current = row.workouts.length ? row.rotation.current_index % row.workouts.length : 0
 
   return (
+    <>
     <Card
       title={row.rotation.name ?? `Rotation ${index + 1}`}
       actions={
-        <Button variant="ghost" onClick={() => removeRotation.mutate(row.rotation.id)} aria-label="Remove rotation">
+        <Button variant="ghost" onClick={() => setConfirmRemove(true)} aria-label="Remove rotation">
           <X size={18} aria-hidden="true" />
         </Button>
       }
@@ -202,5 +204,20 @@ function RotationCard({
         </Button>
       </div>
     </Card>
+    {confirmRemove ? (
+      <ConfirmDialog
+        title="Remove this rotation?"
+        body="This deletes the rotation and the workouts you added to it."
+        confirmLabel="Remove"
+        danger
+        pending={removeRotation.isPending}
+        onCancel={() => setConfirmRemove(false)}
+        onConfirm={() => {
+          removeRotation.mutate(row.rotation.id)
+          setConfirmRemove(false)
+        }}
+      />
+    ) : null}
+    </>
   )
 }
