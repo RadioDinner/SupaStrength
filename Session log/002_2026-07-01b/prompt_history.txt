@@ -1,2 +1,4 @@
 --- 2026-07-01 20:07 ---
 Lets kick off a new session for SUPASTRENGTH
+--- 2026-07-01 20:09 ---
+[AskUserQuestion] "What should this session focus on?" -> "Design backlog P1s (Recommended)"

@@ -7,6 +7,52 @@
 
 **🎉 PHASE 1 COMPLETE — M1–M8 all DONE. Design system — DONE.**
 
+> **Session 002b (2026-07-01, second session that day) — design-backlog P1s + adversarial review:**
+> - **Completion payoff sheet (crit P1)** — "Finish & lock" now ends in a real
+>   payoff sheet instead of a silent redirect: sets / volume (tonnage) / duration
+>   stats, per-exercise best set + Epley e1RM, a **PR badge** (ties-or-beats the
+>   all-time best from `v_exercise_e1rm`, fetched post-completion; a first-ever
+>   exercise counts as a PR), and **"Next time: X lb (±Δ)"** from the engine's
+>   advanced weight line. `summarizeSession` is pure
+>   (`src/features/session/summary.ts`, 14 unit tests);
+>   `sessionsRepo.complete()` now returns a `CompletionReport`
+>   (`ProgressionOutcome[]` out of `commitSessionProgression` + e1RM bests).
+> - **onComplete error handling (crit P1)** — try/catch mirrors the toggleSet
+>   contract: toast on failure, confirm sheet stays open for retry, navigation
+>   only from the payoff sheet (which renders ahead of the status guard).
+> - **Adversarial review (31-agent workflow, 3-skeptic majority votes) found + fixed:**
+>   - **[P1] `complete()` retry double-advanced progression/rotations** — the
+>     status flip is now a **compare-and-swap that runs FIRST**
+>     (`where status='in_progress'`); a retry or double-tap matches 0 rows and
+>     no-ops. Deliberate trade-off: a failure *after* the flip loses that
+>     session's advance (weight holds — safe, self-correcting) instead of
+>     doubling it (training-state corruption).
+>   - **[P2] completion raced in-flight set-log writes** — onComplete now waits
+>     (bounded, 6 s) on `queryClient.isMutating()` before completing, so the DB
+>     verdict matches the screen and no late PATCH hits the immutability trigger.
+>   - **[P3] payoff delta semantics** — delta now compares next vs the
+>     **pre-advance weight line** (`ProgressionOutcome.fromLb`), not the lifted
+>     max, so direction is right when the lifter overrides the weight input.
+>   - **[P3] phantom-set PRs** — new **`9997_e1rm_completed_sets_only.sql`**
+>     gates `est_1rm_lb` on `is_completed` (un-logged sets keep their actuals on
+>     undo and could grant/suppress PRs). **Validated on local PG16** (Supabase
+>     stubs + fixture: phantom 315×5 no longer beats completed 225×5; ran twice
+>     → re-runnable). **USER MUST PASTE 9997 into the SQL Editor.**
+>   - **[P3] payoff numerals** now on `--font-num`/`--tnum` per the type system.
+>   - One finding empirically refuted (`.payoff__stats` fits at 320px — measured
+>     with the real fonts), so no flex-wrap was added.
+> - **Audit P1s:** `.linkbtn` 44 px tap target (inline-flex; all 5 call sites
+>   verified); `aria-pressed` + Check icon on the secondary-muscle chips
+>   (`.chip--toggle` gained `gap`); dead `.setrow--done` rule deleted
+>   (`pop` keyframes stay — `.logbtn` uses them); DESIGN.md Motion section now
+>   sanctions the Home lobby entrance (doc/code drift resolved).
+> - Payoff verified visually via headless Chromium in both themes at 390/320 px
+>   panel widths. typecheck / lint / build green; **tests 83** (69 + 14 summary).
+> - **Observed, NOT fixed (needs a deliberate decision):**
+>   `v_muscle_volume_weekly` still counts un-completed sets' tonnage/reps —
+>   same phantom family as the e1RM fix. Single-workout (no-routine) sessions
+>   get payoff stats but no next-time lines (no progression state — as designed).
+
 > **Session 002 (2026-07-01) — full `impeccable` design-quality pass (on `main`, 9 commits):**
 > - **`/impeccable audit`** → `docs/design-audit-2026-07-01.md` (13/20; 0 P0 / 7
 >   P1 / 9 P2 / 10 P3; NOT AI slop). **All 7 P1s then fixed** across colorize,
@@ -47,25 +93,16 @@
 > - Tests **69 green**. Prereqs for the live smoke-test are done (migration + both
 >   seeds in; Site URL fixed) — the live run is still the operational gate.
 >
-> **NEXT-SESSION DESIGN BACKLOG (from the re-runs, highest value first):**
-> 1. **[crit P1] Completion payoff** — `SessionPage.onComplete` → `navigate('/')`
->    with no summary; add a completion sheet (sets, tonnage, e1RM PR, "next time
->    +X") before returning Home. The peak-end moment is currently a silent redirect.
-> 2. **[crit P1] `onComplete` has no try/catch** — a dropped connection at
->    "Finish & lock" fails silently; mirror the `toggleSet` rollback+toast
->    (toast on failure, keep the sheet open, navigate only on success). *Quick.*
-> 3. **[audit P1] `.linkbtn` ~19px tap height** (`index.css:603`) — the sole
->    measurements "Edit" affordance; give standalone `.linkbtn` a 44px hit area.
-> 4. **[audit P1] `aria-pressed`** on the secondary-muscle toggle chips
->    (`ExercisesPage.tsx:256`, color-only state).
-> 5. **[both] Dead `.setrow--done` CSS** (`index.css` ~1459) — safe delete. *Quick.*
-> 6. **[audit P3] Doc/code drift:** the Home staggered entrance contradicts
->    DESIGN.md's "No page-load choreography" — reconcile (either amend DESIGN.md to
->    permit a lobby-screen entrance, or remove `.home-enter`).
-> 7. **[audit/crit P2s]** theme-color meta (light), elite-band light contrast,
+> **NEXT-SESSION DESIGN BACKLOG:** items 1–6 (completion payoff, onComplete
+> try/catch, `.linkbtn` 44px, `aria-pressed` chips, dead `.setrow--done` CSS,
+> DESIGN.md motion drift) **all shipped in session 002b** (see block above).
+> Remaining:
+> 1. **[audit/crit P2s]** theme-color meta (light), elite-band light contrast,
 >    equipment stepper aria-labels, photo-delete 32px + video-delete confirm,
 >    per-reminder button context, exercise-instructions clip; **[crit P2]** confirm
 >    remove-exercise/remove-workout, numeric rep entry + per-set weight override.
+> 2. **[new, from 002b review]** decide whether `v_muscle_volume_weekly` should
+>    also exclude un-completed sets' tonnage/reps (phantom-set family).
 
 > **Post-Phase-1 polish (this session, on `main`):**
 > - **Real type system** — replaced `system-ui` with self-hosted **Archivo +
@@ -344,6 +381,11 @@ one real bug fixed (warmup rungs could meet/exceed working weight) + one doc fix
 `strength_standards_seed.sql`), and the Supabase **Site URL** fixed
 (`https://supa-strength.vercel.app`, no port). The DB is loaded and reachable.
 
+**⚠️ New paste needed (session 002b):** `9997_e1rm_completed_sets_only.sql`
+(one `create or replace view`, re-runnable) — without it the payoff sheet's PR
+badge can be fooled by logged-then-unchecked sets. Also confirm
+`9998_purge_media_cron.sql` was pasted (it schedules the media purge).
+
 **So the one remaining gate is the live smoke-test itself** — it has NOT run yet
 (session 002's PowerShell kept crashing before it started). Smoke-test the whole
 loop end-to-end against the live DB: sign up → build a workout → make a routine
@@ -376,5 +418,7 @@ DB orchestration around them.
 ## House rules (from new_session_instructions.md)
 
 - Session log folder + `prompt_history.txt` every session (log every prompt).
-- Migrations: descending 4-digit numbering, re-runnable. Next file: `9998_*`.
-- Work commits directly to `main` (per the user's standing instruction).
+- Migrations: descending 4-digit numbering, re-runnable. Next file: `9996_*`.
+- Work commits directly to `main` (per the user's standing instruction) — except
+  remote Claude sessions, which push to their designated `claude/*` branch
+  (002b used `claude/supastrength-kickoff-veem2a`).
