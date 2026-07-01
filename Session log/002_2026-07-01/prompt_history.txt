@@ -1,0 +1,12 @@
+--- 2026-07-01 ---
+where did we leave off?
+
+--- 2026-07-01 ---
+I posted 9999_init.sql and seeded both the exercises and strength standards. I fixed the URL too. Then lets start on the live smoke-test prep
+
+--- 2026-07-01 08:29 ---
+my powershell sessions in claude keep crashing :( Tell me where all of our loose sessions are, tie everything up and lets compare the repos and make sure all our changes from local are pushed to the GITHUB MAIN for the supastrength project, then immediately write the handoff and wrap the session
+
+--- 2026-07-01 08:30 (AskUserQuestion answer) ---
+Q: How should I handle the untracked .claude/ and .cursor/ tooling dirs before pushing?
+A: Commit everything

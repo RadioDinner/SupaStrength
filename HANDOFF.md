@@ -279,16 +279,20 @@ one real bug fixed (warmup rungs could meet/exceed working weight) + one doc fix
 
 ## Next step
 
-**Run `supabase/seed/exercises_seed.sql`** in the SQL Editor (Exercises tab),
-fix the Supabase Site URL (`https://supa-strength.vercel.app`, no port), then
-**smoke-test the whole loop end-to-end against the live DB**: build a workout →
-make a routine with rotations → make it active → "Start this day" → log sets
-(plate calc + rest timer) → Complete → start the next day and confirm the weight
-**climbed** (M5d) and the rotation advanced. This is the first live exercise of
-the `sessionCommit` wiring — watch for upsert/RLS issues.
+**✅ Live-DB prerequisites are DONE (user, around session 002 / 2026-07-01):**
+`9999_init.sql` pasted, **both** seeds run (`exercises_seed.sql` +
+`strength_standards_seed.sql`), and the Supabase **Site URL** fixed
+(`https://supa-strength.vercel.app`, no port). The DB is loaded and reachable.
 
-**Also paste `supabase/seed/strength_standards_seed.sql`** (new in M6) so the
-Stats screen's "vs standards" panel resolves bands.
+**So the one remaining gate is the live smoke-test itself** — it has NOT run yet
+(session 002's PowerShell kept crashing before it started). Smoke-test the whole
+loop end-to-end against the live DB: sign up → build a workout → make a routine
+with rotations → make it active → "Start this day" → log sets (plate calc + rest
+timer) → Complete → start the next day and confirm the weight **climbed** (M5d)
+and the rotation advanced. First live exercise of the `sessionCommit` wiring —
+watch the upsert on-conflict targets (`routine_id,exercise_id` /
+`routine_id,workout_entry_id`) and RLS with a 2nd user. Then check the Stats
+screen's "vs standards" bands resolve off the strength_standards seed.
 
 **Phase 1 is COMPLETE (M1–M8).** The remaining work is operational + Phase 2:
 
