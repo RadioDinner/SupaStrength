@@ -3,20 +3,21 @@
  * mobile-first. New milestones add routes/tabs here.
  */
 import { lazy, Suspense } from 'react'
-import { NavLink, Route, Routes } from 'react-router-dom'
+import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import {
   Home,
   ClipboardList,
   CalendarDays,
   BarChart3,
-  Library,
   User,
   Sun,
   Moon,
+  ArrowRight,
   type LucideIcon,
 } from 'lucide-react'
 import { Logo, SkeletonList } from '../components/ui'
 import { HomePage } from '../features/home/HomePage'
+import { useActiveSession } from '../features/session/useSession'
 import { useTheme } from '../hooks/useTheme'
 
 // Route-split every non-landing screen into its own chunk so the initial bundle
@@ -34,17 +35,22 @@ const ExercisesPage = lazy(() => import('../features/exercises/ExercisesPage').t
 const EquipmentPage = lazy(() => import('../features/equipment/EquipmentPage').then((m) => ({ default: m.EquipmentPage })))
 const ProfilePage = lazy(() => import('../features/settings/ProfilePage').then((m) => ({ default: m.ProfilePage })))
 
+// Five tabs (≤5 mobile convention). The exercise library is a reference surface
+// consumed through the builder's picker, so it lives off the bar (reachable from
+// Profile) rather than owning a thumb-zone slot.
 const TABS: { to: string; label: string; Icon: LucideIcon; end: boolean }[] = [
   { to: '/', label: 'Home', Icon: Home, end: true },
   { to: '/workouts', label: 'Workouts', Icon: ClipboardList, end: false },
   { to: '/routines', label: 'Routines', Icon: CalendarDays, end: false },
   { to: '/analytics', label: 'Stats', Icon: BarChart3, end: false },
-  { to: '/exercises', label: 'Exercises', Icon: Library, end: false },
   { to: '/profile', label: 'Profile', Icon: User, end: false },
 ]
 
 export function AppShell() {
   const { resolved, toggle } = useTheme()
+  const location = useLocation()
+  const { data: activeSession } = useActiveSession()
+  const showResume = !!activeSession && !location.pathname.startsWith('/session/')
   return (
     <div className="app">
       <header className="appbar">
@@ -62,7 +68,7 @@ export function AppShell() {
         </button>
       </header>
 
-      <main className="app__main">
+      <main className={`app__main${showResume ? ' app__main--resume' : ''}`}>
         <Suspense fallback={<SkeletonList rows={3} />}>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -81,6 +87,14 @@ export function AppShell() {
         </Routes>
         </Suspense>
       </main>
+
+      {showResume ? (
+        <Link to={`/session/${activeSession!.id}`} className="resumebar">
+          <span className="resumebar__pulse" aria-hidden="true" />
+          Session in progress — resume
+          <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      ) : null}
 
       <nav className="tabbar">
         {TABS.map((t) => (

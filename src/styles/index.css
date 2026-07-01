@@ -217,6 +217,44 @@ h3,
   width: 100%;
   padding: var(--s-4) var(--s-4) calc(84px + env(safe-area-inset-bottom));
 }
+/* extra bottom room so the resume bar never covers the last of the content */
+.app__main--resume {
+  padding-bottom: calc(132px + env(safe-area-inset-bottom));
+}
+
+/* persistent "return to the live session" affordance (shown off the session route) */
+.resumebar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 19;
+  max-width: 540px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  background: var(--accent);
+  color: var(--on-accent);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  box-shadow: 0 -2px 12px -4px oklch(0 0 0 / 0.45);
+}
+.resumebar__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--on-accent);
+  animation: pulse-dot 1.4s var(--ease) infinite;
+}
+@keyframes pulse-dot {
+  50% {
+    opacity: 0.35;
+  }
+}
 .page {
   display: flex;
   flex-direction: column;

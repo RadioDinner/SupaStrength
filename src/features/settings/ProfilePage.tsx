@@ -148,6 +148,15 @@ export function ProfilePage() {
             </Link>
           </li>
           <li className="list__row">
+            <Link to="/exercises" className="navrow">
+              <span>
+                <span className="workout-link__name">Exercise library</span>
+                <span className="muted">Browse all movements and your custom exercises</span>
+              </span>
+              <ChevronRight size={18} aria-hidden="true" className="navrow__icon" />
+            </Link>
+          </li>
+          <li className="list__row">
             <Link to="/progress" className="navrow">
               <span>
                 <span className="workout-link__name">Measurements, photos &amp; reminders</span>
