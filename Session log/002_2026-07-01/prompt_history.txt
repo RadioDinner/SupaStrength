@@ -53,3 +53,6 @@ update the handoff and log, then continue with the P2s
 
 --- 2026-07-01 12:25 ---
 /impeccable polish
+
+--- 2026-07-01 12:45 ---
+re-run the evals

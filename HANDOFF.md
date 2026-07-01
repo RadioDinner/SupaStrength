@@ -33,13 +33,39 @@
 >   + Remove rotation (recoverable per-item removes left fast); (3) nav **6→5**
 >   (dropped the Exercises tab → Profile entry-point) + a persistent **"return to
 >   session"** bar while a session is in progress.
-> - **So the whole critique backlog (2 P1 + 3 P2) is shipped.** Next design step:
->   **`/impeccable polish`** (consolidate the 3 stepper idioms + 2 toggle styles +
->   spinner-vs-skeleton drift + the `pop` overshoot; ‹›→Lucide) and **re-run
->   `/impeccable audit` + `/impeccable critique`** to confirm the scores moved
->   (audit was 13/20, critique 27/40).
-> - Tests are now **69 green** (was 62). Prereqs for the live smoke-test are done
->   (migration + both seeds in; Site URL fixed) — the live run is still the gate.
+> - **`/impeccable polish` — DONE:** `pop` overshoot removed (no-bounce),
+>   Spinner→SkeletonList on both builders, ‹›/"+"→Lucide, `.antoggle` deleted
+>   (→ `.toggle--compact`), "Done/Later"→"Did it/Snooze".
+> - **Both evals RE-RUN on the fixed code — scores moved up:**
+>   - **Audit 13/20 → 15/20** (every dimension now 3/4; A11y 2→3, Responsive 2→3).
+>     Findings **26 → 16**, **P1s 7 → 2**. All original 7 P1s verified resolved
+>     (contrast clean both themes, width→scaleX confirmed, Recharts split, set-card
+>     wrap, modal focus, toggle 44px). Report: `docs/design-audit-2026-07-01.md`
+>     (older 13/20 snapshot; the 15/20 detail is in this HANDOFF + the run log).
+>   - **Critique 27/40 → 31/40** ("Acceptable" → **"Good"**). Snapshot:
+>     `.impeccable/critique/2026-07-01T18-36-19Z__supastrength-app.md` (trend 27→31).
+> - Tests **69 green**. Prereqs for the live smoke-test are done (migration + both
+>   seeds in; Site URL fixed) — the live run is still the operational gate.
+>
+> **NEXT-SESSION DESIGN BACKLOG (from the re-runs, highest value first):**
+> 1. **[crit P1] Completion payoff** — `SessionPage.onComplete` → `navigate('/')`
+>    with no summary; add a completion sheet (sets, tonnage, e1RM PR, "next time
+>    +X") before returning Home. The peak-end moment is currently a silent redirect.
+> 2. **[crit P1] `onComplete` has no try/catch** — a dropped connection at
+>    "Finish & lock" fails silently; mirror the `toggleSet` rollback+toast
+>    (toast on failure, keep the sheet open, navigate only on success). *Quick.*
+> 3. **[audit P1] `.linkbtn` ~19px tap height** (`index.css:603`) — the sole
+>    measurements "Edit" affordance; give standalone `.linkbtn` a 44px hit area.
+> 4. **[audit P1] `aria-pressed`** on the secondary-muscle toggle chips
+>    (`ExercisesPage.tsx:256`, color-only state).
+> 5. **[both] Dead `.setrow--done` CSS** (`index.css` ~1459) — safe delete. *Quick.*
+> 6. **[audit P3] Doc/code drift:** the Home staggered entrance contradicts
+>    DESIGN.md's "No page-load choreography" — reconcile (either amend DESIGN.md to
+>    permit a lobby-screen entrance, or remove `.home-enter`).
+> 7. **[audit/crit P2s]** theme-color meta (light), elite-band light contrast,
+>    equipment stepper aria-labels, photo-delete 32px + video-delete confirm,
+>    per-reminder button context, exercise-instructions clip; **[crit P2]** confirm
+>    remove-exercise/remove-workout, numeric rep entry + per-set weight override.
 
 > **Post-Phase-1 polish (this session, on `main`):**
 > - **Real type system** — replaced `system-ui` with self-hosted **Archivo +

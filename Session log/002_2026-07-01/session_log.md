@@ -79,10 +79,19 @@ Plus `.impeccable/critique/2026-07-01T17-40-05Z__supastrength-app.md` — the
 - P2 nav 6→5 (dropped Exercises tab → Profile entry) + a persistent "return to
   session" bar. User chose "drop Exercises" over merging Workouts+Routines.
 
-**Next design step:** `/impeccable polish` (consolidate the 3 stepper idioms + 2
-toggle styles + spinner-vs-skeleton drift + drop the `pop` overshoot; swap the
-‹›/"+" literals for Lucide), then **re-run `/impeccable audit` + `/impeccable
-critique`** to confirm the scores moved (were 13/20 and 27/40).
+**`/impeccable polish` — done** (pop overshoot removed, Spinner→SkeletonList,
+‹›/"+"→Lucide, `.antoggle` deleted, copy unified).
+
+**Both evals re-run on the fixed code — scores moved up:**
+- **Audit 13/20 → 15/20** (all dims 3/4; A11y 2→3, Responsive 2→3). Findings
+  26→16, **P1s 7→2**. All original 7 P1s verified resolved.
+- **Critique 27/40 → 31/40** (Acceptable → **Good**). Trend 27→31. Snapshot:
+  `.impeccable/critique/2026-07-01T18-36-19Z__supastrength-app.md`.
+
+**The prioritized next-session design backlog now lives in `HANDOFF.md`** (top
+items: completion-summary payoff + `onComplete` try/catch [both crit P1]; the
+`.linkbtn` 44px + `aria-pressed` chips [audit P1]; dead `.setrow` CSS; the Home
+entrance vs "no page-load choreography" doc/code drift).
 
 **Biggest operational gate remains the live end-to-end smoke-test** against the
 real Supabase project (migration + both seeds in; never run from here).
