@@ -34,7 +34,7 @@ export function HomePage() {
   const since = last ? daysAgo(last.performed_on) : null
 
   return (
-    <div className="page">
+    <div className="page home-enter">
       <DueNudges />
 
       <h2 className="home__title">{name ? `Welcome back, ${name}` : 'Welcome'}</h2>

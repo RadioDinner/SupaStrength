@@ -1226,6 +1226,47 @@ h3,
   font-weight: 800;
   letter-spacing: -0.02em;
 }
+
+/* Dashboard entrance: a restrained, staggered rise-in of the cards on mount.
+   Composited (opacity/transform only); the lobby screen can afford one brief
+   entrance where a task screen (the live session) can't. */
+.home-enter > * {
+  animation: rise-in 300ms var(--ease) both;
+}
+.home-enter > *:nth-child(2) {
+  animation-delay: 40ms;
+}
+.home-enter > *:nth-child(3) {
+  animation-delay: 80ms;
+}
+.home-enter > *:nth-child(4) {
+  animation-delay: 120ms;
+}
+.home-enter > *:nth-child(5) {
+  animation-delay: 160ms;
+}
+.home-enter > *:nth-child(n + 6) {
+  animation-delay: 200ms;
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+/* The hero stat number settles into place when its data lands (numbers-as-hero). */
+@keyframes num-settle {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Delays + fill-mode aren't covered by the global duration reset; kill outright. */
+  .home-enter > * {
+    animation: none;
+  }
+}
 .home__resume {
   display: inline-flex;
   align-items: center;
@@ -1260,6 +1301,8 @@ h3,
   font-size: var(--fs-stat);
   line-height: 1;
   letter-spacing: -0.03em;
+  transform-origin: left center;
+  animation: num-settle 260ms var(--ease) both;
 }
 .herostat__unit {
   font-size: var(--fs-md);
@@ -1275,6 +1318,10 @@ h3,
   gap: var(--s-3);
   text-decoration: none;
   color: var(--ink);
+  transition: transform var(--dur) var(--ease);
+}
+.navrow:active {
+  transform: scale(0.99);
 }
 .navrow .workout-link__name {
   display: block;
@@ -1286,6 +1333,12 @@ h3,
 .navrow__icon {
   color: var(--muted);
   flex: none;
+  transition: transform var(--dur) var(--ease);
+}
+/* the trailing chevron/arrow nudges toward its direction — a "go forward" hint */
+.navrow:hover .navrow__icon,
+.navrow:active .navrow__icon {
+  transform: translateX(3px);
 }
 /* a navrow used as the sole content of a list row fills the row width */
 .list__row .navrow {
