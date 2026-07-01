@@ -27,6 +27,7 @@ export function RoutinesPage() {
         <form className="inline-form" onSubmit={onCreate}>
           <TextInput
             placeholder="New routine (e.g. StrongLifts 5×5)"
+            aria-label="New routine name"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />

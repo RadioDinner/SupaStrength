@@ -279,9 +279,11 @@ function RemindersSection() {
                 </span>
               </div>
               <div className="reminder__actions">
-                <label className="switch" title="Enabled">
+                <label className="switch">
                   <input
                     type="checkbox"
+                    role="switch"
+                    aria-label={`Enable ${meta.label} reminder`}
                     checked={r.enabled}
                     onChange={(e) => setEnabled.mutate({ id: r.id, enabled: e.target.checked })}
                   />

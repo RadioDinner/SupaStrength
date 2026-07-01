@@ -5,7 +5,7 @@
  */
 import { useMemo, useRef, useState } from 'react'
 import { Camera, X } from 'lucide-react'
-import { Banner, Button, Card, EmptyState, Select, SkeletonList, TextInput } from '../../components/ui'
+import { Banner, Button, Card, ConfirmDialog, EmptyState, Select, SkeletonList, TextInput } from '../../components/ui'
 import { useDeletePhoto, usePhotoUrl, useRecentPhotos, useUploadPhoto } from './useProgress'
 import type { PhotoCategory, ProgressPhoto } from '../../data/types'
 
@@ -24,6 +24,7 @@ export function PhotosSection({ userId }: { userId: string }) {
   const [customLabel, setCustomLabel] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [compare, setCompare] = useState<[string | null, string | null]>([null, null])
+  const [pendingDelete, setPendingDelete] = useState<ProgressPhoto | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
@@ -130,12 +131,30 @@ export function PhotosSection({ userId }: { userId: string }) {
                 photo={p}
                 selected={aId === p.id || bId === p.id}
                 onSelect={() => toggleCompare(p.id)}
-                onDelete={() => del.mutate({ id: p.id, storage_path: p.storage_path })}
+                onDelete={() => setPendingDelete(p)}
               />
             ))}
           </div>
         </Card>
       )}
+
+      {pendingDelete ? (
+        <ConfirmDialog
+          title="Delete this photo?"
+          body="This permanently removes the photo — it can't be undone."
+          confirmLabel="Delete"
+          danger
+          pending={del.isPending}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={async () => {
+            await del.mutateAsync({
+              id: pendingDelete.id,
+              storage_path: pendingDelete.storage_path,
+            })
+            setPendingDelete(null)
+          }}
+        />
+      ) : null}
     </>
   )
 }

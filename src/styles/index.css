@@ -12,6 +12,9 @@
   --inset: oklch(0.15 0.012 264);
   --border: oklch(0.32 0.02 264);
   --border-strong: oklch(0.42 0.02 264);
+  /* switch knob edge — dark so the white knob keeps a ≥3:1 boundary on the
+     accent (ON) track (white-on-accent is only 2.95:1). */
+  --switch-edge: oklch(0.25 0.01 264);
   --ink: oklch(0.97 0.005 264);
   --muted: oklch(0.74 0.015 264);
   /* --faint renders as text (placeholders, section labels, rank counters);
@@ -41,6 +44,9 @@
   --inset: oklch(0.965 0.006 264);
   --border: oklch(0.9 0.008 264);
   --border-strong: oklch(0.8 0.012 264);
+  /* switch knob edge — dark enough for a ≥3:1 boundary on the light OFF track
+     (white knob alone is only 1.59:1 there). */
+  --switch-edge: oklch(0.45 0.02 264);
   --ink: oklch(0.23 0.02 264);
   --muted: oklch(0.46 0.02 264);
   /* text role (see dark --faint note); darkened until AA-clear, still < --muted. */
@@ -91,6 +97,7 @@
   --scrim: oklch(0 0 0 / 0.5);
   --scrim-strong: oklch(0 0 0 / 0.55);
   --on-scrim: oklch(1 0 0);
+  --switch-knob: oklch(1 0 0);
 
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --dur: 180ms;
@@ -416,6 +423,20 @@ h3,
 .muted {
   color: var(--muted);
   font-size: var(--fs-sm);
+}
+
+/* visually hidden but available to screen readers (live regions, labels) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ── forms ────────────────────────────────────────────────────────────────── */
@@ -1614,24 +1635,32 @@ h3,
   background: var(--warn-tint);
   color: var(--warn);
 }
+/* 38×22 visual track centered in a ≥44px tap target (product touch-target rule). */
 .switch {
   position: relative;
   display: inline-flex;
-  width: 38px;
-  height: 22px;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   flex: none;
   cursor: pointer;
 }
 .switch input {
   position: absolute;
+  inset: 0;
+  margin: 0;
   opacity: 0;
+  cursor: pointer;
 }
 .switch__track {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: 38px;
+  height: 22px;
   border-radius: var(--r-pill);
-  background: color-mix(in oklch, var(--ink) 18%, transparent);
+  background: color-mix(in oklch, var(--ink) 22%, transparent);
   transition: background var(--dur) var(--ease);
+  pointer-events: none;
 }
 .switch__track::after {
   content: '';
@@ -1641,7 +1670,8 @@ h3,
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--switch-knob);
+  border: 1.5px solid var(--switch-edge);
   box-shadow: 0 1px 3px oklch(0 0 0 / 0.4);
   transition: transform var(--dur) var(--ease);
 }
@@ -1650,6 +1680,9 @@ h3,
 }
 .switch input:checked + .switch__track::after {
   transform: translateX(16px);
+}
+.switch input:focus-visible + .switch__track {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
 }
 
 /* photos */
@@ -1777,7 +1810,7 @@ h3,
 }
 .seg__btn--on {
   background: var(--accent);
-  color: var(--on-accent, oklch(0.99 0 0));
+  color: var(--on-accent);
   box-shadow: 0 1px 6px -2px var(--accent);
 }
 .antoggle {

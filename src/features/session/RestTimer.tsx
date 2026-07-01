@@ -45,6 +45,11 @@ export function RestTimer({ seconds }: { seconds: number }) {
       >
         {fmt(remaining)}
       </span>
+      {/* Non-visual announcement: role=timer is aria-live:off, so the per-second
+          text is silent; this fires once when the countdown reaches zero. */}
+      <span className="sr-only" role="status" aria-live="assertive">
+        {done ? 'Rest complete' : ''}
+      </span>
       <Button
         variant="ghost"
         onClick={() => {

@@ -6,8 +6,9 @@
  *   delete. Clean seam for future pose/form analysis — none today.
  */
 import { Video as VideoIcon, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Banner, Button, Spinner } from '../../components/ui'
+import { useDialog } from '../../hooks/useDialog'
 import { MAX_VIDEO_SECONDS } from '../../data/repos/videosRepo'
 import type { Video } from '../../data/types'
 import { useDeleteVideo, useRecordVideo, useSetVideo, useVideoUrl } from './useVideos'
@@ -42,13 +43,22 @@ export function VideoSheet({
   onClose: () => void
 }) {
   const { data: video, isLoading } = useSetVideo(setLogId)
+  const panelRef = useDialog<HTMLDivElement>(onClose)
+  const titleId = useId()
 
   return (
-    <div className="sheet" role="dialog" aria-modal="true" aria-label={`Form video — ${setLabel}`}>
+    <div className="sheet">
       <div className="sheet__backdrop" onClick={onClose} />
-      <div className="sheet__panel">
+      <div
+        className="sheet__panel"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+      >
         <div className="sheet__head">
-          <h3 className="sheet__title">
+          <h3 className="sheet__title" id={titleId}>
             <VideoIcon size={18} aria-hidden="true" />
             Form video · {setLabel}
           </h3>

@@ -7,10 +7,11 @@
  * bottom "Complete" that confirms with an end-of-session summary. "The set is the
  * hero; numbers read at arm's length."
  */
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Check, Video } from 'lucide-react'
 import { Banner, Button, Card, SkeletonList } from '../../components/ui'
+import { useDialog } from '../../hooks/useDialog'
 import { useAuth } from '../../hooks/useAuth'
 import { useExercisesByIds } from '../workouts/useWorkouts'
 import { solvePlates, type PlateStock } from '../../engine/plates'
@@ -488,11 +489,22 @@ function CompleteSheet({
   onConfirm: () => void
 }) {
   const nothingLogged = setsDone === 0
+  const panelRef = useDialog<HTMLDivElement>(onCancel)
+  const titleId = useId()
   return (
-    <div className="sheet" role="dialog" aria-modal="true" aria-label="Complete workout">
+    <div className="sheet">
       <div className="sheet__backdrop" onClick={onCancel} />
-      <div className="sheet__panel">
-        <h3 className="sheet__title">Finish &amp; lock?</h3>
+      <div
+        className="sheet__panel"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+      >
+        <h3 className="sheet__title" id={titleId}>
+          Finish &amp; lock?
+        </h3>
         {nothingLogged ? (
           <Banner kind="warn">You haven&apos;t logged any sets yet. Log at least one before finishing.</Banner>
         ) : (

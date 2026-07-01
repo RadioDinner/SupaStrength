@@ -3,7 +3,9 @@
  * presentational pieces the feature screens compose.
  */
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react'
+import { useId } from 'react'
 import { Dumbbell } from 'lucide-react'
+import { useDialog } from '../hooks/useDialog'
 
 type ButtonVariant = 'primary' | 'ghost' | 'danger'
 
@@ -154,6 +156,57 @@ export function Banner({ kind, children }: { kind: 'ok' | 'warn' | 'err' | 'info
   return (
     <div className={`status status--${kind === 'info' ? 'wait' : kind}`} {...live}>
       {children}
+    </div>
+  )
+}
+
+/**
+ * Accessible confirm dialog (bottom-sheet). Focus-trapped + Escape-to-close via
+ * useDialog. Use to gate destructive/irreversible actions.
+ */
+export function ConfirmDialog({
+  title,
+  body,
+  confirmLabel = 'Confirm',
+  danger = false,
+  pending = false,
+  onConfirm,
+  onCancel,
+}: {
+  title: string
+  body?: ReactNode
+  confirmLabel?: string
+  danger?: boolean
+  pending?: boolean
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  const panelRef = useDialog<HTMLDivElement>(onCancel)
+  const titleId = useId()
+  return (
+    <div className="sheet">
+      <div className="sheet__backdrop" onClick={onCancel} />
+      <div
+        className="sheet__panel"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+      >
+        <h3 className="sheet__title" id={titleId}>
+          {title}
+        </h3>
+        {body ? <p className="sheet__summary">{body}</p> : null}
+        <div className="sheet__actions">
+          <Button variant="ghost" onClick={onCancel} disabled={pending}>
+            Cancel
+          </Button>
+          <Button variant={danger ? 'danger' : 'primary'} onClick={onConfirm} disabled={pending}>
+            {pending ? '…' : confirmLabel}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
