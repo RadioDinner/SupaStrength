@@ -428,6 +428,15 @@ export interface MuscleVolumeWeekly {
   total_reps: number
 }
 
+/** Per-exercise all-time / 12-week best est-1RM — `v_exercise_e1rm`. */
+export interface ExerciseE1rm {
+  user_id: string
+  exercise_id: string
+  best_e1rm_lb: number
+  best_e1rm_12wk_lb: number | null
+  last_loaded_on: string | null
+}
+
 /** Per-muscle best est-1RM among primary lifts — `v_muscle_strength`. */
 export interface MuscleStrength {
   user_id: string

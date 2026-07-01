@@ -53,6 +53,19 @@ export interface CommitInput {
   equipment: CommitEquipment
 }
 
+/** What the engine decided for one exercise: where the line was → what's next. */
+export interface ProgressionOutcome {
+  exerciseId: string
+  /**
+   * The shared weight line BEFORE this session's advance (cold start: seeded
+   * from what was lifted). Deltas against this report the engine's actual
+   * progression direction, even when the lifter overrode the weight input.
+   */
+  fromLb: number | null
+  /** The advanced shared weight line — next session's prescription. */
+  nextLb: number | null
+}
+
 interface EntryEval {
   entry: SessionEntry
   success: boolean
@@ -143,8 +156,9 @@ function buildCtx(eq: CommitEquipment, we: WorkoutEntry | undefined): WeightCont
 const schemeOf = (entry: SessionEntry): DefaultScheme =>
   entry.planned_rep_scheme === 'double' ? 'double' : entry.planned_rep_scheme === 'rpe' ? 'rpe' : 'straight'
 
-export async function commitSessionProgression(input: CommitInput): Promise<void> {
+export async function commitSessionProgression(input: CommitInput): Promise<ProgressionOutcome[]> {
   const { routineId, entries, setLogsByEntry, workoutEntryById, equipment } = input
+  const outcomes: ProgressionOutcome[] = []
 
   // Group entries by exercise so the shared weight line advances once per exercise.
   const byExercise = new Map<string, SessionEntry[]>()
@@ -171,6 +185,7 @@ export async function commitSessionProgression(input: CommitInput): Promise<void
       ws0.currentWeightLb = driving.achievedWeight
       ws0.targetLineWeightLb = driving.achievedWeight
     }
+    const fromLb = ws0.currentWeightLb
 
     let advancedWeight: WeightState = ws0
 
@@ -244,5 +259,13 @@ export async function commitSessionProgression(input: CommitInput): Promise<void
       },
       'routine_id,exercise_id',
     )
+
+    outcomes.push({
+      exerciseId,
+      fromLb,
+      nextLb: advancedWeight.currentWeightLb,
+    })
   }
+
+  return outcomes
 }

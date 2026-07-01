@@ -4,7 +4,7 @@
  * detail (muscles + instructions), and a custom-exercise creator.
  */
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Search } from 'lucide-react'
+import { Check, Search } from 'lucide-react'
 import { Banner, Button, Card, EmptyState, Field, Select, SkeletonList, TextInput } from '../../components/ui'
 import {
   useCreateCustomExercise,
@@ -257,9 +257,11 @@ function CustomExerciseForm({ groups, onDone }: { groups: MuscleGroup[]; onDone:
                 key={g.id}
                 type="button"
                 className={`chip chip--toggle ${secondary.has(g.id) ? 'chip--on' : ''}`}
+                aria-pressed={secondary.has(g.id)}
                 onClick={() => toggleSecondary(g.id)}
                 disabled={g.id === primary}
               >
+                {secondary.has(g.id) ? <Check size={14} aria-hidden="true" /> : null}
                 {g.display_name}
               </button>
             ))}

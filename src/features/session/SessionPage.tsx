@@ -8,6 +8,7 @@
  * hero; numbers read at arm's length."
  */
 import { useId, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Check, ChevronLeft, ChevronRight, Video } from 'lucide-react'
 import { Banner, Button, Card, SkeletonList } from '../../components/ui'
@@ -19,6 +20,7 @@ import { solvePlates, type PlateStock } from '../../engine/plates'
 import { generateWarmups } from '../../engine/warmups'
 import { RestTimer } from './RestTimer'
 import { VideoSheet } from './VideoSheet'
+import { summarizeSession, type ExerciseSummary, type SessionSummary } from './summary'
 import {
   useCompleteSession,
   useSession,
@@ -46,6 +48,7 @@ function schemeText(e: SessionEntry): string {
 export function SessionPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const { user } = useAuth()
   const { toast } = useToast()
   const { data: session, isLoading } = useSession(id)
@@ -77,6 +80,7 @@ export function SessionPage() {
   const [restSignal, setRestSignal] = useState(0)
   const [activeIndex, setActiveIndex] = useState(0)
   const [confirming, setConfirming] = useState(false)
+  const [summary, setSummary] = useState<SessionSummary | null>(null)
   const [videoSet, setVideoSet] = useState<SetLog | null>(null)
 
   const ordered = useMemo(() => entries ?? [], [entries])
@@ -98,6 +102,17 @@ export function SessionPage() {
 
   if (isLoading) return <SkeletonList rows={3} />
   if (!session) return <Banner kind="err">Session not found.</Banner>
+  // The payoff renders ahead of the status guard: once completion succeeds the
+  // session is no longer in_progress, and the celebration must still show.
+  if (summary) {
+    return (
+      <PayoffSheet
+        summary={summary}
+        nameOf={(exerciseId) => exById.get(exerciseId)?.name ?? 'Exercise'}
+        onDone={() => navigate('/')}
+      />
+    )
+  }
   if (session.status !== 'in_progress') {
     return (
       <div className="page">
@@ -158,8 +173,45 @@ export function SessionPage() {
 
   async function onComplete() {
     if (!session) return
-    await complete.mutateAsync(session)
-    navigate('/')
+    // Snapshot what the screen shows before the writes (local overlays win over
+    // possibly-stale DB rows — same resolution the set cards use).
+    const snapshot = ordered.map((e) => ({
+      exerciseId: e.exercise_id,
+      sets: (logsByEntry.get(e.id) ?? []).map((s) => {
+        if (!isDone(s)) return { done: false, weightLb: null, reps: null }
+        return {
+          done: true,
+          weightLb: loggedWeights[s.id] ?? s.actual_weight ?? (Number(weightOf(e)) || null),
+          reps: Number(repsOf(s)) || null,
+        }
+      }),
+    }))
+    // Let in-flight set-log writes land first (bounded): completion freezes
+    // set_logs and reads them for the progression verdict, so a just-tapped
+    // final set still PATCHing on gym wifi must not be missed (wrong "failure"
+    // verdict) or rejected by the immutability trigger. Past the cap we proceed
+    // — a connection that bad will fail complete() visibly, which is retryable.
+    const deadline = Date.now() + 6000
+    while (qc.isMutating() > 0 && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 150))
+    }
+    try {
+      const report = await complete.mutateAsync(session)
+      setSummary(
+        summarizeSession({
+          entries: snapshot,
+          outcomes: report.outcomes,
+          bestE1rmByExercise: report.bestE1rmByExercise,
+          startedAt: session.started_at,
+          endedAtMs: Date.now(),
+        }),
+      )
+      setConfirming(false)
+    } catch {
+      // Same contract as toggleSet: a signal drop must never silently eat the
+      // session. Keep the confirm sheet open so "Finish & lock" can be retried.
+      toast("Couldn't finish the session — check your connection and try again.", 'err')
+    }
   }
 
   return (
@@ -582,5 +634,102 @@ function CompleteSheet({
         </div>
       </div>
     </div>
+  )
+}
+
+/** The peak-end moment: what you did, what it earned, what's next. */
+function PayoffSheet({
+  summary,
+  nameOf,
+  onDone,
+}: {
+  summary: SessionSummary
+  nameOf: (exerciseId: string) => string
+  onDone: () => void
+}) {
+  const panelRef = useDialog<HTMLDivElement>(onDone)
+  const titleId = useId()
+  return (
+    <div className="sheet">
+      <div className="sheet__backdrop" onClick={onDone} />
+      <div
+        className="sheet__panel payoff"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+      >
+        <h3 className="sheet__title" id={titleId}>
+          Workout complete
+        </h3>
+        <div className="payoff__stats">
+          <div className="stat">
+            <div className="stat__value">
+              {summary.setsDone}
+              <span className="stat__unit">/ {summary.setsTotal}</span>
+            </div>
+            <span className="stat__label">Sets</span>
+          </div>
+          {summary.tonnageLb > 0 ? (
+            <div className="stat">
+              <div className="stat__value">
+                {Math.round(summary.tonnageLb).toLocaleString()}
+                <span className="stat__unit">lb</span>
+              </div>
+              <span className="stat__label">Volume</span>
+            </div>
+          ) : null}
+          {summary.durationMin != null ? (
+            <div className="stat">
+              <div className="stat__value">
+                {summary.durationMin}
+                <span className="stat__unit">min</span>
+              </div>
+              <span className="stat__label">Time</span>
+            </div>
+          ) : null}
+        </div>
+        <ul className="payoff__list">
+          {summary.exercises.map((x) => (
+            <li key={x.exerciseId} className="payoffrow">
+              <span className="payoffrow__name">{nameOf(x.exerciseId)}</span>
+              {x.setsDone === 0 ? (
+                <span className="payoffrow__skipped">skipped</span>
+              ) : (
+                <>
+                  {x.isRecord ? <span className="payoffrow__pr">PR</span> : null}
+                  <span className="payoffrow__top mono">
+                    {x.topWeightLb != null
+                      ? `${x.topWeightLb} lb × ${x.topReps}`
+                      : `${x.setsDone} ${x.setsDone === 1 ? 'set' : 'sets'}`}
+                  </span>
+                  {x.bestE1rmLb != null ? (
+                    <span className="payoffrow__e1rm">e1RM {Math.round(x.bestE1rmLb)}</span>
+                  ) : null}
+                </>
+              )}
+              <NextTime x={x} />
+            </li>
+          ))}
+        </ul>
+        <div className="sheet__actions">
+          <Button onClick={onDone}>Done</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** "Next time: 230 lb (+5)" — the auto-progression made visible at the payoff. */
+function NextTime({ x }: { x: ExerciseSummary }) {
+  if (x.nextLb == null) return null
+  const delta = x.deltaLb
+  const dir = !delta ? 'hold' : delta > 0 ? 'up' : 'down'
+  return (
+    <span className={`payoffrow__next payoffrow__next--${dir}`}>
+      Next time: <strong className="mono">{x.nextLb} lb</strong>
+      {dir === 'up' ? ` (+${delta})` : dir === 'down' ? ` (−${Math.abs(delta!)})` : ''}
+    </span>
   )
 }

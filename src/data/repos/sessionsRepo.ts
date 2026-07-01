@@ -13,10 +13,15 @@ import { onlineDataClient } from '../online/supabaseDataClient'
 import { workoutsRepo } from './workoutsRepo'
 import { routinesRepo } from './routinesRepo'
 import { equipmentRepo } from './equipmentRepo'
-import { commitSessionProgression, type CommitEquipment } from './sessionCommit'
+import {
+  commitSessionProgression,
+  type CommitEquipment,
+  type ProgressionOutcome,
+} from './sessionCommit'
 import { advanceRotations, nextGymDay } from '../../engine/schedule'
 import { maxLoadableLb, type PlateStock } from '../../engine/plates'
 import type {
+  ExerciseE1rm,
   ProgressionEntryState,
   ProgressionState,
   Session,
@@ -24,6 +29,17 @@ import type {
   SetLog,
   WorkoutEntry,
 } from '../types'
+
+/** What `complete()` hands back for the end-of-session payoff sheet. */
+export interface CompletionReport {
+  outcomes: ProgressionOutcome[]
+  /**
+   * All-time best e1RM per exercise from `v_exercise_e1rm`, read after the
+   * completion writes (so it includes this session). Empty when the read fails —
+   * the payoff sheet just skips its record badges.
+   */
+  bestE1rmByExercise: Record<string, number>
+}
 
 interface Resolved {
   plannedWeight: number | null
@@ -215,11 +231,31 @@ export const sessionsRepo = {
   },
 
   /**
-   * Complete the session: run engine auto-progression (routine sessions), advance
-   * the rotation pointers, then flip the session to completed (immutable).
+   * Complete the session: flip it to completed (compare-and-swap), then run
+   * engine auto-progression (routine sessions) and advance the rotation
+   * pointers. Returns the payoff-sheet report (progression outcomes + all-time
+   * e1RM bests).
+   *
+   * The CAS flip comes FIRST so completion wins exactly once: a retry after a
+   * partial failure — or a double tap — matches 0 rows and returns a no-op
+   * report instead of advancing the weight line and rotation pointers a second
+   * time. The trade-off is deliberate: if a later step fails, that advance is
+   * lost for this session (the weight holds — safe, self-correcting) rather
+   * than doubled (corrupted training state).
    */
-  async complete(session: Session): Promise<void> {
+  async complete(session: Session): Promise<CompletionReport> {
+    const flipped = await onlineDataClient.update<Session>(
+      'sessions',
+      { status: 'completed', completed_at: new Date().toISOString() },
+      [
+        { column: 'id', op: 'eq', value: session.id },
+        { column: 'status', op: 'eq', value: 'in_progress' },
+      ],
+    )
+    if (flipped.length === 0) return { outcomes: [], bestE1rmByExercise: {} }
+
     const entries = await this.listEntries(session.id)
+    let outcomes: ProgressionOutcome[] = []
 
     // M5d: engine auto-progression (routine sessions with equipment only).
     if (session.routine_id && session.location_id) {
@@ -239,7 +275,7 @@ export const sessionsRepo = {
             })
           : []
         const workoutEntryById = new Map(workoutEntries.map((w) => [w.id, w]))
-        await commitSessionProgression({
+        outcomes = await commitSessionProgression({
           routineId: session.routine_id,
           entries,
           setLogsByEntry,
@@ -267,11 +303,24 @@ export const sessionsRepo = {
       }
     }
 
-    await onlineDataClient.update<Session>(
-      'sessions',
-      { status: 'completed', completed_at: new Date().toISOString() },
-      [{ column: 'id', op: 'eq', value: session.id }],
-    )
+    // Record check for the payoff sheet — read the aggregated bests now that this
+    // session's sets count. Garnish only: a failed read must not fail completion.
+    let bestE1rmByExercise: Record<string, number> = {}
+    const exerciseIds = [...new Set(entries.map((e) => e.exercise_id))]
+    if (exerciseIds.length) {
+      try {
+        const rows = await onlineDataClient.list<ExerciseE1rm>('v_exercise_e1rm', {
+          filters: [{ column: 'exercise_id', op: 'in', value: exerciseIds }],
+        })
+        bestE1rmByExercise = Object.fromEntries(
+          rows.filter((r) => r.best_e1rm_lb != null).map((r) => [r.exercise_id, r.best_e1rm_lb]),
+        )
+      } catch {
+        // ignore — the sheet shows without record badges
+      }
+    }
+
+    return { outcomes, bestE1rmByExercise }
   },
 
   abandon(sessionId: string): Promise<Session[]> {

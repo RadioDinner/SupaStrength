@@ -601,9 +601,16 @@ h3,
   font: inherit;
   font-weight: 600;
   padding: 0;
+  /* 44px tap target: keeps the text-link look but not the ~19px hit area
+     (it's the sole "Edit" affordance on the measurements table). */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
 }
 .linkbtn--center {
-  display: block;
+  display: flex;
   margin: 0 auto;
   text-align: center;
 }
@@ -768,6 +775,7 @@ h3,
   font-size: var(--fs-sm);
   display: inline-flex;
   align-items: center;
+  gap: var(--s-1);
   min-height: 44px;
 }
 .chip--toggle:disabled {
@@ -1187,6 +1195,77 @@ h3,
   }
 }
 
+/* ── completion payoff (end-of-session summary sheet) ─────────────────────── */
+.payoff__stats {
+  display: flex;
+  gap: var(--s-6);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.payoff__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.payoffrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-1) var(--s-3);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+.payoffrow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.payoffrow__name {
+  flex: 1 1 auto;
+  min-width: 10ch;
+  font-weight: 600;
+}
+.payoffrow__top {
+  font-variant-numeric: var(--tnum);
+  font-weight: 700;
+}
+.payoffrow__e1rm,
+.payoffrow__skipped {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.payoffrow__e1rm {
+  font-family: var(--font-num);
+  font-variant-numeric: var(--tnum);
+}
+.payoffrow__pr {
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--good-tint);
+  color: var(--good);
+}
+.payoffrow__next {
+  width: 100%;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-variant-numeric: var(--tnum);
+}
+.payoffrow__next strong {
+  font-weight: 700;
+}
+.payoffrow__next--up {
+  color: var(--good);
+}
+.payoffrow__next--hold {
+  color: var(--muted);
+}
+.payoffrow__next--down {
+  color: var(--warn);
+}
+
 /* rest timer */
 .resttimer {
   display: flex;
@@ -1455,9 +1534,6 @@ h3,
   from {
     transform: scale(0.7);
   }
-}
-.setrow--done .setrow__idx {
-  animation: pop 240ms var(--ease);
 }
 .resttimer--running .resttimer__time {
   color: var(--accent);

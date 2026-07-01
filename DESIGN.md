@@ -71,8 +71,12 @@ timer states use `--good`. Focus is a visible accent ring.
 ## Motion
 
 150–250ms, `ease-out` (quart/expo), state-only (press feedback, set-done fill,
-tab/route change, timer tick). No page-load choreography. Full
-`prefers-reduced-motion: reduce` fallback (instant / opacity-only).
+tab/route change, timer tick). No page-load choreography on task screens (the
+live session above all). **One sanctioned exception:** the Home dashboard — a
+lobby, not a task screen — gets a single restrained staggered rise-in on mount
+(`.home-enter`, ≤300ms + ≤200ms stagger, opacity/transform only, killed under
+reduced motion). Full `prefers-reduced-motion: reduce` fallback
+(instant / opacity-only).
 
 ## Bans honored
 
