@@ -70,17 +70,22 @@ Plus `.impeccable/critique/2026-07-01T17-40-05Z__supastrength-app.md` — the
 
 ## Open questions / next step
 
-**The three remaining critique P2s (in progress next):**
-1. **Optimistic rollback + toast** (`SessionPage`) — a failed set-log currently
-   lies that it saved. Needs a small toast/provider + `onError` rollback. `harden`.
-2. **Guard destructive actions** (`WorkoutsPage` + builders) — Archive (beside
-   Start) / Remove-entry / Remove-rotation fire with no confirm. Reuse
-   `ConfirmDialog`. `harden`.
-3. **Nav 6→5 + session-focus** (`AppShell`) — **IA fork to decide**: fold
-   *Exercises* under another area, OR merge *Workouts + Routines* into a "Plan"
-   tab; plus a persistent "return to session" affordance. `distill`.
+**Critique backlog COMPLETE — all 2 P1 + 3 P2 shipped** (commits `79f5625`,
+`410af34`, `106a90c`):
+- P1 rest-timer auto-start + per-set weight (session loop).
+- P2 optimistic rollback + toast (new `useToast`/`ToastProvider`).
+- P2 confirm-gated Archive + Remove-rotation (recoverable per-item removes left
+  fast, by design).
+- P2 nav 6→5 (dropped Exercises tab → Profile entry) + a persistent "return to
+  session" bar. User chose "drop Exercises" over merging Workouts+Routines.
 
-Then `/impeccable polish`, and **re-run audit + critique** to see the scores move.
+**Next design step:** `/impeccable polish` (consolidate the 3 stepper idioms + 2
+toggle styles + spinner-vs-skeleton drift + drop the `pop` overshoot; swap the
+‹›/"+" literals for Lucide), then **re-run `/impeccable audit` + `/impeccable
+critique`** to confirm the scores moved (were 13/20 and 27/40).
+
+**Biggest operational gate remains the live end-to-end smoke-test** against the
+real Supabase project (migration + both seeds in; never run from here).
 
 **Still the biggest operational gate:** the **live end-to-end smoke-test** against
 the real Supabase project (migration + both seeds are in; never run from here).

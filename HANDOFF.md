@@ -28,10 +28,16 @@
 >   (**27/40**, dual-agent, NOT AI slop; weakness = domain fluency of the gym
 >   loop). **Both P1s shipped:** rest timer **auto-starts on log**; **per-set
 >   weight** shown on every set card (ramp/back-off now expressible).
-> - **REMAINING critique P2s (next):** (1) optimistic rollback + toast on set-log
->   failure; (2) confirm-gate Archive/Remove-entry/Remove-rotation (reuse
->   `ConfirmDialog`); (3) nav **6→5 + a "return to session" affordance** — an IA
->   fork to decide (fold Exercises vs merge Workouts+Routines into "Plan").
+> - **Critique P2s — ALL DONE:** (1) optimistic **rollback + toast** on set-log
+>   failure (`useToast` + `ToastProvider`); (2) **confirm-gated** Archive workout
+>   + Remove rotation (recoverable per-item removes left fast); (3) nav **6→5**
+>   (dropped the Exercises tab → Profile entry-point) + a persistent **"return to
+>   session"** bar while a session is in progress.
+> - **So the whole critique backlog (2 P1 + 3 P2) is shipped.** Next design step:
+>   **`/impeccable polish`** (consolidate the 3 stepper idioms + 2 toggle styles +
+>   spinner-vs-skeleton drift + the `pop` overshoot; ‹›→Lucide) and **re-run
+>   `/impeccable audit` + `/impeccable critique`** to confirm the scores moved
+>   (audit was 13/20, critique 27/40).
 > - Tests are now **69 green** (was 62). Prereqs for the live smoke-test are done
 >   (migration + both seeds in; Site URL fixed) — the live run is still the gate.
 
