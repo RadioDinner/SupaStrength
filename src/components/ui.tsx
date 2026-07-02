@@ -2,7 +2,13 @@
  * Shared dumb UI primitives (BUILD_PLAN 0.1 `components/`). No data access — pure
  * presentational pieces the feature screens compose.
  */
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react'
+import type {
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from 'react'
 import { useId } from 'react'
 import { Dumbbell } from 'lucide-react'
 import { useDialog } from '../hooks/useDialog'
@@ -54,6 +60,10 @@ export function Field({
 
 export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input className="input" {...props} />
+}
+
+export function TextArea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return <textarea className="input input--area" rows={2} {...props} />
 }
 
 export function Select({ children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {

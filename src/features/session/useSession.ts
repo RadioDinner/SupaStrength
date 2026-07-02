@@ -84,6 +84,14 @@ export function useUpdateSetLog() {
   })
 }
 
+export function useUpdateSessionEntryNotes() {
+  // Same fire-and-persist contract as set logs: the page owns the live text.
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string | null }) =>
+      sessionsRepo.updateEntryNotes(id, notes),
+  })
+}
+
 export function useDeleteSession() {
   const qc = useQueryClient()
   return useMutation({

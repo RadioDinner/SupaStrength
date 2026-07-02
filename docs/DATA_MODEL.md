@@ -337,6 +337,10 @@ The engine reads these when routing computed weights through plate-aware roundin
 | `rest_seconds` | `integer` | null → inherit |
 | `last_set_amrap` | `boolean not null default false` | last set to failure |
 | `starting_weight` | `numeric` null check `> 0` | opening prescription until `progression_state` exists; ignored after the first commit (migration 9994) |
+| `overload_mode` | `text not null default 'engine'` check in (engine, rep_ladder) | rep_ladder opts the entry out of the shared engine line (migration 9993) |
+| `rep_cap` | `integer` null check `> 0` | rep ladder: weight steps once every set hits this |
+| `increment_lb` | `numeric` null check `> 0` | rep ladder: weight step on increment |
+| `reps_after_increment` | `integer` null check `> 0` | rep ladder: every set's target after an increment |
 | `barbell_id_override` | `uuid` null `references barbells(id) on delete set null` | overrides exercise default bar |
 | `ceiling_behavior_override` | `text` null check in (hold_warn, auto_switch_reps) | per-entry override of equipment ceiling (§7) |
 | `consolidation_enabled` | `boolean not null default false` | opt-in gap-workout (§6) |
@@ -350,6 +354,29 @@ The engine reads these when routing computed weights through plate-aware roundin
   null and rep_range_high is not null and rep_range_high >= rep_range_low))`;
   `check (rep_scheme <> 'straight' or rep_target is not null)`.
 - Indexes: `(workout_id, position)`, `(exercise_id)`, `(user_id)`.
+- `notes` is the **sticky note** — surfaced on the exercise every session
+  ("Remember to shovel!"); per-occurrence notes live on `session_entries.notes`.
+
+#### `workout_entry_sets`  (per-set targets — migration 9993)
+Optional child rows giving an entry per-set targets (set 1: 15 lb × 9, set 2:
+15 lb × 8, …). When present, session snapshots plan each set individually. For
+`overload_mode = 'rep_ladder'` entries these rows are the LIVE progression
+state: after each completed session every set that hit its target climbs one
+rep (failed sets hold); when all sets sit at `rep_cap` and hit it, weight steps
+by `increment_lb` and reps reset to `reps_after_increment` — written back here,
+so the builder always shows (and can hand-edit) the current ladder. Runs for
+routine and single-workout sessions; such entries are excluded from the shared
+engine line.
+
+| column | type | notes |
+|---|---|---|
+| `id` | `uuid` PK | |
+| `user_id` | `uuid not null` | owner-only RLS (policies restated in 9993) |
+| `workout_entry_id` | `uuid not null references workout_entries(id) on delete cascade` | |
+| `set_index` | `integer not null` check `> 0` | `unique (workout_entry_id, set_index)` |
+| `target_reps` | `integer not null` check `> 0` | |
+| `target_weight` | `numeric` null check `> 0` | null → bodyweight/unloaded |
+| `created_at`/`updated_at` | `timestamptz` | |
 
 ### 3.4 Schedule (user-owned)
 
@@ -648,6 +675,7 @@ Snapshots the prescription so later template edits don't rewrite history.
 | `last_set_amrap` | `boolean not null default false` | snapshot |
 | `was_failure` | `boolean not null default false` | engine verdict |
 | `was_consolidation_hold` | `boolean not null default false` | gap-workout hold |
+| `notes` | `text` | per-occurrence note ("shoulders clicking"), written mid-session; frozen on completion (migration 9993) |
 | `created_at`/`updated_at` | `timestamptz` | |
 
 - Indexes: `(session_id, position)`, `(exercise_id)`, `(workout_entry_id)`.

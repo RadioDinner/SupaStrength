@@ -20,6 +20,7 @@ import {
 } from './sessionCommit'
 import { advanceRotations, nextGymDay } from '../../engine/schedule'
 import { maxLoadableLb, type PlateStock } from '../../engine/plates'
+import { advanceRepLadder } from '../../engine/repLadder'
 import type {
   ExerciseE1rm,
   ProgressionEntryState,
@@ -29,6 +30,7 @@ import type {
   SetLog,
   Video,
   WorkoutEntry,
+  WorkoutEntrySet,
 } from '../types'
 
 /** What `complete()` hands back for the end-of-session payoff sheet. */
@@ -84,6 +86,7 @@ async function snapshotEntry(
   e: WorkoutEntry,
   position: number,
   resolved: Resolved,
+  perSet?: WorkoutEntrySet[],
 ): Promise<void> {
   const seRows = await onlineDataClient.insert<SessionEntry>('session_entries', {
     session_id: sessionId,
@@ -103,16 +106,93 @@ async function snapshotEntry(
   const se = seRows[0]
   if (!se) return
 
-  const setRows = Array.from({ length: Math.max(1, resolved.plannedSets) }, (_, i) => ({
-    session_entry_id: se.id,
-    set_index: i + 1,
-    is_warmup: false,
-    is_completed: false,
-    planned_reps: resolved.plannedReps,
-    planned_weight: resolved.plannedWeight,
-    is_amrap: e.last_set_amrap && i === resolved.plannedSets - 1,
-  }))
+  // Per-set targets (9993) plan each set individually; otherwise the entry's
+  // uniform prescription stamps every set.
+  const setRows = perSet?.length
+    ? perSet.map((t, i) => ({
+        session_entry_id: se.id,
+        set_index: t.set_index,
+        is_warmup: false,
+        is_completed: false,
+        planned_reps: t.target_reps,
+        planned_weight: t.target_weight,
+        is_amrap: e.last_set_amrap && i === perSet.length - 1,
+      }))
+    : Array.from({ length: Math.max(1, resolved.plannedSets) }, (_, i) => ({
+        session_entry_id: se.id,
+        set_index: i + 1,
+        is_warmup: false,
+        is_completed: false,
+        planned_reps: resolved.plannedReps,
+        planned_weight: resolved.plannedWeight,
+        is_amrap: e.last_set_amrap && i === resolved.plannedSets - 1,
+      }))
   await onlineDataClient.insert<SetLog>('set_logs', setRows)
+}
+
+/** Per-set targets for the rep-ladder entries in a batch, keyed by entry id. */
+async function ladderSetsByEntry(entries: WorkoutEntry[]): Promise<Map<string, WorkoutEntrySet[]>> {
+  const ids = entries.filter((e) => e.overload_mode === 'rep_ladder').map((e) => e.id)
+  const m = new Map<string, WorkoutEntrySet[]>()
+  if (ids.length === 0) return m
+  const rows = await onlineDataClient.list<WorkoutEntrySet>('workout_entry_sets', {
+    filters: [{ column: 'workout_entry_id', op: 'in', value: ids }],
+    order: [{ column: 'set_index' }],
+  })
+  for (const r of rows) {
+    const a = m.get(r.workout_entry_id) ?? []
+    a.push(r)
+    m.set(r.workout_entry_id, a)
+  }
+  return m
+}
+
+/**
+ * Advance rep-ladder entries (9993) after completion: each set that hit its
+ * target climbs a rep; when every set conquers the cap, the weight steps and
+ * reps reset. Advanced targets write BACK to `workout_entry_sets`, so the
+ * builder shows live state. Runs for routine AND single-workout sessions;
+ * entries with incomplete ladder config (missing cap/increment/floor) hold.
+ */
+async function advanceLadders(
+  ladderEntries: SessionEntry[],
+  workoutEntryById: Map<string, WorkoutEntry>,
+  setLogsByEntry: Map<string, SetLog[]>,
+): Promise<void> {
+  for (const se of ladderEntries) {
+    const we = se.workout_entry_id ? workoutEntryById.get(se.workout_entry_id) : undefined
+    if (!we || we.rep_cap == null || we.increment_lb == null || we.reps_after_increment == null)
+      continue
+    const targetRows = await onlineDataClient.list<WorkoutEntrySet>('workout_entry_sets', {
+      filters: [{ column: 'workout_entry_id', op: 'eq', value: we.id }],
+      order: [{ column: 'set_index' }],
+    })
+    if (targetRows.length === 0) continue
+
+    const results = (setLogsByEntry.get(se.id) ?? [])
+      .filter((l) => !l.is_warmup)
+      .map((l) => ({ setIndex: l.set_index, achievedReps: l.actual_reps, completed: l.is_completed }))
+    const advanced = advanceRepLadder(
+      targetRows.map((r) => ({
+        setIndex: r.set_index,
+        targetReps: r.target_reps,
+        targetWeight: r.target_weight,
+      })),
+      { repCap: we.rep_cap, incrementLb: we.increment_lb, repsAfterIncrement: we.reps_after_increment },
+      results,
+    )
+    for (const row of targetRows) {
+      const next = advanced.find((a) => a.setIndex === row.set_index)
+      if (!next) continue
+      if (next.targetReps !== row.target_reps || next.targetWeight !== row.target_weight) {
+        await onlineDataClient.update<WorkoutEntrySet>(
+          'workout_entry_sets',
+          { target_reps: next.targetReps, target_weight: next.targetWeight },
+          [{ column: 'id', op: 'eq', value: row.id }],
+        )
+      }
+    }
+  }
 }
 
 async function loadEquipment(session: Session): Promise<CommitEquipment | null> {
@@ -188,13 +268,29 @@ export const sessionsRepo = {
     })
     const session = rows[0]
     if (!session) throw new Error('Session insert returned no row')
+    const perSetByEntry = await ladderSetsByEntry(entries)
     let position = 0
     for (const e of entries) {
-      await snapshotEntry(session.id, e, position++, {
-        plannedWeight: e.starting_weight ?? null,
-        plannedReps: e.rep_scheme === 'double' ? e.rep_range_low : e.rep_target,
-        plannedSets: e.sets,
-      })
+      const perSet = perSetByEntry.get(e.id)
+      if (perSet?.length) {
+        await snapshotEntry(
+          session.id,
+          e,
+          position++,
+          {
+            plannedWeight: perSet[0]!.target_weight,
+            plannedReps: null,
+            plannedSets: perSet.length,
+          },
+          perSet,
+        )
+      } else {
+        await snapshotEntry(session.id, e, position++, {
+          plannedWeight: e.starting_weight ?? null,
+          plannedReps: e.rep_scheme === 'double' ? e.rep_range_low : e.rep_target,
+          plannedSets: e.sets,
+        })
+      }
     }
     return session.id
   },
@@ -222,9 +318,27 @@ export const sessionsRepo = {
     let position = 0
     for (const d of day) {
       const entries = await workoutsRepo.listEntries(d.workoutId)
+      const perSetByEntry = await ladderSetsByEntry(entries)
       for (const e of entries) {
-        const resolved = await resolvePlanned(routineId, e)
-        await snapshotEntry(session.id, e, position++, resolved)
+        const perSet = perSetByEntry.get(e.id)
+        if (perSet?.length) {
+          // Rep-ladder entries prescribe their own per-set targets — the
+          // shared engine line doesn't apply to them.
+          await snapshotEntry(
+            session.id,
+            e,
+            position++,
+            {
+              plannedWeight: perSet[0]!.target_weight,
+              plannedReps: null,
+              plannedSets: perSet.length,
+            },
+            perSet,
+          )
+        } else {
+          const resolved = await resolvePlanned(routineId, e)
+          await snapshotEntry(session.id, e, position++, resolved)
+        }
       }
     }
     return session.id
@@ -261,27 +375,37 @@ export const sessionsRepo = {
     const entries = await this.listEntries(session.id)
     let outcomes: ProgressionOutcome[] = []
 
-    // M5d: engine auto-progression (routine sessions with equipment only).
+    const logs = await this.listSetLogs(entries.map((e) => e.id))
+    const setLogsByEntry = new Map<string, SetLog[]>()
+    for (const l of logs) {
+      const arr = setLogsByEntry.get(l.session_entry_id) ?? []
+      arr.push(l)
+      setLogsByEntry.set(l.session_entry_id, arr)
+    }
+    const weIds = entries.map((e) => e.workout_entry_id).filter((x): x is string => !!x)
+    const workoutEntries = weIds.length
+      ? await onlineDataClient.list<WorkoutEntry>('workout_entries', {
+          filters: [{ column: 'id', op: 'in', value: weIds }],
+        })
+      : []
+    const workoutEntryById = new Map(workoutEntries.map((w) => [w.id, w]))
+
+    // Rep-ladder entries (9993) progress per set, independent of the shared
+    // engine line — for routine AND single-workout sessions alike.
+    const isLadder = (e: SessionEntry) =>
+      !!e.workout_entry_id &&
+      workoutEntryById.get(e.workout_entry_id)?.overload_mode === 'rep_ladder'
+    await advanceLadders(entries.filter(isLadder), workoutEntryById, setLogsByEntry)
+
+    // M5d: engine auto-progression (routine sessions with equipment only) —
+    // over the non-ladder entries.
     if (session.routine_id && session.location_id) {
-      const equipment = await loadEquipment(session)
+      const engineEntries = entries.filter((e) => !isLadder(e))
+      const equipment = engineEntries.length ? await loadEquipment(session) : null
       if (equipment) {
-        const logs = await this.listSetLogs(entries.map((e) => e.id))
-        const setLogsByEntry = new Map<string, SetLog[]>()
-        for (const l of logs) {
-          const arr = setLogsByEntry.get(l.session_entry_id) ?? []
-          arr.push(l)
-          setLogsByEntry.set(l.session_entry_id, arr)
-        }
-        const weIds = entries.map((e) => e.workout_entry_id).filter((x): x is string => !!x)
-        const workoutEntries = weIds.length
-          ? await onlineDataClient.list<WorkoutEntry>('workout_entries', {
-              filters: [{ column: 'id', op: 'in', value: weIds }],
-            })
-          : []
-        const workoutEntryById = new Map(workoutEntries.map((w) => [w.id, w]))
         outcomes = await commitSessionProgression({
           routineId: session.routine_id,
-          entries,
+          entries: engineEntries,
           setLogsByEntry,
           workoutEntryById,
           equipment,
@@ -330,6 +454,13 @@ export const sessionsRepo = {
   abandon(sessionId: string): Promise<Session[]> {
     return onlineDataClient.update<Session>('sessions', { status: 'abandoned' }, [
       { column: 'id', op: 'eq', value: sessionId },
+    ])
+  },
+
+  /** The "as it happens" note on one exercise of a live session (9993). */
+  updateEntryNotes(sessionEntryId: string, notes: string | null): Promise<SessionEntry[]> {
+    return onlineDataClient.update<SessionEntry>('session_entries', { notes }, [
+      { column: 'id', op: 'eq', value: sessionEntryId },
     ])
   },
 

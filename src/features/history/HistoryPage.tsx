@@ -193,6 +193,7 @@ function SessionDetail({ sessionId }: { sessionId: string }) {
                 ))}
               </span>
             )}
+            {e.notes ? <span className="histnote muted">“{e.notes}”</span> : null}
           </div>
         )
       })}

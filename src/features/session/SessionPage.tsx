@@ -10,12 +10,12 @@
 import { useId, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Check, ChevronLeft, ChevronRight, Video } from 'lucide-react'
-import { Banner, Button, Card, SkeletonList } from '../../components/ui'
+import { Check, ChevronLeft, ChevronRight, Pin, Video } from 'lucide-react'
+import { Banner, Button, Card, SkeletonList, TextArea } from '../../components/ui'
 import { useDialog } from '../../hooks/useDialog'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../hooks/useToast'
-import { useExercisesByIds } from '../workouts/useWorkouts'
+import { useExercisesByIds, useWorkoutEntriesByIds } from '../workouts/useWorkouts'
 import { solvePlates, type PlateStock } from '../../engine/plates'
 import { generateWarmups } from '../../engine/warmups'
 import { RestTimer } from './RestTimer'
@@ -27,6 +27,7 @@ import {
   useSessionEntries,
   useSessionEquipment,
   useSetLogs,
+  useUpdateSessionEntryNotes,
   useUpdateSetLog,
 } from './useSession'
 import type {
@@ -42,7 +43,9 @@ const PLATE_LOADED = new Set(['barbell', 'plate_loaded'])
 
 function schemeText(e: SessionEntry): string {
   if (e.planned_rep_scheme === 'double') return `${e.planned_sets} × ${e.planned_rep_low}–${e.planned_rep_high}`
-  return `${e.planned_sets} × ${e.planned_rep_target ?? '?'}`
+  // Per-set targets (rep ladder) have no single entry-level rep figure.
+  if (e.planned_rep_target == null) return `${e.planned_sets} sets`
+  return `${e.planned_sets} × ${e.planned_rep_target}`
 }
 
 export function SessionPage() {
@@ -59,7 +62,18 @@ export function SessionPage() {
   const { data: setLogs } = useSetLogs(id, entryIds)
   const { data: equipment } = useSessionEquipment(session?.location_id ?? null, user!.id)
   const update = useUpdateSetLog()
+  const updateNotes = useUpdateSessionEntryNotes()
   const complete = useCompleteSession()
+  // Sticky per-exercise notes live on the template entry (workout_entries.notes).
+  const workoutEntryIds = useMemo(
+    () => (entries ?? []).map((e) => e.workout_entry_id).filter((x): x is string => !!x),
+    [entries],
+  )
+  const { data: workoutEntries } = useWorkoutEntriesByIds(workoutEntryIds)
+  const weById = useMemo(
+    () => new Map((workoutEntries ?? []).map((w) => [w.id, w])),
+    [workoutEntries],
+  )
 
   const exById = useMemo(() => new Map((exercises ?? []).map((e) => [e.id, e])), [exercises])
   const logsByEntry = useMemo(() => {
@@ -74,6 +88,7 @@ export function SessionPage() {
 
   // Local edit overlays (persist across exercise navigation; fall back to data).
   const [weights, setWeights] = useState<Record<string, string>>({})
+  const [entryNotes, setEntryNotes] = useState<Record<string, string>>({})
   const [reps, setReps] = useState<Record<string, string>>({})
   const [doneSet, setDoneSet] = useState<Record<string, boolean>>({})
   const [loggedWeights, setLoggedWeights] = useState<Record<string, number>>({})
@@ -128,7 +143,15 @@ export function SessionPage() {
     const next = !prevDone
     setDoneSet((d) => ({ ...d, [s.id]: next }))
     const r = reps[s.id] ?? String(s.actual_reps ?? s.planned_reps ?? '')
-    const w = weights[entry.id] ?? (entry.planned_weight != null ? String(entry.planned_weight) : '')
+    // An explicit hero-input edit wins; otherwise each set logs at its OWN
+    // planned weight (per-set targets can differ), falling back to the entry's.
+    const w =
+      weights[entry.id] ??
+      (s.planned_weight != null
+        ? String(s.planned_weight)
+        : entry.planned_weight != null
+          ? String(entry.planned_weight)
+          : '')
     // Capture this set's own load (so ramping/back-off shows per set) and kick
     // off rest — only when logging, not when undoing.
     if (next) {
@@ -229,6 +252,7 @@ export function SessionPage() {
           exercise={exById.get(active.exercise_id) ?? null}
           sets={logsByEntry.get(active.id) ?? []}
           weight={weightOf(active)}
+          weightTouched={weights[active.id] !== undefined}
           onWeight={(v) => setWeights((w) => ({ ...w, [active.id]: v }))}
           repsOf={repsOf}
           onReps={(s, v) => setReps((r) => ({ ...r, [s.id]: v }))}
@@ -240,6 +264,19 @@ export function SessionPage() {
           bar={equipment?.bar ?? null}
           plates={equipment?.plates ?? []}
           prefs={equipment?.prefs ?? null}
+          stickyNote={
+            (active.workout_entry_id ? weById.get(active.workout_entry_id)?.notes : null) ?? null
+          }
+          note={entryNotes[active.id] ?? active.notes ?? ''}
+          onNote={(v) => setEntryNotes((n) => ({ ...n, [active.id]: v }))}
+          onNoteBlur={() => {
+            const text = (entryNotes[active.id] ?? active.notes ?? '').trim()
+            if ((active.notes ?? '') === text) return
+            updateNotes.mutate(
+              { id: active.id, notes: text || null },
+              { onError: () => toast("That note didn't save — check your connection.", 'err') },
+            )
+          }}
           hasPrev={activeIndex > 0}
           hasNext={activeIndex < ordered.length - 1}
           onPrev={() => setActiveIndex((i) => Math.max(0, i - 1))}
@@ -346,6 +383,7 @@ function ActiveExercise({
   exercise,
   sets,
   weight,
+  weightTouched,
   onWeight,
   repsOf,
   onReps,
@@ -357,6 +395,10 @@ function ActiveExercise({
   bar,
   plates,
   prefs,
+  stickyNote,
+  note,
+  onNote,
+  onNoteBlur,
   hasPrev,
   hasNext,
   onPrev,
@@ -366,6 +408,7 @@ function ActiveExercise({
   exercise: Exercise | null
   sets: SetLog[]
   weight: string
+  weightTouched: boolean
   onWeight: (v: string) => void
   repsOf: (s: SetLog) => string
   onReps: (s: SetLog, v: string) => void
@@ -377,6 +420,10 @@ function ActiveExercise({
   bar: Barbell | null
   plates: PlateInventory[]
   prefs: EquipmentPreferences | null
+  stickyNote: string | null
+  note: string
+  onNote: (v: string) => void
+  onNoteBlur: () => void
   hasPrev: boolean
   hasNext: boolean
   onPrev: () => void
@@ -425,6 +472,12 @@ function ActiveExercise({
         <h2 className="hero__name">{exercise?.name ?? '…'}</h2>
         <span className="hero__scheme mono">{schemeText(entry)}</span>
       </div>
+
+      {stickyNote ? (
+        <p className="stickynote">
+          <Pin size={14} aria-hidden="true" /> {stickyNote}
+        </p>
+      ) : null}
 
       <div className="weighthero">
         <button className="weighthero__step" onClick={() => bump(-5)} aria-label="Decrease weight 5 lb">
@@ -511,8 +564,13 @@ function ActiveExercise({
           const done = isDone(s)
           const current = i === currentIdx
           // Each set shows the load it was logged at (ramp/back-off visible);
-          // a pending set previews the current working weight it will capture.
-          const shownWeight = done ? loggedWeights[s.id] ?? s.actual_weight ?? w : w
+          // a pending set previews its own planned weight (per-set targets can
+          // differ) unless the hero input was edited, which overrides all sets.
+          const shownWeight = done
+            ? loggedWeights[s.id] ?? s.actual_weight ?? w
+            : weightTouched
+              ? w
+              : s.planned_weight ?? w
           return (
             <li key={s.id} className={`setcard ${done ? 'is-done' : ''} ${current ? 'is-current' : ''}`}>
               <span className="setcard__n">Set {s.set_index}</span>
@@ -572,6 +630,16 @@ function ActiveExercise({
       {entry.planned_rest_seconds ? (
         <RestTimer seconds={entry.planned_rest_seconds} autoStartSignal={restSignal} />
       ) : null}
+
+      <div className="sessionnote">
+        <TextArea
+          placeholder="Note for today (e.g. shoulders clicking)"
+          aria-label={`Today's note for ${exercise?.name ?? 'this exercise'}`}
+          value={note}
+          onChange={(e) => onNote(e.target.value)}
+          onBlur={onNoteBlur}
+        />
+      </div>
 
       <div className="hero__nav">
         <Button variant="ghost" disabled={!hasPrev} onClick={onPrev}>

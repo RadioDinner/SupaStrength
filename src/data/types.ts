@@ -166,7 +166,26 @@ export interface WorkoutEntry {
   ceiling_behavior_override: CeilingBehavior | null
   consolidation_enabled: boolean
   consolidation_sessions: number
+  overload_mode: OverloadMode
+  rep_cap: number | null
+  increment_lb: number | null
+  reps_after_increment: number | null
   notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type OverloadMode = 'engine' | 'rep_ladder'
+
+/** Per-set target for a template entry (9993). Present → the session snapshot
+ * plans each set individually; rep-ladder advancement writes back here. */
+export interface WorkoutEntrySet {
+  id: string
+  user_id: string
+  workout_entry_id: string
+  set_index: number
+  target_reps: number
+  target_weight: number | null
   created_at: string
   updated_at: string
 }
@@ -203,6 +222,7 @@ export interface SessionEntry {
   last_set_amrap: boolean
   was_failure: boolean
   was_consolidation_hold: boolean
+  notes: string | null
   created_at: string
   updated_at: string
 }

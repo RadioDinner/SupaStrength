@@ -6,7 +6,7 @@
  * first session until progression state exists (migration 9994).
  */
 import { onlineDataClient } from '../online/supabaseDataClient'
-import type { RepScheme, Workout, WorkoutEntry } from '../types'
+import type { RepScheme, Workout, WorkoutEntry, WorkoutEntrySet } from '../types'
 
 export interface NewEntry {
   exerciseId: string
@@ -80,8 +80,56 @@ export const workoutsRepo = {
     return row
   },
 
+  listEntriesByIds(ids: string[]): Promise<WorkoutEntry[]> {
+    if (ids.length === 0) return Promise.resolve([])
+    return onlineDataClient.list<WorkoutEntry>('workout_entries', {
+      filters: [{ column: 'id', op: 'in', value: ids }],
+    })
+  },
+
+  /** On-the-fly entry edits: sticky note, overload mode/knobs, set count. */
+  updateEntry(entryId: string, patch: Partial<WorkoutEntry>): Promise<WorkoutEntry[]> {
+    return onlineDataClient.update<WorkoutEntry>('workout_entries', patch, [
+      { column: 'id', op: 'eq', value: entryId },
+    ])
+  },
+
   removeEntry(entryId: string): Promise<void> {
     return onlineDataClient.remove('workout_entries', [{ column: 'id', op: 'eq', value: entryId }])
+  },
+
+  // ── per-set targets (9993) ─────────────────────────────────────────────────
+  listEntrySets(entryId: string): Promise<WorkoutEntrySet[]> {
+    return onlineDataClient.list<WorkoutEntrySet>('workout_entry_sets', {
+      filters: [{ column: 'workout_entry_id', op: 'eq', value: entryId }],
+      order: [{ column: 'set_index' }],
+    })
+  },
+
+  /**
+   * Replace an entry's per-set targets: upsert rows 1..n on
+   * (workout_entry_id, set_index), then drop any leftovers past n.
+   */
+  async saveEntrySets(
+    entryId: string,
+    rows: { targetReps: number; targetWeight: number | null }[],
+  ): Promise<void> {
+    if (rows.length > 0) {
+      await onlineDataClient.upsert<WorkoutEntrySet>(
+        'workout_entry_sets',
+        rows.map((r, i) => ({
+          workout_entry_id: entryId,
+          set_index: i + 1,
+          target_reps: r.targetReps,
+          target_weight: r.targetWeight,
+        })),
+        'workout_entry_id,set_index',
+      )
+    }
+    await onlineDataClient.remove('workout_entry_sets', [
+      { column: 'workout_entry_id', op: 'eq', value: entryId },
+      { column: 'set_index', op: 'gt', value: rows.length },
+    ])
   },
 
   /**

@@ -432,6 +432,17 @@ h3,
 .list__row:last-child {
   border-bottom: none;
 }
+/* A row that can expand: the main line keeps the flex layout, extra content
+   (e.g. the entry editor) stacks below it. */
+.list__row--stack {
+  display: block;
+}
+.list__rowmain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
 
 .checklist {
   list-style: none;
@@ -533,6 +544,12 @@ h3,
   color: var(--ink);
   font-size: 16px;
   transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.input--area {
+  resize: vertical;
+  min-height: 2.75em;
+  font: inherit;
+  font-size: 16px;
 }
 .input::placeholder {
   color: var(--faint);
@@ -1618,6 +1635,11 @@ h3,
   justify-content: flex-end;
   padding: 0 0 var(--s-3);
 }
+.histnote {
+  flex-basis: 100%;
+  font-size: var(--fs-sm);
+  font-style: italic;
+}
 .histex {
   display: flex;
   flex-wrap: wrap;
@@ -1653,6 +1675,44 @@ h3,
   align-items: center;
   gap: var(--s-1);
   flex: none;
+}
+/* ── per-entry editor (workout builder drop-down) ────────────────────────── */
+.entryeditor {
+  border-top: 1px dashed var(--border);
+  margin-top: var(--s-3);
+  padding: var(--s-3) 0 var(--s-2);
+  display: grid;
+  gap: var(--s-3);
+}
+.setedit {
+  display: grid;
+  grid-template-columns: 3.75rem 1fr 1fr auto;
+  gap: var(--s-2);
+  align-items: center;
+  margin-bottom: var(--s-2);
+}
+.setedit__n {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+/* ── sticky + per-session notes (live session) ───────────────────────────── */
+.stickynote {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: var(--s-2) 0 0;
+  padding-left: var(--s-2);
+  border-left: 2px solid var(--accent);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.stickynote svg {
+  flex: none;
+  transform: translateY(2px);
+  color: var(--accent);
+}
+.sessionnote {
+  margin-top: var(--s-3);
 }
 .reorderbtn {
   width: 44px;
