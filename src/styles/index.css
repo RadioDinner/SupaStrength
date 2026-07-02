@@ -166,6 +166,11 @@ h3,
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
   border-color: var(--accent) !important;
 }
+/* Pages take programmatic focus (post-delete landing spot) — no ring on a
+   whole-page container. */
+.page:focus-visible {
+  box-shadow: none;
+}
 
 /* ── shells ───────────────────────────────────────────────────────────────── */
 .shell {
@@ -1606,6 +1611,11 @@ h3,
 .historyrow__detail {
   display: grid;
   gap: var(--s-2);
+  padding: 0 0 var(--s-3);
+}
+.historyrow__foot {
+  display: flex;
+  justify-content: flex-end;
   padding: 0 0 var(--s-3);
 }
 .histex {

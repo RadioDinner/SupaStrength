@@ -1,14 +1,21 @@
 /**
  * Workout history. Lists completed sessions (newest first); expand one to see the
- * logged working sets per exercise. Reuses the session repos — read-only, so no
- * new data layer. Closes the "no way to review past workouts" gap.
+ * logged working sets per exercise. Expanding also reveals Delete — a confirmed
+ * hard-delete of the session and its logged sets (progression already applied
+ * stays; see migration 9996).
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { ChevronDown, ChevronRight, NotebookText } from 'lucide-react'
-import { Card, EmptyState, Skeleton, SkeletonList } from '../../components/ui'
-import { useRecentSessions, useSessionEntries, useSetLogs } from '../session/useSession'
+import { ChevronDown, ChevronRight, NotebookText, Trash2 } from 'lucide-react'
+import { Button, Card, ConfirmDialog, EmptyState, Skeleton, SkeletonList } from '../../components/ui'
+import {
+  useDeleteSession,
+  useRecentSessions,
+  useSessionEntries,
+  useSetLogs,
+} from '../session/useSession'
 import { useExercisesByIds } from '../workouts/useWorkouts'
+import { useToast } from '../../hooks/useToast'
 import type { Session, SetLog } from '../../data/types'
 
 function prettyDate(d: string): string {
@@ -37,9 +44,16 @@ function durationLabel(s: Session): string | null {
 
 export function HistoryPage() {
   const { data: sessions, isLoading } = useRecentSessions(30)
+  const remove = useDeleteSession()
+  const { toast } = useToast()
+  const [deleting, setDeleting] = useState<Session | null>(null)
+  // Post-delete focus target: the dialog restores focus to the row's Delete
+  // button, but a successful delete unmounts that row — land on the page
+  // instead so keyboard/SR users keep their place.
+  const pageRef = useRef<HTMLDivElement>(null)
 
   return (
-    <div className="page">
+    <div className="page" ref={pageRef} tabIndex={-1}>
       <Card title="History" subtitle="Your completed sessions" />
       {isLoading ? (
         <SkeletonList rows={4} />
@@ -53,16 +67,45 @@ export function HistoryPage() {
         <Card>
           <ul className="history">
             {sessions.map((s) => (
-              <HistoryRow key={s.id} session={s} />
+              <HistoryRow key={s.id} session={s} onDelete={setDeleting} />
             ))}
           </ul>
         </Card>
       )}
+
+      {deleting ? (
+        <ConfirmDialog
+          title={`Delete the ${prettyDate(deleting.performed_on)} session?`}
+          body="This permanently removes the session and every set it logged from your history and analytics. Progression it already applied stays."
+          confirmLabel="Delete"
+          danger
+          pending={remove.isPending}
+          onCancel={() => setDeleting(null)}
+          onConfirm={() => {
+            // Stay open while the delete is in flight — pending disables both
+            // buttons ('…'), which is also what prevents a double confirm.
+            remove.mutate(deleting.id, {
+              onSuccess: () => {
+                toast('Session deleted.', 'ok')
+                pageRef.current?.focus()
+              },
+              onError: () => toast("Couldn't delete that session — try again.", 'err'),
+              onSettled: () => setDeleting(null),
+            })
+          }}
+        />
+      ) : null}
     </div>
   )
 }
 
-function HistoryRow({ session }: { session: Session }) {
+function HistoryRow({
+  session,
+  onDelete,
+}: {
+  session: Session
+  onDelete: (s: Session) => void
+}) {
   const [open, setOpen] = useState(false)
   return (
     <li className="historyrow">
@@ -80,7 +123,20 @@ function HistoryRow({ session }: { session: Session }) {
           {open ? <ChevronDown size={18} aria-hidden /> : <ChevronRight size={18} aria-hidden />}
         </span>
       </button>
-      {open ? <SessionDetail sessionId={session.id} /> : null}
+      {open ? (
+        <>
+          <SessionDetail sessionId={session.id} />
+          <div className="historyrow__foot">
+            <Button
+              variant="ghost"
+              onClick={() => onDelete(session)}
+              aria-label={`Delete the ${prettyDate(session.performed_on)} session`}
+            >
+              <Trash2 size={16} aria-hidden="true" /> Delete
+            </Button>
+          </div>
+        </>
+      ) : null}
     </li>
   )
 }

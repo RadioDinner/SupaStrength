@@ -1,0 +1,7 @@
+--- 2026-07-02 11:25 ---
+Ok, lets kick off a new session and start building some features and troubleshooting bugs. Always commit to main for the remainder of this session. The first thing I want to tackle is that I can't delete completed workouts. Add a feature for that
+
+--- 2026-07-02 11:45 ---
+Error: Failed to run sql query: ERROR: 42501: permission denied for table job
+
+9998 migration

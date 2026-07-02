@@ -603,7 +603,11 @@ At prescribe time for a `workout_entry`:
 
 #### `sessions`
 `status` in (in_progress, completed, abandoned). Once `completed` the row **and
-all its children** are read-only, enforced by immutability triggers.
+all its children** are read-only, enforced by immutability triggers. One
+carve-out (migration 9996): the owner may hard-**DELETE** a whole session
+(History → Delete) — the cascade removes its children, and progression already
+applied is not rolled back. What stays forbidden is post-hoc *editing* of a
+completed session or its children.
 
 | column | type | notes |
 |---|---|---|
@@ -619,8 +623,9 @@ all its children** are read-only, enforced by immutability triggers.
 
 - Indexes: `(user_id, performed_on desc)`, `(routine_id)`, partial
   `(user_id) where status='in_progress'` (resume).
-- Immutability: `prevent_completed_session_mutation` rejects update/delete of a
-  `completed` session.
+- Immutability: `prevent_completed_session_mutation` rejects **update** of a
+  `completed` session; **delete** is allowed for any status (owner-scoped by
+  RLS; migration 9996) and cascades to the children.
 
 #### `session_entries`  (prescription snapshot)
 Snapshots the prescription so later template edits don't rewrite history.
@@ -646,7 +651,8 @@ Snapshots the prescription so later template edits don't rewrite history.
 
 - Indexes: `(session_id, position)`, `(exercise_id)`, `(workout_entry_id)`.
 - Immutability: `prevent_completed_child_mutation` rejects update/delete once the
-  parent session is `completed`.
+  parent session is `completed` (reference-detach FK writes — `workout_id` /
+  `workout_entry_id` going null, all else untouched — excepted; migration 9995).
 
 #### `set_logs`  (planned vs actual; atomic analytics unit)
 The views read `set_logs` joined to `session_entries.exercise_id` and
@@ -678,7 +684,9 @@ The views read `set_logs` joined to `session_entries.exercise_id` and
 - est-1RM (Epley) computed in views from `actual_weight`/`actual_reps` of working
   sets only.
 - Immutability: `prevent_completed_child_mutation` rejects update/delete once the
-  owning session is `completed`.
+  owning session is `completed` (the `video_id`-detach write from a video
+  delete/purge excepted — migration 9995; without it `purge_expired_media()`
+  aborts on the first expired clip attached to completed history).
 
 #### `session_overrides`  (in-gym edits → optional save-to-template)
 | column | type | notes |
@@ -695,7 +703,8 @@ The views read `set_logs` joined to `session_entries.exercise_id` and
 
 - Indexes: `(session_entry_id)`, partial `(workout_entry_id) where persisted_to_template`.
 - Immutability: `prevent_completed_child_mutation` rejects update/delete once the
-  owning session is `completed`.
+  owning session is `completed` (`workout_entry_id`-detach writes excepted —
+  migration 9995).
 
 #### `audit_log`  (append-only)
 | column | type | notes |
@@ -711,7 +720,10 @@ The views read `set_logs` joined to `session_entries.exercise_id` and
 | `created_at` | `timestamptz default now()` | no `updated_at` — append-only |
 
 - Insert-only: `prevent_audit_mutation` trigger rejects update/delete; only
-  select + insert policies granted.
+  select + insert policies granted. Exception (migration 9996): the FK
+  `on delete set null` write that fires when a referenced
+  session/routine/exercise is deleted is recognized (context ids going null,
+  all other columns untouched) and allowed through.
 - Indexes: `(user_id, created_at desc)`, `(entity_type, entity_id)`,
   `(routine_id, exercise_id)`.
 
@@ -818,12 +830,18 @@ via the `reminders_due` view (never stored). An `after insert` trigger on
   `form-videos/{user_id}/{video_id}.ext`,
   `progress-photos/{user_id}/{category}/{photo_id}.ext`.
 - **Immutability triggers**: `prevent_completed_session_mutation` (no
-  update/delete of `completed` sessions) **plus** `prevent_completed_child_mutation`
+  **update** of `completed` sessions; owner **delete** of a whole session is
+  allowed — migration 9996) **plus** `prevent_completed_child_mutation`
   on `session_entries`, `set_logs`, `session_overrides` (no update/delete once
   the owning session is `completed` — this closes the post-hoc history-rewrite
-  hole that the parent-only guard left open); `prevent_audit_mutation` (audit is
-  insert-only); `assert_equipment_owner` (no cross-user reparenting of
-  barbells/plates/dumbbells).
+  hole that the parent-only guard left open; a session-delete cascade passes
+  because the parent row is already gone when the children are checked, and
+  reference-detach FK writes — `video_id`/`workout_id`/`workout_entry_id` going
+  null with all else untouched — are allowed so video purge and template
+  deletes don't abort on completed history, migration 9995);
+  `prevent_audit_mutation` (audit is insert-only, save for FK set-null writes
+  from deletes of referenced rows — 9996); `assert_equipment_owner` (no
+  cross-user reparenting of barbells/plates/dumbbells).
 - **SECURITY DEFINER RPCs** (`set_default_location`, `set_default_barbell`,
   `purge_expired_media`) run as the (bypassrls) owner, so FORCE RLS does not
   constrain them; their `where user_id = auth.uid()` predicates are the real

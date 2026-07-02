@@ -27,6 +27,7 @@ import type {
   Session,
   SessionEntry,
   SetLog,
+  Video,
   WorkoutEntry,
 } from '../types'
 
@@ -327,5 +328,47 @@ export const sessionsRepo = {
     return onlineDataClient.update<Session>('sessions', { status: 'abandoned' }, [
       { column: 'id', op: 'eq', value: sessionId },
     ])
+  },
+
+  /**
+   * Hard-delete a session (History → Delete). The DB cascade removes its
+   * entries and set logs (migration 9996 allows owner deletes of completed
+   * sessions); progression already applied by the session is NOT rolled back.
+   *
+   * Form videos need eager cleanup: the cascade only detaches them (both link
+   * columns go null), leaving the row + storage object reachable by nothing in
+   * the UI. Snapshot them before the delete, clean up after — best-effort,
+   * object before row, because purge_expired_media() keys its storage deletes
+   * off the rows (a row must never die before its object) and picks up
+   * whatever this leaves behind at expires_at.
+   */
+  async delete(sessionId: string): Promise<void> {
+    let videos: Video[] = []
+    try {
+      const entries = await this.listEntries(sessionId)
+      const logs = await this.listSetLogs(entries.map((e) => e.id))
+      const videoIds = [...new Set(logs.map((l) => l.video_id).filter((v): v is string => !!v))]
+      if (videoIds.length) {
+        videos = await onlineDataClient.list<Video>('videos', {
+          filters: [{ column: 'id', op: 'in', value: videoIds }],
+        })
+      }
+    } catch {
+      videos = [] // the snapshot must never block the delete itself
+    }
+
+    await onlineDataClient.remove('sessions', [{ column: 'id', op: 'eq', value: sessionId }])
+
+    if (videos.length) {
+      await onlineDataClient
+        .removeFiles(
+          'form-videos',
+          videos.map((v) => v.storage_path),
+        )
+        .catch(() => {})
+      await onlineDataClient
+        .remove('videos', [{ column: 'id', op: 'in', value: videos.map((v) => v.id) }])
+        .catch(() => {})
+    }
   },
 }

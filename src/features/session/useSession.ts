@@ -84,6 +84,27 @@ export function useUpdateSetLog() {
   })
 }
 
+export function useDeleteSession() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (sessionId: string) => sessionsRepo.delete(sessionId),
+    onSuccess: async (_, sessionId) => {
+      // Everything derived from session data: the History list, the Home page's
+      // last-session card (['sessions', 'recent', N]), and the analytics views
+      // that aggregate the deleted set logs.
+      qc.invalidateQueries({ queryKey: ['sessions'] })
+      qc.invalidateQueries({ queryKey: ['analytics'] })
+      // Await the History list refetch so the deleted row UNMOUNTS before its
+      // detail caches are removed — removing a query that still has a mounted
+      // observer makes TanStack rebuild it and refetch the deleted session.
+      await qc.invalidateQueries({ queryKey: ['recent_sessions'] })
+      qc.removeQueries({ queryKey: ['session', sessionId] })
+      qc.removeQueries({ queryKey: ['session_entries', sessionId] })
+      qc.removeQueries({ queryKey: ['set_logs', sessionId] })
+    },
+  })
+}
+
 export function useCompleteSession() {
   const qc = useQueryClient()
   return useMutation({

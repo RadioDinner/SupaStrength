@@ -79,8 +79,9 @@ export const videosRepo = {
 
   /**
    * Delete a clip (object + row). The `videos.set_log_id` FK is `on delete set
-   * null`, so the set log's pointer clears automatically. Only usable while the
-   * owning session is still in progress (completed-session children are frozen).
+   * null`, so the set log's pointer clears automatically — and since migration
+   * 9995 that detach write is allowed even on completed-session set logs (the
+   * rest of the row stays frozen).
    */
   async delete(video: Pick<Video, 'id' | 'storage_path' | 'set_log_id'>): Promise<void> {
     if (video.set_log_id) {
