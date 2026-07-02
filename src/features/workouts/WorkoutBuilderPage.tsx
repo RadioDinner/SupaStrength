@@ -1,14 +1,17 @@
 /**
  * Workout builder (BUILD_PLAN M3). Edit a workout's ordered exercise list — each
- * an exercise + its prescription (sets, rep scheme, rest, AMRAP). No weight: that
- * is born in the session. Validation blocks invalid rep-scheme combos before save
- * (straight needs a rep target; double needs low ≤ high).
+ * an exercise + its prescription (sets, rep scheme, rest, AMRAP, optional
+ * starting weight — the seed until progression state exists). The picker can
+ * create a custom exercise inline when the library has no match. Validation
+ * blocks invalid rep-scheme combos before save (straight needs a rep target;
+ * double needs low ≤ high).
  */
 import { useMemo, useState, type FormEvent } from 'react'
-import { ChevronDown, ChevronLeft, ChevronUp, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronUp, Plus, X } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { Banner, Button, Card, Field, Select, SkeletonList, TextInput } from '../../components/ui'
-import { useExercises } from '../exercises/useExercises'
+import { useCreateCustomExercise, useExercises, useMuscleGroups } from '../exercises/useExercises'
+import { MOVEMENTS, MOVEMENT_DEFAULTS } from '../exercises/exerciseMeta'
 import { useDebounced } from '../../hooks/useDebounced'
 import {
   useAddEntry,
@@ -18,7 +21,7 @@ import {
   useWorkout,
   useWorkoutEntries,
 } from './useWorkouts'
-import type { RepScheme, WorkoutEntry } from '../../data/types'
+import type { MovementType, RepScheme, WorkoutEntry } from '../../data/types'
 
 export function WorkoutBuilderPage() {
   const { id = '' } = useParams()
@@ -47,6 +50,9 @@ export function WorkoutBuilderPage() {
                   <span className="workout-link__name">{nameById.get(e.exercise_id) ?? '…'}</span>
                   <br />
                   <span className="mono">{prescriptionMain(e)}</span>
+                  {e.starting_weight != null ? (
+                    <span className="muted"> · starts at <span className="mono">{e.starting_weight}</span> lb</span>
+                  ) : null}
                   {e.rest_seconds ? (
                     <span className="muted"> · rest <span className="mono">{e.rest_seconds}</span>s</span>
                   ) : null}
@@ -119,6 +125,7 @@ function AddEntryForm({ workoutId }: { workoutId: string }) {
   const [high, setHigh] = useState('12')
   const [rest, setRest] = useState('180')
   const [amrap, setAmrap] = useState(false)
+  const [startWeight, setStartWeight] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   function reset() {
@@ -139,6 +146,9 @@ function AddEntryForm({ workoutId }: { workoutId: string }) {
       if (!low || !high) return setError('Double progression needs a low and high rep range.')
       if (Number(high) < Number(low)) return setError('Rep range high must be ≥ low.')
     }
+    const startingWeight = startWeight.trim() ? Number(startWeight) : null
+    if (startingWeight != null && (!Number.isFinite(startingWeight) || startingWeight <= 0))
+      return setError('Starting weight must be a positive number (or leave it blank).')
     try {
       await add.mutateAsync({
         exerciseId,
@@ -149,7 +159,9 @@ function AddEntryForm({ workoutId }: { workoutId: string }) {
         repRangeHigh: scheme === 'double' ? Number(high) : null,
         restSeconds: rest ? Number(rest) : null,
         lastSetAmrap: amrap,
+        startingWeight,
       })
+      setStartWeight('')
       reset()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -206,11 +218,23 @@ function AddEntryForm({ workoutId }: { workoutId: string }) {
           <Field label="Rest (seconds)" htmlFor="rest">
             <TextInput id="rest" type="number" min="0" value={rest} onChange={(e) => setRest(e.target.value)} />
           </Field>
-          <label className="toggle toggle--field">
-            <input type="checkbox" checked={amrap} onChange={(e) => setAmrap(e.target.checked)} />
-            <span>Last set AMRAP</span>
-          </label>
+          <Field label="Starting weight (lb, optional)" htmlFor="start_weight">
+            <TextInput
+              id="start_weight"
+              type="number"
+              min="0"
+              step="any"
+              placeholder="e.g. 135"
+              value={startWeight}
+              onChange={(e) => setStartWeight(e.target.value)}
+            />
+          </Field>
         </div>
+
+        <label className="toggle toggle--field">
+          <input type="checkbox" checked={amrap} onChange={(e) => setAmrap(e.target.checked)} />
+          <span>Last set AMRAP</span>
+        </label>
 
         {error ? <Banner kind="err">{error}</Banner> : null}
 
@@ -226,6 +250,21 @@ function ExercisePicker({ onPick }: { onPick: (id: string, name: string) => void
   const [search, setSearch] = useState('')
   const debounced = useDebounced(search, 250)
   const { data: results } = useExercises({ search: debounced, limit: 8 })
+  const [creating, setCreating] = useState(false)
+
+  if (creating) {
+    return (
+      <InlineExerciseCreate
+        initialName={search.trim()}
+        onCreated={(id, name) => {
+          setCreating(false)
+          setSearch('')
+          onPick(id, name)
+        }}
+        onCancel={() => setCreating(false)}
+      />
+    )
+  }
 
   return (
     <Field label="Exercise" htmlFor="ex_search">
@@ -245,8 +284,112 @@ function ExercisePicker({ onPick }: { onPick: (id: string, name: string) => void
             </li>
           ))}
           {results && results.length === 0 ? <li className="muted">No matches.</li> : null}
+          <li>
+            <button type="button" className="picker__item" onClick={() => setCreating(true)}>
+              <Plus size={16} aria-hidden="true" /> New exercise{debounced.trim() ? ` “${debounced.trim()}”` : ''}
+            </button>
+          </li>
         </ul>
       ) : null}
     </Field>
+  )
+}
+
+/**
+ * Compact custom-exercise creator for the picker: name + movement type +
+ * primary muscle (the radar needs one), loading style derived from the
+ * movement. Lives inside the AddEntryForm <form>, so it renders buttons only —
+ * no nested form element; Enter on the name input creates.
+ */
+function InlineExerciseCreate({
+  initialName,
+  onCreated,
+  onCancel,
+}: {
+  initialName: string
+  onCreated: (id: string, name: string) => void
+  onCancel: () => void
+}) {
+  const create = useCreateCustomExercise()
+  const { data: groups } = useMuscleGroups()
+  const [name, setName] = useState(initialName)
+  const [movement, setMovement] = useState<MovementType>('barbell')
+  const [primary, setPrimary] = useState<number | ''>('')
+  const [error, setError] = useState<string | null>(null)
+
+  async function onCreate() {
+    setError(null)
+    if (!name.trim()) return setError('Name is required.')
+    if (primary === '') return setError('Pick a primary muscle.')
+    const defaults = MOVEMENT_DEFAULTS[movement]
+    try {
+      const exercise = await create.mutateAsync({
+        name,
+        movementType: movement,
+        loadingStyle: defaults.loadingStyle,
+        isLoaded: defaults.isLoaded,
+        muscles: [{ muscleGroupId: primary, role: 'primary' }],
+      })
+      onCreated(exercise.id, exercise.name)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  return (
+    <div className="form">
+      <Field label="New exercise name" htmlFor="new_ex_name">
+        <TextInput
+          id="new_ex_name"
+          value={name}
+          autoFocus
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              void onCreate()
+            }
+          }}
+        />
+      </Field>
+      <div className="grid2">
+        <Field label="Movement type" htmlFor="new_ex_movement">
+          <Select
+            id="new_ex_movement"
+            value={movement}
+            onChange={(e) => setMovement(e.target.value as MovementType)}
+          >
+            {MOVEMENTS.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Primary muscle" htmlFor="new_ex_primary">
+          <Select
+            id="new_ex_primary"
+            value={primary}
+            onChange={(e) => setPrimary(e.target.value ? Number(e.target.value) : '')}
+          >
+            <option value="">Select…</option>
+            {(groups ?? []).map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.display_name}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </div>
+      {error ? <Banner kind="err">{error}</Banner> : null}
+      <div className="row-actions">
+        <Button type="button" onClick={() => void onCreate()} disabled={create.isPending}>
+          {create.isPending ? 'Creating…' : 'Create & use'}
+        </Button>
+        <Button variant="ghost" type="button" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </div>
   )
 }

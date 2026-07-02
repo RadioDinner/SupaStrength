@@ -321,7 +321,7 @@ The engine reads these when routing computed weights through plate-aware roundin
 | `archived_at` | `timestamptz` | soft-delete (immutable sessions reference it) |
 | `created_at`/`updated_at` | `timestamptz` | |
 
-#### `workout_entries`  (the *exercise scope* — prescription only, no weight)
+#### `workout_entries`  (the *exercise scope* — prescription; weight only as an opening seed)
 | column | type | notes |
 |---|---|---|
 | `id` | `uuid` PK | |
@@ -336,6 +336,7 @@ The engine reads these when routing computed weights through plate-aware roundin
 | `target_rpe` | `numeric(3,1)` | rpe (prescription-only; see RPE note §6) |
 | `rest_seconds` | `integer` | null → inherit |
 | `last_set_amrap` | `boolean not null default false` | last set to failure |
+| `starting_weight` | `numeric` null check `> 0` | opening prescription until `progression_state` exists; ignored after the first commit (migration 9994) |
 | `barbell_id_override` | `uuid` null `references barbells(id) on delete set null` | overrides exercise default bar |
 | `ceiling_behavior_override` | `text` null check in (hold_warn, auto_switch_reps) | per-entry override of equipment ceiling (§7) |
 | `consolidation_enabled` | `boolean not null default false` | opt-in gap-workout (§6) |

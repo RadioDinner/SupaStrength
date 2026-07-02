@@ -48,6 +48,15 @@ export const routinesRepo = {
     ])
   },
 
+  async rename(id: string, name: string): Promise<Routine> {
+    const rows = await onlineDataClient.update<Routine>('routines', { name: name.trim() }, [
+      { column: 'id', op: 'eq', value: id },
+    ])
+    const row = rows[0]
+    if (!row) throw new Error('Routine rename returned no row')
+    return row
+  },
+
   // ── rotations ────────────────────────────────────────────────────────────
   listRotations(routineId: string): Promise<Rotation[]> {
     return onlineDataClient.list<Rotation>('rotations', {

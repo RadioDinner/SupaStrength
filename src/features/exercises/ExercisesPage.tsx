@@ -12,31 +12,8 @@ import {
   useExercises,
   useMuscleGroups,
 } from './useExercises'
-import type { Exercise, LoadingStyle, MovementType, MuscleGroup, MuscleRole } from '../../data/types'
-
-const MOVEMENTS: { value: MovementType; label: string }[] = [
-  { value: 'barbell', label: 'Barbell' },
-  { value: 'dumbbell', label: 'Dumbbell' },
-  { value: 'machine', label: 'Machine' },
-  { value: 'cable', label: 'Cable' },
-  { value: 'bodyweight', label: 'Bodyweight' },
-  { value: 'weighted_bodyweight', label: 'Weighted bodyweight' },
-  { value: 'assisted', label: 'Assisted' },
-  { value: 'timed_cardio', label: 'Cardio / timed' },
-]
-
-const MOVEMENT_DEFAULTS: Record<MovementType, { loadingStyle: LoadingStyle; isLoaded: boolean }> = {
-  barbell: { loadingStyle: 'barbell', isLoaded: true },
-  dumbbell: { loadingStyle: 'dumbbell', isLoaded: true },
-  machine: { loadingStyle: 'stack', isLoaded: true },
-  cable: { loadingStyle: 'stack', isLoaded: true },
-  bodyweight: { loadingStyle: 'bodyweight', isLoaded: false },
-  weighted_bodyweight: { loadingStyle: 'plate_loaded', isLoaded: true },
-  assisted: { loadingStyle: 'stack', isLoaded: false },
-  timed_cardio: { loadingStyle: 'timed', isLoaded: false },
-}
-
-const movementLabel = (m: MovementType) => MOVEMENTS.find((x) => x.value === m)?.label ?? m
+import type { Exercise, MovementType, MuscleGroup, MuscleRole } from '../../data/types'
+import { MOVEMENTS, MOVEMENT_DEFAULTS, movementLabel } from './exerciseMeta'
 
 function useDebounced<T>(value: T, ms: number): T {
   const [v, setV] = useState(value)

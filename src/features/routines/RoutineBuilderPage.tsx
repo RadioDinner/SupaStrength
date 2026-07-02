@@ -3,19 +3,29 @@
  * workouts and see the computed "next gym day" — the head of every rotation. The
  * pointer math is the pure, tested `engine/schedule`.
  */
-import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
+import { useMemo, useState, type FormEvent } from 'react'
+import { ChevronLeft, ChevronRight, Pencil, Plus, X } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Banner, Button, Card, ConfirmDialog, Select, SkeletonList } from '../../components/ui'
+import {
+  Banner,
+  Button,
+  Card,
+  ConfirmDialog,
+  Select,
+  SkeletonList,
+  TextInput,
+} from '../../components/ui'
 import { nextGymDay, type EngineRotation } from '../../data/repos/routinesRepo'
 import { useWorkouts } from '../workouts/useWorkouts'
 import { useActiveSession, useStartNextGymDay } from '../session/useSession'
+import { useToast } from '../../hooks/useToast'
 import {
   useAddRotation,
   useAddRotationWorkout,
   useAdvanceRoutine,
   useRemoveRotation,
   useRemoveRotationWorkout,
+  useRenameRoutine,
   useRoutine,
   useRoutineSchedule,
   useSetActiveRoutine,
@@ -33,10 +43,30 @@ export function RoutineBuilderPage() {
   const advance = useAdvanceRoutine(id)
   const setActive = useSetActiveRoutine()
   const startDay = useStartNextGymDay()
+  const rename = useRenameRoutine()
+  const { toast } = useToast()
+  const [renaming, setRenaming] = useState(false)
+  const [draft, setDraft] = useState('')
 
   async function onStartDay() {
     const sessionId = await startDay.mutateAsync(id)
     navigate(`/session/${sessionId}`)
+  }
+
+  function onRename(e: FormEvent) {
+    e.preventDefault()
+    const name = draft.trim()
+    if (!name || name === routine?.name) {
+      setRenaming(false)
+      return
+    }
+    rename.mutate(
+      { id, name },
+      {
+        onError: () => toast("Couldn't rename the routine — try again.", 'err'),
+        onSettled: () => setRenaming(false),
+      },
+    )
   }
 
   const workoutName = useMemo(
@@ -69,12 +99,40 @@ export function RoutineBuilderPage() {
         }
         actions={<Link className="linkbtn" to="/routines"><ChevronLeft size={18} aria-hidden="true" />All</Link>}
       >
-        {!routine.is_active ? (
-          <Button variant="ghost" onClick={() => setActive.mutate(id)}>
-            Make this routine active
-          </Button>
+        {renaming ? (
+          <form className="inline-form" onSubmit={onRename}>
+            <TextInput
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              aria-label="Routine name"
+              autoFocus
+            />
+            <Button type="submit" disabled={rename.isPending || !draft.trim()}>
+              Save
+            </Button>
+            <Button variant="ghost" type="button" onClick={() => setRenaming(false)}>
+              Cancel
+            </Button>
+          </form>
         ) : (
-          <span className="muted">This is your active routine.</span>
+          <div className="row-actions">
+            {!routine.is_active ? (
+              <Button variant="ghost" onClick={() => setActive.mutate(id)}>
+                Make this routine active
+              </Button>
+            ) : (
+              <span className="muted">This is your active routine.</span>
+            )}
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setDraft(routine.name)
+                setRenaming(true)
+              }}
+            >
+              <Pencil size={16} aria-hidden="true" /> Rename
+            </Button>
+          </div>
         )}
       </Card>
 

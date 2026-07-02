@@ -48,13 +48,15 @@ interface Resolved {
   plannedSets: number
 }
 
-/** Routine prescription: read the climbed weight/reps; consume a consolidation hold. */
+/** Routine prescription: read the climbed weight/reps; consume a consolidation hold.
+ * Before any progression state exists, the template's starting weight (9994)
+ * prescribes the opener; the engine's line takes over after the first commit. */
 async function resolvePlanned(routineId: string, we: WorkoutEntry): Promise<Resolved> {
   const ws = await onlineDataClient.getOne<ProgressionState>('progression_state', [
     { column: 'routine_id', op: 'eq', value: routineId },
     { column: 'exercise_id', op: 'eq', value: we.exercise_id },
   ])
-  let plannedWeight = ws?.current_weight ?? null
+  let plannedWeight = ws?.current_weight ?? we.starting_weight ?? null
   if (ws && ws.consolidation_counter > 0) {
     plannedWeight = ws.current_weight // hold the rounded weight an extra session
     await onlineDataClient.update<ProgressionState>(
@@ -175,7 +177,8 @@ export const sessionsRepo = {
     })
   },
 
-  /** Start a session from a single workout (no routine context → manual weight). */
+  /** Start a session from a single workout (no routine context → the template's
+   * starting weight if set, else manual weight). */
   async startFromWorkout(workoutId: string, locationId: string | null): Promise<string> {
     const entries = await workoutsRepo.listEntries(workoutId)
     const rows = await onlineDataClient.insert<Session>('sessions', {
@@ -188,7 +191,7 @@ export const sessionsRepo = {
     let position = 0
     for (const e of entries) {
       await snapshotEntry(session.id, e, position++, {
-        plannedWeight: null,
+        plannedWeight: e.starting_weight ?? null,
         plannedReps: e.rep_scheme === 'double' ? e.rep_range_low : e.rep_target,
         plannedSets: e.sets,
       })

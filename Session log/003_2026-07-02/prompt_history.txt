@@ -5,3 +5,14 @@ Ok, lets kick off a new session and start building some features and troubleshoo
 Error: Failed to run sql query: ERROR: 42501: permission denied for table job
 
 9998 migration
+
+--- 2026-07-02 12:40 ---
+I can't rename "Routines" I want to be able to do that
+
+--- 2026-07-02 12:47 ---
+Also, when building a workout, I can't add a custom exercise or add starting weights per set
+
+--- 2026-07-02 12:55 ---
+While we're making changes. I want to be able to drop down any single exercise in the workout builder and set the weight per set. And I want to be able to set specific progression/overload targets per exercise UNIQUE to that workout. So for instance. I want to add Lateral Raise (Dumbbell) exercise, (A custom exercise btw) and when I add that, I want a space to add notes that are "sticky", that last from workout to work out and then I want the ability to add notes per time that the workout occurred. For instance, my old exercise tracking has a sticky note on the lateral raise section that says "Remember to shovel!" and I want to see that every workout. But if I notice something unique like "shoulders clicking", I want a way to write that down as it happens.
+
+Back to the set builder, on the Lateral Raise (Dumbbell) example, I have 15lbs for 9 reps as set 1, 15 pounds for 8 reps as set 2, and 15 pounds for 5 reps as set 3. I want to add a rep every time I do the workout until I hit 10 reps on each set, then I want to increment up to 20 pounds but cut the reps back to 8 reps because the tonnage would be too much to add 5 pounds to each rep. So with the 15 pound reps of 10, I'd move 300lbs each set (because 15lb on both arms). If I went up to 20 lb dumbbells, I would move to 400lbs. So I'd cut the reps back to 7 reps per set and then add a rep to each set, per workout, UNLESS I fail. Then I don't add a rep. These are settings I want to change on the fly in the app.

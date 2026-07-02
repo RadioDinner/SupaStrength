@@ -1,8 +1,9 @@
 /**
  * Workout templates repository (BUILD_PLAN M3). A workout is an ordered list of
  * `workout_entries` — each an exercise + its *prescription* (sets, rep scheme,
- * rest, AMRAP). There is deliberately NO weight here: weight is born in the
- * session (the engine), never the template.
+ * rest, AMRAP). Working weight lives in the session (the engine), not the
+ * template — with one seed: an optional `starting_weight` that prescribes the
+ * first session until progression state exists (migration 9994).
  */
 import { onlineDataClient } from '../online/supabaseDataClient'
 import type { RepScheme, Workout, WorkoutEntry } from '../types'
@@ -16,6 +17,7 @@ export interface NewEntry {
   repRangeHigh?: number | null
   restSeconds?: number | null
   lastSetAmrap?: boolean
+  startingWeight?: number | null
 }
 
 export const workoutsRepo = {
@@ -71,6 +73,7 @@ export const workoutsRepo = {
       rep_range_high: entry.repScheme === 'double' ? (entry.repRangeHigh ?? null) : null,
       rest_seconds: entry.restSeconds ?? null,
       last_set_amrap: entry.lastSetAmrap ?? false,
+      starting_weight: entry.startingWeight ?? null,
     })
     const row = rows[0]
     if (!row) throw new Error('Entry insert returned no row')

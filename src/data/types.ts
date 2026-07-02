@@ -161,6 +161,7 @@ export interface WorkoutEntry {
   target_rpe: number | null
   rest_seconds: number | null
   last_set_amrap: boolean
+  starting_weight: number | null
   barbell_id_override: string | null
   ceiling_behavior_override: CeilingBehavior | null
   consolidation_enabled: boolean

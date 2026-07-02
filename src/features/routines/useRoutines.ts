@@ -26,6 +26,18 @@ export function useSetActiveRoutine() {
   })
 }
 
+export function useRenameRoutine() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => routinesRepo.rename(id, name),
+    onSuccess: (_, { id }) => {
+      // ['routines'] also feeds the Home page's active-routine card.
+      qc.invalidateQueries({ queryKey: ['routines'] })
+      qc.invalidateQueries({ queryKey: ['routine', id] })
+    },
+  })
+}
+
 export function useArchiveRoutine() {
   const qc = useQueryClient()
   return useMutation({
