@@ -42,11 +42,22 @@
 >   "note for today" in session, shown in History detail).
 > - Routine **rename**; exercise picker **creates custom exercises inline**
 >   (the RLS bug that broke ALL custom-exercise creation is fixed in 9992).
+> - **Bodyweight weigh-in** at workout completion ("Finish & lock?" sheet,
+>   placeholder = profile weight) and on the backfill form —
+>   `useLogBodyweight()` merge-upserts that day's `body_measurements` row
+>   (DB trigger bumps the weigh-in reminder) and syncs the canonical
+>   `user_profiles.bodyweight_lb` ONLY when dated today (backdates must not
+>   overwrite the §9 standards weight). Best-effort: never blocks completion.
 > - **93 tests green**; every migration verified re-runnable on a scratch
 >   Postgres 16 with Supabase shims (incl. RLS check under `authenticated`).
-> - **Known issues:** `auth.users → audit_log` cascade still blocks full
->   account deletion (pre-existing); payoff sheet shows no "Next time" line
->   for ladder entries; UI not click-tested from this env (no Supabase creds).
+> - **Known issues / next-session candidates:** `auth.users → audit_log`
+>   cascade still blocks full account deletion (pre-existing); payoff sheet
+>   shows no "Next time" line for ladder entries; UI not click-tested from
+>   this env (no Supabase creds) — user hasn't reported device testing of the
+>   new builder/backfill/bodyweight screens yet, expect screenshot-driven
+>   tweaks; possible "count backfill toward progression" toggle.
+> - Session commits (all on main): `ba4eb2a`, `bca66c1`, `1143538`, `6b03f17`,
+>   `da633b7`, `a2f2054`, `05cf0e2`, `2408e69`, `4970e92` + the wrap commit.
 
 > **Session 002b (later, same session) — FULL VISUAL TEARDOWN → v2 "calibrated
 > instrument"** (user directive: tear the visual design down, rebuild clean /

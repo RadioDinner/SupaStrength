@@ -1,7 +1,8 @@
-# Session 003 — 2026-07-02
+# Session 003 — 2026-07-02 (CLOSED)
 
-Running log; updated as the session progresses. All work committed directly to
-`main` per the user's standing instruction for this session.
+All work committed directly to `main` per the user's standing instruction for
+this session. Nine commits shipped; all six new/fixed migrations confirmed
+applied to production by the user mid-session.
 
 ## What shipped (commits on main)
 
@@ -41,11 +42,22 @@ Running log; updated as the session progresses. All work committed directly to
   rest); BUG FIX: `exercises.user_id` now defaults to `auth.uid()` — custom
   exercise creation previously always failed RLS ("new row violates row-level
   security policy"). Add-set is a quiet right-aligned text button.
-- (this commit) **Backfill sessions** — History → "Log past session": pick a
+- `05cf0e2` **Backfill sessions** — History → "Log past session": pick a
   workout, set date/start time/duration, fill sets (prefilled from targets,
   all marked done by default), save → lands as completed. Deliberately does
   NOT advance progression/ladders/rotations. Partial-failure cleanup deletes
   the orphan session so it can't hijack Resume.
+- `2408e69` **HANDOFF + log update** — recorded the user's confirmation that
+  every pending migration was applied in production.
+- `4970e92` **Bodyweight at completion + backfill** — optional Bodyweight (lb)
+  field on the "Finish & lock?" sheet (placeholder = profile weight) and on
+  the backfill form. New `useLogBodyweight()`: merge-upserts that day's
+  `body_measurements` row (DB trigger bumps the weigh-in reminder); syncs the
+  canonical `user_profiles.bodyweight_lb` (strength standards, §9) ONLY when
+  the date is today, so backdated entries can't overwrite the current weight.
+  Best-effort: a failed weigh-in write never eats the completed session.
+- (final commit) **Session wrap** — this log finalized, HANDOFF updated,
+  prompt history committed.
 
 ## Migrations — ALL APPLIED by the user (confirmed 2026-07-02)
 
@@ -79,9 +91,13 @@ All re-runnable; all verified on a local Postgres 16 with Supabase shims
 - HomePage "last session" card uses keys ['sessions','recent',1]; delete and
   backfill invalidate the ['sessions'] prefix.
 
-## Open questions
+## Open questions / next session candidates
 
 - Payoff sheet doesn't yet show "Next time" for rep-ladder entries (engine
   outcomes only) — possible polish.
 - Per-set rest is displayed in the builder; SessionPage rest timer uses it,
   but set cards don't show per-set rest values.
+- User has NOT yet reported back on device testing of the new builder
+  set-table / backfill / bodyweight screens — expect UI tweak requests
+  (screenshots) early next session.
+- Possible "count backfill toward progression" toggle if the user asks.

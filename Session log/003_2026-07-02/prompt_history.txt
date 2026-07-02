@@ -41,3 +41,6 @@ I ran all migrations
 
 --- 2026-07-02 14:45 ---
 I want to be able to log my body weight at the end of each workout, including when adding a workout to history
+
+--- 2026-07-02 15:10 ---
+write the handoff, commit to main and wrap the sesion
