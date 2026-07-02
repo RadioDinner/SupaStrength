@@ -53,7 +53,7 @@ export function RoutinesPage() {
                 <Link to={`/routines/${r.id}`} className="workout-link">
                   <span className="workout-link__name">
                     {r.name}
-                    {r.is_active ? <span className="badge">active</span> : null}
+                    {r.is_active ? <span className="badge badge--live">active</span> : null}
                   </span>
                   <span className="muted">Tap to build rotations</span>
                 </Link>

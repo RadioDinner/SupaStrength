@@ -234,8 +234,8 @@ export function AnalyticsPage() {
                 <Radar
                   name={prefs.radar_mode}
                   dataKey="value"
-                  stroke="var(--accent)"
-                  fill="var(--accent)"
+                  stroke="var(--ink)"
+                  fill="var(--ink)"
                   fillOpacity={0.32}
                   strokeWidth={2}
                   isAnimationActive={false}

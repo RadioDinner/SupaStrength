@@ -49,7 +49,7 @@ export function HomePage() {
       <section className="card herostat">
         <p className="herostat__label">{since === null ? 'Training' : 'Last trained'}</p>
         {recent.isLoading ? (
-          <Skeleton w={120} h={40} radius={8} />
+          <Skeleton w={120} h={40} />
         ) : since === null ? (
           <p className="herostat__value">
             Ready<span className="herostat__unit">log your first session</span>

@@ -105,3 +105,57 @@ majority rules). 6 confirmed, 1 empirically refuted. Fixed all confirmed:
   node_modules) and has no `.env` — live-DB work needs the user's
   `VITE_SUPABASE_URL`/anon key.
 - Next migration number: **9996**.
+
+---
+
+# Part 2 — full visual teardown → design system v2 ("calibrated instrument")
+
+User directive mid-session: tear the entire visual design down and rebuild —
+clean, professional, sharp corners, "not something stupid vibe coded"; merge
+directly to main for the rest of the session.
+
+## What shipped
+
+- **v2 design system** replacing the v1 "bold high-energy electric-indigo,
+  rounded, dark-gym" look (which was itself the workout-app category reflex):
+  - True-neutral chassis: light = pure white `oklch(1 0 0)`, dark = graphite;
+    chroma 0 throughout — the identity lives in ink + amber + mono, not the
+    surface tint.
+  - Primary actions are **ink keys** (new `--action`/`--on-action`/
+    `--action-hover` tokens); `--accent` is now an **amber signal lamp**
+    (bronze in light for AA text) used ONLY for live + selected state.
+  - **JetBrains Mono on every numeral** (`--font-num`), Inter-only UI.
+    Archivo/Oswald/Space-Grotesk deps removed.
+  - **Radius 0 everywhere** (tokens kept, zeroed), hairline 1px borders,
+    `--shadow: none`, backdrop-blur glass removed, gradients flattened,
+    square switch knob / lamps / badges. Favicon + PWA colors updated.
+- **Verification:** palette locked by a WCAG script (38 pairs, both themes,
+  all ≥4.5:1 text / ≥3:1 UI); `impeccable` detect.mjs = 0 findings; static
+  previews screenshotted in both themes at 390px.
+- **Adversarial review** (3 parallel lenses: token drift / layout fallout /
+  craft+slop) returned 22 findings; all fixed, headliners:
+  - Amber had leaked onto static UI (radar fill, std gauge, freq counts,
+    badges, info banners, std-band ladder, links, taxonomy chips) → data marks
+    are ink, labels neutral, `.badge--live` added for active/next; the
+    novice-vs-advanced band collision resolved by making the ladder neutral
+    (position is read off the gauge).
+  - Sticky `.sprogress` was sliced under the now-opaque appbar → offset is now
+    `max(12px, env(safe-area-inset-top)) + 57px` (exact appbar height).
+  - Mono digits are ~8% wider: rest timer lost its stale 96px min-width and
+    wraps; payoff stats row wraps at 320px; plate chips + progress counters +
+    payoff deltas brought onto the mono system.
+  - Switch knob re-machined (16px + 1px edge = exact 2px inset; was
+    overhanging its track at dpr≥2 once squared); skeletons squared (radius
+    lived in TSX inline styles); input focus unified to the crisp amber edge;
+    top/bottom chrome unified on `--bg`; spinner squared.
+- DESIGN.md fully rewritten for v2; PRODUCT.md personality/anti-refs updated
+  (rounded "bubble gum" styling is now an explicit anti-reference).
+- typecheck / lint / build / 83 tests green; committed straight to main
+  (user-authorized).
+
+## Notes for next session
+
+- The old audit (15/20) and critique (31/40) scored v1 — **re-run both against
+  v2** when design work resumes.
+- The `.impeccable/` critique snapshots and older session screenshots show v1.
+- Live smoke-test gate unchanged (plus the 9997 paste).

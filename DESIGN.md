@@ -1,90 +1,101 @@
 # Design
 
-> Visual system for SupaStrength. Register: **product**. Vibe: **bold &
-> high-energy**, earned-familiarity with Hevy/Strong. Dark-first with a real
-> light/dark toggle. Colors in OKLCH. Source of truth = the tokens in
-> `src/styles/index.css`; this doc explains the intent.
+> Visual system for SupaStrength, v2 — **"calibrated instrument."** Register:
+> **product**. A training ledger with the temperament of a precision scale, not
+> a fitness app. Clean, professional, sharp. Colors in OKLCH. Source of truth =
+> the tokens in `src/styles/index.css`; this doc explains the intent.
+>
+> v1 (bold/high-energy electric-indigo, rounded, dark-gym) was torn down
+> deliberately on 2026-07-01: it *was* the category reflex. v2 starts from the
+> equipment world — machined steel, etched hairlines, an amber indicator lamp —
+> instead of the fitness-app world.
 
-## Theme
+## The scene
 
-Dark-first (the gym default), with a user-controlled **light/dark/system** toggle
-(`useTheme`, persisted to `localStorage`, applied as `data-theme` on `<html>`; an
-inline script in `index.html` sets it pre-paint to avoid a flash). Both themes
-are first-class and AA-contrast.
+One lifter, home gym, phone propped on the rack. Garage daylight or basement
+LEDs — both themes are first-class and true-neutral, chosen by the user
+(`useTheme`, persisted, pre-paint script in `index.html`). Neither theme has a
+temperature: the mood lives in ink, the amber lamp, and the mono numerals — the
+surface is pure chassis.
 
 ## Color (OKLCH)
 
-Strategy: **Restrained** — one committed accent doing the energy, neutrals
-everywhere else. The accent is an electric indigo-blue; it appears only on primary
-actions, the current selection, and live state (active set, running timer).
+Strategy: **Restrained**, instrument-flavored. Three layers:
 
-Semantic roles (per theme):
+1. **Chassis** — true neutrals, chroma 0. Light: `--bg`/`--surface` are **pure
+   white** `oklch(1 0 0)` (no hidden warmth), panels `--surface-2` L0.965.
+   Dark: graphite `--bg` L0.155, `--surface` L0.19, `--surface-2` L0.225.
+   Hairlines `--border` do the separation work — **no shadows** (`--shadow:
+   none`), no translucency, no backdrop blur anywhere.
+2. **Action** — primary actions are the chassis inverted: `--action` /
+   `--on-action` (ink key with white legend in light; white key in dark).
+   Buttons look like keys on an instrument, not colored pills.
+3. **Signal** — ONE hue: amber, the indicator lamp. `--accent` is
+   `oklch(0.78 0.14 85)` in dark and darkens to bronze `oklch(0.52 0.11 80)`
+   in light so it survives as small text (5.59:1 on white). It marks **live and
+   selected state only**: the current set, the running rest timer, the session
+   progress fill, the active tab tick, selection borders, focus rings. Never
+   decoration, never large fills (the `.std__fill` gauge is the one sanctioned
+   area fill).
 
-- `--bg` page · `--surface` card · `--surface-2` raised (app bar / tab bar) ·
-  `--border` hairline.
-- `--ink` primary text · `--muted` secondary (kept ≥4.5:1, never decorative gray) ·
-  `--faint` least-prominent text (placeholders, section micro-labels, rank
-  counters) — dimmer than `--muted` but still **AA ≥4.5:1 in both themes** (it is a
-  text role, never decorative).
-- `--accent` brand / primary; `--on-accent` text on it.
-- State hues: `--good` (set done / PR), `--warn` (ceiling / stale), `--bad`
-  (error / failure). Each has a low-chroma tint background for fills, and the hue
-  itself is used as **text on that tint** (status banners, badges, standards
-  bands). So the light-theme `--good`/`--warn`/`--bad` are darkened enough that
-  on-tint text clears AA 4.5:1 (verified: good 4.80, warn 5.00, bad 4.77). Keep
-  that invariant when retuning these hues.
-
-Dark bg sits near OKLCH L0.17 with a faint brand-hue tint (not navy-cliché, not
-neutral-black). Light bg is a cool near-white (L~0.985, chroma toward the brand
-hue) — explicitly **not** warm cream.
+State hues stay semantic: `--good` (set done / PR), `--warn` (ceiling / stale /
+deload — hue ~50, kept well away from the amber signal at ~85), `--bad`
+(error / failure). Each has a `-tint` fill and the hue itself is used as text
+on that tint. **Every text/background pair above is verified ≥4.5:1 by script
+in both themes** (`scratchpad/contrast.mjs` pattern — rerun when retuning).
 
 ## Typography
 
-**Self-hosted variable type system, driven by three tokens** (swap a direction by
-changing only these): `--font-display` = **Archivo Variable** (the bold,
-high-energy voice — headings, brand, big figures), `--font-num` = Archivo Variable
-with `tabular-nums` (weights / reps / timer / counts), `--font-body` = **Inter
-Variable** (UI/body workhorse). Archivo (mechanical grotesque) over Inter (humanist
-grotesque) is a deliberate contrast-axis pairing, not two look-alikes. Bundled via
-`@fontsource-variable/*` so the PWA works offline with no FOUT. **Fixed rem scale**
-(ratio ~1.2), not fluid. Display letter-spacing held at −0.015 to −0.03em (≥ −0.04em
-floor). Numbers go big and heavy (the working weight, the rest timer); labels stay
-quiet (uppercase micro-labels used sparingly, never as per-section eyebrows).
+**Two families on a hard contrast axis: Inter (UI) + JetBrains Mono (data).**
 
-Scale: `--fs-xs` 0.75 · `--fs-sm` 0.8125 · `--fs-base` 1 · `--fs-md` 1.0625 ·
-`--fs-lg` 1.25 · `--fs-xl` 1.5 · `--fs-2xl` 2 · `--fs-stat` 2.75rem (hero figures).
+- `--font-body` = `--font-display` = **Inter Variable**. One family for all UI;
+  hierarchy is carried by weight and size only (product register: one family is
+  right). Display letter-spacing −0.01em, nothing tighter.
+- `--font-num` = **JetBrains Mono Variable** + `tabular-nums`, **letter-spacing
+  0** (never track a mono). Every numeral in the app runs through it — working
+  weight, reps, rest timer, plate math, e1RM, tables, dates in history. Digits
+  read like an instrument readout and never shift width as values change.
 
-## Space & radius
+Fixed rem scale (ratio ~1.2): `--fs-xs` 0.75 … `--fs-2xl` 2 · `--fs-stat`
+2.75rem for hero figures. Uppercase micro-labels (`.stat__label`,
+`.warmups__label`) are data labeling, kept sparse.
 
-8px rhythm via `--s-1..--s-7` (4/8/12/16/20/24/32). Radii: `--r-sm` 8 ·
-`--r-md` 12 · `--r-lg` 16 (cards top out at 16 — no over-rounding) · `--r-pill`
-999 for chips/tags. One elevation shadow token per theme (defined, ≤ moderate
-blur — no ghost-card 1px-border + wide-shadow pairing).
+## Space, radius, elevation
+
+8px rhythm via `--s-1..--s-7` (4/8/12/16/20/24/32). **Radius: 0. Everywhere.**
+The `--r-*` tokens exist so a future direction is one edit, but every component
+ships square — machined edges, no pills, no bubbles. The only circle left is
+the loading spinner (a standard affordance, not a corner).
+
+Elevation is **flat**: 1px hairline borders, opaque surfaces, `--shadow: none`.
+Sticky chrome (app bar, tab bar, session progress header) is opaque `--bg` /
+`--surface-2` with a hairline — content scrolls beneath a clean edge, not glass.
 
 ## Components
 
-Buttons (primary / ghost / danger), inputs, cards, chips/badges, list rows, the
-plate readout, set rows, the rest timer, bottom tab bar. Every interactive
-element defines default / hover / focus-visible / active / disabled. Set-done and
-timer states use `--good`. Focus is a visible accent ring.
+Same vocabulary everywhere: square keys (`.btn--primary` = action tokens,
+ghost = hairline outline), square tags (`.chip`, `.badge`, `.plate`), square
+slide switch (`.switch` — square knob on a square track, amber when on),
+segmented controls as flat key rows (`.seg__btn--on` = action). Selection and
+live state get the amber lamp (border/tint/tick), done state gets `--good`.
+Every interactive element keeps default / hover / focus-visible / active /
+disabled. Focus is a 2px amber ring offset by the bg.
+
+Data viz: ledger marks. Bars are flat ink; the strength-vs-standards gauge is
+flat amber with an ink position marker; the analytics radar strokes amber.
+No gradients (the skeleton shimmer is the one functional exception).
 
 ## Motion
 
-150–250ms, `ease-out` (quart/expo), state-only (press feedback, set-done fill,
-tab/route change, timer tick). No page-load choreography on task screens (the
-live session above all). **One sanctioned exception:** the Home dashboard — a
-lobby, not a task screen — gets a single restrained staggered rise-in on mount
-(`.home-enter`, ≤300ms + ≤200ms stagger, opacity/transform only, killed under
-reduced motion). Full `prefers-reduced-motion: reduce` fallback
-(instant / opacity-only).
+Unchanged contract from v1: 150–250ms, `ease-out`, state-only; no page-load
+choreography on task screens; the Home lobby keeps its single sanctioned
+staggered rise-in (composited, killed under reduced motion). The amber timer
+pulse (`tick-pulse`) and the resume-bar lamp blink are state, not decoration.
+Full `prefers-reduced-motion: reduce` fallback.
 
 ## Bans honored
 
-No side-stripe borders, no gradient text, no default glassmorphism, no hero-metric
-template, no cream body, no over-rounded cards, no 1px-border+wide-shadow combo.
-
-**Cards** carry a single elevation: a hairline `--border` plus a tight contact
-`--shadow` (≤ 8px blur) — not the wide-blur "ghost card". **Backdrop-blur** is a
-deliberate, functional exception limited to sticky chrome (app bar, bottom tab bar,
-the in-session progress header) where content scrolls beneath; it is never used as
-decorative glass on cards or surfaces.
+Everything in the impeccable shared list, plus the v2 house bans: no rounded
+corners, no pill chips, no backdrop blur, no drop shadows, no gradient fills,
+no translucent chrome, no accent-colored primary buttons (actions are ink/white
+keys; amber is a lamp, not a paint bucket).

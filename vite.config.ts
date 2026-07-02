@@ -18,8 +18,8 @@ export default defineConfig({
         name: 'SupaStrength',
         short_name: 'SupaStrength',
         description: 'Personalized strength training tracker',
-        theme_color: '#0b0f17',
-        background_color: '#0b0f17',
+        theme_color: '#0c0c0c',
+        background_color: '#0c0c0c',
         display: 'standalone',
         start_url: '/',
         icons: [

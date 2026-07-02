@@ -1,72 +1,80 @@
 /* ============================================================================
-   SupaStrength design system — bold & high-energy, dark-first + light theme.
-   Colors in OKLCH. One committed accent (electric indigo) carries the energy;
-   neutrals everywhere else. See DESIGN.md / PRODUCT.md.
+   SupaStrength design system — "calibrated instrument".
+   A training ledger, not a fitness app: true-neutral chassis (pure white /
+   graphite), ink primary actions, ONE amber signal lamp for live + selected
+   state, JetBrains Mono for every numeral, hairline rules, zero radius,
+   no glass, no shadows. Colors in OKLCH, all pairs AA-verified by script.
+   See DESIGN.md / PRODUCT.md.
    ============================================================================ */
 
 :root,
 :root[data-theme='dark'] {
-  --bg: oklch(0.165 0.012 264);
-  --surface: oklch(0.205 0.014 264);
-  --surface-2: oklch(0.235 0.016 264);
-  --inset: oklch(0.15 0.012 264);
-  --border: oklch(0.32 0.02 264);
-  --border-strong: oklch(0.42 0.02 264);
+  --bg: oklch(0.155 0 0);
+  --surface: oklch(0.19 0 0);
+  --surface-2: oklch(0.225 0 0);
+  --inset: oklch(0.135 0 0);
+  --border: oklch(0.32 0 0);
+  --border-strong: oklch(0.45 0 0);
   /* switch knob edge — dark so the white knob keeps a ≥3:1 boundary on the
-     accent (ON) track (white-on-accent is only 2.95:1). */
-  --switch-edge: oklch(0.25 0.01 264);
-  --ink: oklch(0.97 0.005 264);
-  --muted: oklch(0.74 0.015 264);
+     amber (ON) track. */
+  --switch-edge: oklch(0.25 0 0);
+  --ink: oklch(0.95 0 0);
+  --muted: oklch(0.72 0 0);
   /* --faint renders as text (placeholders, section labels, rank counters);
      tuned to clear AA 4.5:1 while staying dimmer than --muted. */
-  --faint: oklch(0.64 0.015 264);
+  --faint: oklch(0.63 0 0);
 
-  --accent: oklch(0.68 0.17 264);
-  --accent-strong: oklch(0.62 0.2 264);
-  --on-accent: oklch(0.16 0.03 264);
-  --accent-tint: oklch(0.68 0.17 264 / 0.16);
+  /* Primary actions are the chassis color, inverted (white key on graphite). */
+  --action: oklch(0.95 0 0);
+  --on-action: oklch(0.15 0 0);
+  --action-hover: oklch(0.86 0 0);
+
+  /* The single signal hue: amber, the indicator lamp. Live + selected only. */
+  --accent: oklch(0.78 0.14 85);
+  --accent-tint: oklch(0.78 0.14 85 / 0.15);
 
   --good: oklch(0.8 0.16 155);
   --good-tint: oklch(0.8 0.16 155 / 0.16);
-  --warn: oklch(0.83 0.13 85);
-  --warn-tint: oklch(0.83 0.13 85 / 0.16);
+  --warn: oklch(0.78 0.13 55);
+  --warn-tint: oklch(0.78 0.13 55 / 0.16);
   --bad: oklch(0.7 0.19 22);
   --bad-tint: oklch(0.7 0.19 22 / 0.18);
 
-  --shadow: 0 2px 6px -2px oklch(0 0 0 / 0.45);
+  --shadow: none;
   color-scheme: dark;
 }
 
 :root[data-theme='light'] {
-  --bg: oklch(0.98 0.004 264);
+  --bg: oklch(1 0 0); /* pure white — the mood lives in ink + amber, not the surface */
   --surface: oklch(1 0 0);
-  --surface-2: oklch(0.972 0.005 264);
-  --inset: oklch(0.965 0.006 264);
-  --border: oklch(0.9 0.008 264);
-  --border-strong: oklch(0.8 0.012 264);
-  /* switch knob edge — dark enough for a ≥3:1 boundary on the light OFF track
-     (white knob alone is only 1.59:1 there). */
-  --switch-edge: oklch(0.45 0.02 264);
-  --ink: oklch(0.23 0.02 264);
-  --muted: oklch(0.46 0.02 264);
-  /* text role (see dark --faint note); darkened until AA-clear, still < --muted. */
-  --faint: oklch(0.52 0.02 264);
+  --surface-2: oklch(0.965 0 0);
+  --inset: oklch(0.97 0 0);
+  --border: oklch(0.87 0 0);
+  --border-strong: oklch(0.72 0 0);
+  /* switch knob edge — dark enough for a ≥3:1 boundary on the light OFF track. */
+  --switch-edge: oklch(0.45 0 0);
+  --ink: oklch(0.145 0 0);
+  --muted: oklch(0.44 0 0);
+  /* text role (see dark --faint note); AA-clear, still dimmer than --muted. */
+  --faint: oklch(0.51 0 0);
 
-  --accent: oklch(0.53 0.21 264);
-  --accent-strong: oklch(0.48 0.22 264);
-  --on-accent: oklch(0.99 0 0);
-  --accent-tint: oklch(0.53 0.21 264 / 0.1);
+  --action: oklch(0.145 0 0);
+  --on-action: oklch(1 0 0);
+  --action-hover: oklch(0.28 0 0);
 
-  /* state hues carry TEXT on their -tint fills, so light values are darkened
-     until on-tint text clears AA 4.5:1 (verified): good 4.80, warn 5.00. */
+  /* Amber darkens to bronze so it survives as small TEXT on white (5.59:1). */
+  --accent: oklch(0.52 0.11 80);
+  --accent-tint: oklch(0.82 0.13 88 / 0.16);
+
+  /* state hues carry TEXT on their -tint fills; all pairs script-verified AA. */
   --good: oklch(0.49 0.15 152);
   --good-tint: oklch(0.49 0.15 152 / 0.12);
-  --warn: oklch(0.5 0.15 72);
-  --warn-tint: oklch(0.5 0.15 72 / 0.14);
+  --warn: oklch(0.5 0.15 50);
+  --warn-tint: oklch(0.5 0.15 50 / 0.14);
   --bad: oklch(0.54 0.21 25);
   --bad-tint: oklch(0.54 0.21 25 / 0.1);
 
-  --shadow: 0 2px 6px -2px oklch(0.25 0.04 264 / 0.16);
+  --shadow: none;
   color-scheme: light;
 }
 
@@ -88,10 +96,12 @@
   --s-6: 24px;
   --s-7: 32px;
 
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-pill: 999px;
+  /* Zero radius everywhere: machined edges, not bubbles. The tokens stay so a
+     future direction is one edit, but every component ships square. */
+  --r-sm: 0;
+  --r-md: 0;
+  --r-lg: 0;
+  --r-pill: 0;
 
   /* scrims / overlays (shared across both themes) */
   --scrim: oklch(0 0 0 / 0.5);
@@ -104,10 +114,12 @@
 
   --tnum: tabular-nums;
 
-  /* Type system. Swap a direction by changing these three tokens only. */
+  /* Type system. Swap a direction by changing these three tokens only.
+     One UI family (Inter) + a mono for every numeral: weights, reps, timers,
+     tables all read like an instrument readout and never shift width. */
   --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Archivo Variable', var(--font-body);
-  --font-num: 'Archivo Variable', var(--font-body);
+  --font-display: var(--font-body);
+  --font-num: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 
 * {
@@ -132,7 +144,8 @@ button {
   font-family: inherit;
 }
 
-/* Display face on headings + brand + section titles (the bold, high-energy voice). */
+/* Headings + brand + section titles: same family as body, hierarchy carried
+   by weight and size alone (one-family product UI). */
 h1,
 h2,
 h3,
@@ -146,7 +159,7 @@ h3,
 .sheet__title,
 .reminder__name {
   font-family: var(--font-display);
-  letter-spacing: -0.015em;
+  letter-spacing: -0.01em;
 }
 :focus-visible {
   outline: none;
@@ -180,7 +193,7 @@ h3,
 .brand h1 {
   font-size: var(--fs-xl);
   margin: 0;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.015em;
   font-weight: 800;
 }
 
@@ -199,8 +212,8 @@ h3,
   align-items: center;
   gap: var(--s-2);
   padding: max(var(--s-3), env(safe-area-inset-top)) var(--s-4) var(--s-3);
-  background: color-mix(in oklch, var(--surface-2) 88%, transparent);
-  backdrop-filter: blur(10px);
+  /* opaque chassis + hairline — no translucent glass anywhere */
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
 .appbar__title {
@@ -236,18 +249,17 @@ h3,
   justify-content: center;
   gap: var(--s-2);
   padding: var(--s-3) var(--s-4);
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--action);
+  color: var(--on-action);
   text-decoration: none;
   font-weight: 700;
   font-size: var(--fs-sm);
-  box-shadow: 0 -2px 12px -4px oklch(0 0 0 / 0.45);
 }
+/* square indicator lamp, blinking: a session is live */
 .resumebar__pulse {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
-  background: var(--on-accent);
+  background: var(--on-action);
   animation: pulse-dot 1.4s var(--ease) infinite;
 }
 @keyframes pulse-dot {
@@ -289,8 +301,8 @@ h3,
   display: flex;
   max-width: 540px;
   margin: 0 auto;
-  background: color-mix(in oklch, var(--surface-2) 94%, transparent);
-  backdrop-filter: blur(10px);
+  /* same chassis fill as the appbar — one material for all chrome */
+  background: var(--bg);
   border-top: 1px solid var(--border);
   padding-bottom: env(safe-area-inset-bottom);
   z-index: 20;
@@ -314,18 +326,18 @@ h3,
   transition: transform var(--dur) var(--ease);
 }
 .tab--active {
-  color: var(--accent);
+  color: var(--ink);
 }
 .tab--active .tab__icon {
   transform: translateY(-1px) scale(1.06);
 }
+/* the amber indicator lamp: a square tick over the active tab */
 .tab--active::before {
   content: '';
   position: absolute;
   top: 0;
   width: 26px;
   height: 3px;
-  border-radius: 0 0 3px 3px;
   background: var(--accent);
 }
 
@@ -376,11 +388,11 @@ h3,
 .status code {
   background: color-mix(in oklch, var(--ink) 10%, transparent);
   padding: 1px 5px;
-  border-radius: 5px;
   font-size: 0.85em;
 }
+/* neutral hint — informational, not a signal state */
 .status--wait {
-  background: var(--accent-tint);
+  background: color-mix(in oklch, var(--ink) 7%, transparent);
   color: var(--ink);
 }
 .status--ok {
@@ -443,20 +455,25 @@ h3,
   font-weight: 700;
 }
 
+/* neutral tag by default; --live wears the amber lamp (current/active things) */
 .badge {
   margin-left: var(--s-2);
   font-size: var(--fs-xs);
   padding: 2px 8px;
-  border-radius: var(--r-pill);
-  background: var(--accent-tint);
-  color: var(--accent);
+  background: color-mix(in oklch, var(--ink) 7%, transparent);
+  color: var(--ink);
   font-weight: 700;
   vertical-align: middle;
 }
+.badge--live {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+/* every numeral in the app runs through this: mono, tabular, untracked */
 .mono {
   font-family: var(--font-num);
   font-variant-numeric: var(--tnum);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 .muted {
   color: var(--muted);
@@ -515,10 +532,11 @@ h3,
 .input::placeholder {
   color: var(--faint);
 }
+/* same amber focus vocabulary as :focus-visible — a crisp 2px signal edge */
 .input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-tint);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 .inline-form {
   display: flex;
@@ -572,11 +590,11 @@ h3,
   transform: scale(0.97);
 }
 .btn--primary {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--action);
+  color: var(--on-action);
 }
 .btn--primary:not(:disabled):hover {
-  background: var(--accent-strong);
+  background: var(--action-hover);
 }
 .btn--ghost {
   background: transparent;
@@ -593,10 +611,14 @@ h3,
 .btn--block {
   width: 100%;
 }
+/* text action: ink + underline — actions are ink, amber stays a state lamp */
 .linkbtn {
   background: none;
   border: none;
-  color: var(--accent);
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--border-strong);
   cursor: pointer;
   font: inherit;
   font-weight: 600;
@@ -764,9 +786,10 @@ h3,
   color: var(--muted);
   border: 1px solid transparent;
 }
+/* taxonomy label (primary muscle) — neutral, must not mimic a toggled chip */
 .chip--primary {
-  background: var(--accent-tint);
-  color: var(--accent);
+  background: color-mix(in oklch, var(--ink) 7%, transparent);
+  color: var(--ink);
   font-weight: 650;
 }
 .chip--toggle {
@@ -798,14 +821,15 @@ h3,
 /* progress header */
 .sprogress {
   position: sticky;
-  top: calc(env(safe-area-inset-top) + 52px);
+  /* pin flush under the opaque appbar: its height = max(12px, safe-top) + 44px
+     iconbtn + 12px padding + 1px hairline = max(12px, safe-top) + 57px */
+  top: calc(max(12px, env(safe-area-inset-top)) + 57px);
   z-index: 5;
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
   padding: var(--s-2) var(--s-1);
-  background: color-mix(in oklch, var(--bg) 88%, transparent);
-  backdrop-filter: blur(6px);
+  background: var(--bg);
 }
 .sprogress__row {
   display: flex;
@@ -890,7 +914,7 @@ h3,
   font-size: var(--fs-stat);
   font-weight: 800;
   font-variant-numeric: var(--tnum);
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   text-align: center;
   padding: 0;
   -moz-appearance: textfield;
@@ -927,9 +951,9 @@ h3,
   justify-content: center;
 }
 .plate {
+  font-family: var(--font-num);
   font-variant-numeric: var(--tnum);
   padding: var(--s-1) var(--s-3);
-  border-radius: var(--r-sm);
   background: var(--surface-2);
   border: 1px solid var(--border);
   color: var(--ink);
@@ -964,15 +988,14 @@ h3,
   align-items: center;
   gap: var(--s-2) var(--s-3);
   padding: var(--s-2) var(--s-3);
-  border-radius: var(--r-md);
   background: var(--inset);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   min-height: 56px;
   transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 .setcard.is-current {
   border-color: var(--accent);
-  background: color-mix(in oklch, var(--accent) 8%, var(--inset));
+  background: var(--accent-tint);
 }
 .setcard.is-done {
   background: var(--good-tint);
@@ -991,7 +1014,7 @@ h3,
   font-weight: 800;
   font-size: var(--fs-md);
   font-variant-numeric: var(--tnum);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 .setcard__wtunit {
   margin-left: 1px;
@@ -1198,7 +1221,8 @@ h3,
 /* ── completion payoff (end-of-session summary sheet) ─────────────────────── */
 .payoff__stats {
   display: flex;
-  gap: var(--s-6);
+  flex-wrap: wrap; /* mono digits at 320px need the escape hatch */
+  gap: var(--s-3) var(--s-5);
   padding: var(--s-3) 0;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -1269,6 +1293,7 @@ h3,
 /* rest timer */
 .resttimer {
   display: flex;
+  flex-wrap: wrap; /* mono digits are wide; buttons drop below on narrow phones */
   align-items: center;
   gap: var(--s-3);
   margin-top: var(--s-4);
@@ -1280,9 +1305,9 @@ h3,
   font-size: var(--fs-stat);
   font-weight: 800;
   font-variant-numeric: var(--tnum);
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   line-height: 1;
-  min-width: 96px;
+  flex-shrink: 0;
 }
 .resttimer--done .resttimer__time {
   color: var(--good);
@@ -1297,10 +1322,10 @@ h3,
   justify-content: center;
   padding: var(--s-6) 0;
 }
+/* a rotating square tick — the machined-edge take on a spinner */
 .spinner__dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
+  width: 14px;
+  height: 14px;
   border: 2px solid var(--border);
   border-top-color: var(--accent);
   animation: spin 0.8s linear infinite;
@@ -1440,7 +1465,7 @@ h3,
   font-weight: 800;
   font-size: var(--fs-stat);
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   transform-origin: left center;
   animation: num-settle 260ms var(--ease) both;
 }
@@ -1500,7 +1525,7 @@ h3,
   font-weight: 800;
   font-size: var(--fs-xl);
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 .stat__unit {
   font-size: var(--fs-sm);
@@ -1572,7 +1597,8 @@ h3,
   cursor: pointer;
 }
 .historyrow__date {
-  font-family: var(--font-display);
+  font-family: var(--font-num);
+  font-variant-numeric: var(--tnum);
 }
 .historyrow__chev {
   color: var(--muted);
@@ -1661,8 +1687,7 @@ h3,
   gap: var(--s-2);
   min-height: 44px;
   padding: 6px 14px;
-  border-radius: var(--r-md);
-  border: 1.5px dashed var(--border-strong);
+  border: 1px dashed var(--border-strong);
   background: var(--inset);
   color: var(--ink);
   cursor: pointer;
@@ -1859,17 +1884,17 @@ h3,
   transition: background var(--dur) var(--ease);
   pointer-events: none;
 }
+/* square knob on a square track — a slide switch, not a pill toggle.
+   16px + 1px edge = 18px box, 2px inset on every side of the 22px track. */
 .switch__track::after {
   content: '';
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
+  width: 16px;
+  height: 16px;
   background: var(--switch-knob);
-  border: 1.5px solid var(--switch-edge);
-  box-shadow: 0 1px 3px oklch(0 0 0 / 0.4);
+  border: 1px solid var(--switch-edge);
   transition: transform var(--dur) var(--ease);
 }
 .switch input:checked + .switch__track {
@@ -1917,7 +1942,7 @@ h3,
   display: block;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--surface-2), var(--inset));
+  background: var(--inset);
 }
 .photothumb__cap {
   display: flex;
@@ -1936,7 +1961,6 @@ h3,
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
   border: none;
   background: var(--scrim-strong);
   color: var(--on-scrim);
@@ -2006,9 +2030,8 @@ h3,
   transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
 .seg__btn--on {
-  background: var(--accent);
-  color: var(--on-accent);
-  box-shadow: 0 1px 6px -2px var(--accent);
+  background: var(--action);
+  color: var(--on-action);
 }
 
 .radarwrap {
@@ -2034,7 +2057,6 @@ h3,
 .radarlegend__dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
   background: var(--bad);
   flex: none;
 }
@@ -2076,12 +2098,12 @@ h3,
   background: color-mix(in oklch, var(--ink) 8%, transparent);
   overflow: hidden;
 }
+/* data bars are ink — flat ledger marks; amber stays reserved for live state */
 .bar__fill {
   display: block;
   height: 100%;
   width: 100%;
-  border-radius: var(--r-pill);
-  background: var(--accent);
+  background: var(--ink);
   transform-origin: left;
   transition: transform var(--dur) var(--ease);
 }
@@ -2109,35 +2131,17 @@ h3,
   font-weight: 700;
   color: var(--ink);
 }
+/* One neutral treatment for every rung: the ladder is read off the gauge
+   position, not a five-hue rainbow (the old novice-amber collided with
+   advanced-orange once amber became the signal hue). */
 .std__band {
   font-size: var(--fs-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 3px 10px;
-  border-radius: var(--r-pill);
-  background: var(--accent-tint);
-  color: var(--accent);
-}
-.std__band--beginner {
-  background: color-mix(in oklch, var(--muted) 18%, transparent);
-  color: var(--muted);
-}
-.std__band--novice {
-  background: var(--accent-tint);
-  color: var(--accent);
-}
-.std__band--intermediate {
-  background: var(--good-tint);
-  color: var(--good);
-}
-.std__band--advanced {
-  background: var(--warn-tint);
-  color: var(--warn);
-}
-.std__band--elite {
-  background: color-mix(in oklch, var(--bad) 18%, transparent);
-  color: var(--bad);
+  background: color-mix(in oklch, var(--ink) 7%, transparent);
+  color: var(--ink);
 }
 .std__track {
   position: relative;
@@ -2146,11 +2150,11 @@ h3,
   background: color-mix(in oklch, var(--ink) 8%, transparent);
   overflow: hidden;
 }
+/* ledger mark like .bar__fill — the ink marker ring keeps the position legible */
 .std__fill {
   position: absolute;
   inset: 0 auto 0 0;
-  border-radius: var(--r-pill);
-  background: linear-gradient(90deg, var(--accent), var(--good));
+  background: var(--ink);
 }
 .std__marker {
   position: absolute;
@@ -2158,7 +2162,6 @@ h3,
   width: 3px;
   height: 16px;
   transform: translate(-50%, -50%);
-  border-radius: 2px;
   background: var(--ink);
   box-shadow: 0 0 0 2px var(--surface);
 }
@@ -2223,9 +2226,11 @@ h3,
   white-space: nowrap;
 }
 .freqlist__cnt {
+  font-family: var(--font-num);
+  font-variant-numeric: var(--tnum);
   font-size: var(--fs-sm);
   font-weight: 700;
-  color: var(--accent);
+  color: var(--ink);
 }
 
 /* ── toasts ──────────────────────────────────────────────────────────────── */

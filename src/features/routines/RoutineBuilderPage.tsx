@@ -64,7 +64,7 @@ export function RoutineBuilderPage() {
         title={
           <>
             {routine.name}
-            {routine.is_active ? <span className="badge">active</span> : null}
+            {routine.is_active ? <span className="badge badge--live">active</span> : null}
           </>
         }
         actions={<Link className="linkbtn" to="/routines"><ChevronLeft size={18} aria-hidden="true" />All</Link>}
@@ -171,7 +171,7 @@ function RotationCard({
                 <span className={i === current ? 'workout-link__name' : 'muted'}>
                   {workoutName.get(rw.workout_id) ?? '…'}
                 </span>
-                {i === current ? <span className="badge">next</span> : null}
+                {i === current ? <span className="badge badge--live">next</span> : null}
               </span>
               <Button variant="ghost" onClick={() => removeWorkout.mutate(rw.id)} aria-label="Remove">
                 <X size={18} aria-hidden="true" />

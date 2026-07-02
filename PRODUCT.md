@@ -22,15 +22,19 @@ the next weight without thinking.
 
 ## Brand Personality
 
-Bold, focused, strong. Confident and high-energy without being loud or "gamer."
-The voice is a spotter who knows the numbers: terse, encouraging, never cute.
-Big readable figures, one decisive accent, zero clutter.
+A calibrated instrument. Clean, professional, precise — the temperament of a
+good scale or a machinist's caliper, not a hype app. The voice is a coach's
+logbook: terse, factual, never cute. Mono numerals you trust, hairline rules,
+sharp edges, one amber indicator lamp. Confidence comes from precision, not
+volume. (v2, 2026-07-01 — replaced the v1 "bold high-energy" direction.)
 
 ## Anti-references
 
 - Generic SaaS/admin dashboards (cards-in-a-grid, hero-metric template).
 - The warm cream/sand "editorial AI" default body background.
 - RGB-neon gamer aesthetics; glassmorphism for its own sake.
+- **Rounded-everything "bubble gum" fitness-app styling** — pill chips, blobby
+  cards, candy accents (the v1 look; explicitly rejected).
 - Cluttered spreadsheet/MyFitnessPal density; fussy decoration.
 - Anything that makes you stop and read mid-set.
 
@@ -42,8 +46,8 @@ Big readable figures, one decisive accent, zero clutter.
    figures legible on a phone propped against the rack with sweaty hands.
 3. **Earned familiarity (Hevy/Strong).** Standard lifting-app affordances — set
    rows, done toggles, plate breakdown. Don't reinvent logging for flavor.
-4. **Confident, not loud.** Bold type weight + one strong accent carry the energy;
-   restraint everywhere else (accent only on primary actions, selection, state).
+4. **Precise, not loud.** Ink actions + one amber signal carry the identity;
+   restraint everywhere else (amber only on live state, selection, and focus).
 5. **Fast over fancy.** Motion conveys state in ≤250ms and never blocks the task.
 
 ## Accessibility & Inclusion

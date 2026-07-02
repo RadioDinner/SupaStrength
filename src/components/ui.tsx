@@ -100,7 +100,7 @@ export function Spinner({ label }: { label?: string }) {
   )
 }
 
-export function Skeleton({ w, h = 14, radius = 6 }: { w?: number | string; h?: number; radius?: number }) {
+export function Skeleton({ w, h = 14, radius = 0 }: { w?: number | string; h?: number; radius?: number }) {
   return (
     <span
       className="skeleton"

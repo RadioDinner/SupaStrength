@@ -5,7 +5,39 @@
 
 ## Where the project is
 
-**🎉 PHASE 1 COMPLETE — M1–M8 all DONE. Design system — DONE.**
+**🎉 PHASE 1 COMPLETE — M1–M8 all DONE. Design system — v2 ("calibrated instrument").**
+
+> **Session 002b (later, same session) — FULL VISUAL TEARDOWN → v2 "calibrated
+> instrument"** (user directive: tear the visual design down, rebuild clean /
+> professional / sharp, kill the rounded "vibe-coded" look; direct-to-main
+> authorized):
+> - **New system** (all in `src/styles/index.css` tokens + skins; markup mostly
+>   untouched): true-neutral chassis (light = **pure white**, dark = graphite,
+>   chroma 0), primary actions = **ink keys** (`--action`/`--on-action`), ONE
+>   **amber signal lamp** (`--accent`: bronze `oklch(0.52 0.11 80)` light /
+>   amber `oklch(0.78 0.14 85)` dark) reserved for live + selected state,
+>   **JetBrains Mono for every numeral** (`--font-num`), Inter-only UI type,
+>   **radius 0 everywhere**, hairline borders, `--shadow: none`, no backdrop
+>   blur, gradients flattened. Fonts swapped in `main.tsx` (archivo/oswald/
+>   space-grotesk deps removed); favicon/icon recolored; theme-color metas
+>   split dark/light (`#0c0c0c` / `#ffffff`); PWA manifest colors updated.
+> - **Palette AA-verified by script** (OKLCH→sRGB WCAG, 38 pairs, both themes).
+>   `impeccable` slop detector: 0 findings. DESIGN.md rewritten; PRODUCT.md
+>   brand personality updated to v2 (v1 "bold high-energy" replaced).
+> - **3-lens adversarial review (drift / layout / craft) → 22 findings, ALL
+>   addressed**, notably: amber leaks purged (radar + std gauge + freq counts →
+>   ink data marks; badges/status--wait/std bands → neutral, with a new
+>   `.badge--live` for active routine/next-day), `.linkbtn` → ink underline,
+>   sticky `.sprogress` offset fixed to sit flush under the opaque appbar
+>   (`max(12px, safe-top) + 57px`), rest-timer + payoff-stats got mono-width
+>   escape hatches (flex-wrap), switch knob re-machined (16px + 1px edge, true
+>   2px inset), skeletons squared (TSX inline radius), `.plate` chips mono
+>   ("the trust moment"), input focus unified to the crisp amber edge, chrome
+>   unified on `--bg`, spinner squared.
+> - typecheck / lint / build / **83 tests** green after everything.
+> - **NOT yet re-run:** the full `impeccable audit`/`critique` scoring against
+>   v2 (the old 15/20 / 31/40 scores graded v1 and are obsolete). The live
+>   smoke-test gate is unchanged. Session-002 screenshots in older docs show v1.
 
 > **Session 002b (2026-07-01, second session that day) — design-backlog P1s + adversarial review:**
 > - **Completion payoff sheet (crit P1)** — "Finish & lock" now ends in a real

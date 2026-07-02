@@ -325,7 +325,10 @@ function ProgressHeader({
     <div className="sprogress">
       <div className="sprogress__row">
         <span className="sprogress__lift">
-          Exercise <strong>{exerciseIndex + 1}</strong>/{exerciseCount}
+          Exercise{' '}
+          <strong className="mono">
+            {exerciseIndex + 1}/{exerciseCount}
+          </strong>
         </span>
         <span className="sprogress__sets mono">
           {setsDone}/{setsTotal} sets
@@ -728,8 +731,10 @@ function NextTime({ x }: { x: ExerciseSummary }) {
   const dir = !delta ? 'hold' : delta > 0 ? 'up' : 'down'
   return (
     <span className={`payoffrow__next payoffrow__next--${dir}`}>
-      Next time: <strong className="mono">{x.nextLb} lb</strong>
-      {dir === 'up' ? ` (+${delta})` : dir === 'down' ? ` (−${Math.abs(delta!)})` : ''}
+      Next time:{' '}
+      <strong className="mono">
+        {x.nextLb} lb{dir === 'up' ? ` (+${delta})` : dir === 'down' ? ` (−${Math.abs(delta!)})` : ''}
+      </strong>
     </span>
   )
 }
