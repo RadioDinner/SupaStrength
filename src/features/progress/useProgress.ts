@@ -3,8 +3,10 @@
  */
 import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { format } from 'date-fns'
 import { measurementsRepo, type MeasurementValues } from '../../data/repos/measurementsRepo'
 import { photosRepo } from '../../data/repos/photosRepo'
+import { profileRepo } from '../../data/repos/profileRepo'
 import { remindersRepo } from '../../data/repos/remindersRepo'
 import type { PhotoCategory } from '../../data/types'
 
@@ -24,6 +26,30 @@ export function useSaveMeasurement() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['measurements'] })
       qc.invalidateQueries({ queryKey: ['reminders_due'] })
+    },
+  })
+}
+
+/**
+ * Log a bodyweight for a date (end-of-workout weigh-in, backfill). Upserts
+ * that day's measurement row (the DB trigger bumps the weigh-in reminder).
+ * When the date is TODAY it also syncs the canonical profile bodyweight the
+ * strength standards read (§9) — a backdated entry must not overwrite it.
+ */
+export function useLogBodyweight() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { takenOn: string; bodyweightLb: number; userId: string }) => {
+      await measurementsRepo.save(input.takenOn, { bodyweight: input.bodyweightLb })
+      if (input.takenOn === format(new Date(), 'yyyy-MM-dd')) {
+        await profileRepo.update(input.userId, { bodyweight_lb: input.bodyweightLb })
+      }
+    },
+    onSuccess: (_, { userId }) => {
+      qc.invalidateQueries({ queryKey: ['measurements'] })
+      qc.invalidateQueries({ queryKey: ['reminders_due'] })
+      qc.invalidateQueries({ queryKey: ['profile', userId] })
+      qc.invalidateQueries({ queryKey: ['analytics', 'standards'] })
     },
   })
 }

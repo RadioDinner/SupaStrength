@@ -10,9 +10,11 @@ import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { Minus, Plus } from 'lucide-react'
 import { Banner, Button, Card, Field, Select, SkeletonList, TextInput } from '../../components/ui'
+import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../hooks/useToast'
 import { useEntrySets, useExercisesByIds, useWorkoutEntries, useWorkouts } from '../workouts/useWorkouts'
 import { useBackfillSession } from '../session/useSession'
+import { useLogBodyweight } from '../progress/useProgress'
 import type { WorkoutEntry, WorkoutEntrySet } from '../../data/types'
 
 interface FillRow {
@@ -24,11 +26,14 @@ interface FillRow {
 export function BackfillForm({ onDone }: { onDone: () => void }) {
   const { data: workouts } = useWorkouts()
   const backfill = useBackfillSession()
+  const logBodyweight = useLogBodyweight()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [workoutId, setWorkoutId] = useState('')
   const [date, setDate] = useState(() => format(new Date(), 'yyyy-MM-dd'))
   const [startTime, setStartTime] = useState(() => format(new Date(), 'HH:mm'))
   const [duration, setDuration] = useState('60')
+  const [bodyweight, setBodyweight] = useState('')
   const [fills, setFills] = useState<Record<string, FillRow[]>>({})
   const [error, setError] = useState<string | null>(null)
 
@@ -69,6 +74,9 @@ export function BackfillForm({ onDone }: { onDone: () => void }) {
     }
     if (!payload.some((x) => x.sets.some((s) => s.done)))
       return setError('Mark at least one set as done.')
+    const bw = bodyweight.trim() ? Number(bodyweight) : null
+    if (bw != null && !(bw > 0))
+      return setError('Bodyweight must be a positive number (or leave it blank).')
 
     try {
       await backfill.mutateAsync({
@@ -77,6 +85,17 @@ export function BackfillForm({ onDone }: { onDone: () => void }) {
         completedAt: new Date(started.getTime() + mins * 60_000).toISOString(),
         entries: payload,
       })
+      // Weigh-in for the backfilled day — best-effort garnish; the profile's
+      // canonical bodyweight only syncs when the date is today.
+      if (bw != null && user) {
+        logBodyweight.mutate(
+          { takenOn: date, bodyweightLb: bw, userId: user.id },
+          {
+            onError: () =>
+              toast("Couldn't save the bodyweight — log it on the Progress page.", 'err'),
+          },
+        )
+      }
       toast('Session added to history.', 'ok')
       onDone()
     } catch (err) {
@@ -113,9 +132,22 @@ export function BackfillForm({ onDone }: { onDone: () => void }) {
             <TextInput id="bf_time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
           </Field>
         </div>
-        <Field label="Duration (minutes)" htmlFor="bf_dur">
-          <TextInput id="bf_dur" type="number" min="1" value={duration} onChange={(e) => setDuration(e.target.value)} />
-        </Field>
+        <div className="grid2">
+          <Field label="Duration (minutes)" htmlFor="bf_dur">
+            <TextInput id="bf_dur" type="number" min="1" value={duration} onChange={(e) => setDuration(e.target.value)} />
+          </Field>
+          <Field label="Bodyweight (lb, optional)" htmlFor="bf_bw" hint="Weigh-in for that day.">
+            <TextInput
+              id="bf_bw"
+              type="number"
+              min="0"
+              step="any"
+              inputMode="decimal"
+              value={bodyweight}
+              onChange={(e) => setBodyweight(e.target.value)}
+            />
+          </Field>
+        </div>
 
         {workoutId && !entries ? <SkeletonList rows={2} /> : null}
         {workoutId && entries && entries.length === 0 ? (

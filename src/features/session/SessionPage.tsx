@@ -11,11 +11,13 @@ import { useId, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Check, ChevronLeft, ChevronRight, Pin, Video } from 'lucide-react'
-import { Banner, Button, Card, SkeletonList, TextArea } from '../../components/ui'
+import { Banner, Button, Card, Field, SkeletonList, TextArea, TextInput } from '../../components/ui'
 import { useDialog } from '../../hooks/useDialog'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../hooks/useToast'
 import { useExercisesByIds, useWorkoutEntriesByIds } from '../workouts/useWorkouts'
+import { useLogBodyweight } from '../progress/useProgress'
+import { useProfile } from '../settings/useProfile'
 import { solvePlates, type PlateStock } from '../../engine/plates'
 import { generateWarmups } from '../../engine/warmups'
 import { RestTimer } from './RestTimer'
@@ -64,6 +66,8 @@ export function SessionPage() {
   const update = useUpdateSetLog()
   const updateNotes = useUpdateSessionEntryNotes()
   const complete = useCompleteSession()
+  const logBodyweight = useLogBodyweight()
+  const { data: profile } = useProfile(user!.id)
   // Sticky per-exercise notes live on the template entry (workout_entries.notes).
   const workoutEntryIds = useMemo(
     () => (entries ?? []).map((e) => e.workout_entry_id).filter((x): x is string => !!x),
@@ -99,6 +103,7 @@ export function SessionPage() {
   const [confirming, setConfirming] = useState(false)
   const [summary, setSummary] = useState<SessionSummary | null>(null)
   const [videoSet, setVideoSet] = useState<SetLog | null>(null)
+  const [bodyweight, setBodyweight] = useState('')
 
   const ordered = useMemo(() => entries ?? [], [entries])
   const weightOf = (e: SessionEntry) =>
@@ -223,6 +228,18 @@ export function SessionPage() {
     }
     try {
       const report = await complete.mutateAsync(session)
+      // End-of-workout weigh-in: best-effort garnish — a failed save must
+      // never eat the completed session. Dated to the gym day.
+      const bw = bodyweight.trim() ? Number(bodyweight) : null
+      if (bw != null && bw > 0) {
+        logBodyweight.mutate(
+          { takenOn: session.performed_on, bodyweightLb: bw, userId: user!.id },
+          {
+            onError: () =>
+              toast("Couldn't save your bodyweight — log it on the Progress page.", 'err'),
+          },
+        )
+      }
       setSummary(
         summarizeSession({
           entries: snapshot,
@@ -333,6 +350,11 @@ export function SessionPage() {
           setsTotal={totals.total}
           exerciseCount={ordered.length}
           pending={complete.isPending}
+          bodyweight={bodyweight}
+          onBodyweight={setBodyweight}
+          bodyweightPlaceholder={
+            profile?.bodyweight_lb != null ? String(profile.bodyweight_lb) : 'lb'
+          }
           onCancel={() => setConfirming(false)}
           onConfirm={() => void onComplete()}
         />
@@ -670,6 +692,9 @@ function CompleteSheet({
   setsTotal,
   exerciseCount,
   pending,
+  bodyweight,
+  onBodyweight,
+  bodyweightPlaceholder,
   onCancel,
   onConfirm,
 }: {
@@ -677,10 +702,14 @@ function CompleteSheet({
   setsTotal: number
   exerciseCount: number
   pending: boolean
+  bodyweight: string
+  onBodyweight: (v: string) => void
+  bodyweightPlaceholder: string
   onCancel: () => void
   onConfirm: () => void
 }) {
   const nothingLogged = setsDone === 0
+  const bwInvalid = bodyweight.trim() !== '' && !(Number(bodyweight) > 0)
   const panelRef = useDialog<HTMLDivElement>(onCancel)
   const titleId = useId()
   return (
@@ -707,11 +736,27 @@ function CompleteSheet({
             advances your routine — the weights climb next time.
           </p>
         )}
+        <Field
+          label="Bodyweight (lb, optional)"
+          htmlFor="complete_bw"
+          hint={bwInvalid ? 'Must be a positive number — or leave it blank.' : "Logged as today's weigh-in."}
+        >
+          <TextInput
+            id="complete_bw"
+            type="number"
+            min="0"
+            step="any"
+            inputMode="decimal"
+            placeholder={bodyweightPlaceholder}
+            value={bodyweight}
+            onChange={(e) => onBodyweight(e.target.value)}
+          />
+        </Field>
         <div className="sheet__actions">
           <Button variant="ghost" onClick={onCancel} disabled={pending}>
             Keep going
           </Button>
-          <Button onClick={onConfirm} disabled={pending || nothingLogged}>
+          <Button onClick={onConfirm} disabled={pending || nothingLogged || bwInvalid}>
             {pending ? 'Finishing…' : 'Finish & lock'}
           </Button>
         </div>

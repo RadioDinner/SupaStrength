@@ -38,3 +38,6 @@ I want to be able to add a workout to history. I want to be able to click the wo
 
 --- 2026-07-02 14:30 ---
 I ran all migrations
+
+--- 2026-07-02 14:45 ---
+I want to be able to log my body weight at the end of each workout, including when adding a workout to history
