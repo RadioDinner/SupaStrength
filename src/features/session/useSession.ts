@@ -36,6 +36,16 @@ export function useRecentSessions(limit = 8) {
   return useQuery({ queryKey: ['recent_sessions'], queryFn: () => sessionsRepo.recent(limit) })
 }
 
+/** Last completed actuals per template entry — the builder's PREVIOUS column. */
+export function usePreviousActuals(workoutEntryIds: string[]) {
+  const key = [...workoutEntryIds].sort().join(',')
+  return useQuery({
+    queryKey: ['previous_actuals', key],
+    queryFn: () => sessionsRepo.lastActuals(workoutEntryIds),
+    enabled: workoutEntryIds.length > 0,
+  })
+}
+
 /** The session location's default bar + plate inventory + rounding prefs. */
 export function useSessionEquipment(locationId: string | null, userId: string) {
   return useQuery({

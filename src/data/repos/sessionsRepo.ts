@@ -130,9 +130,14 @@ async function snapshotEntry(
   await onlineDataClient.insert<SetLog>('set_logs', setRows)
 }
 
-/** Per-set targets for the rep-ladder entries in a batch, keyed by entry id. */
-async function ladderSetsByEntry(entries: WorkoutEntry[]): Promise<Map<string, WorkoutEntrySet[]>> {
-  const ids = entries.filter((e) => e.overload_mode === 'rep_ladder').map((e) => e.id)
+/**
+ * Per-set targets for a batch of entries, keyed by entry id. Any entry with
+ * rows plans its sessions from them — typed targets are what you get next
+ * time. Rep-ladder entries additionally auto-advance them on completion;
+ * engine-mode entries treat them as fixed manual targets.
+ */
+async function entrySetsByEntry(entries: WorkoutEntry[]): Promise<Map<string, WorkoutEntrySet[]>> {
+  const ids = entries.map((e) => e.id)
   const m = new Map<string, WorkoutEntrySet[]>()
   if (ids.length === 0) return m
   const rows = await onlineDataClient.list<WorkoutEntrySet>('workout_entry_sets', {
@@ -249,6 +254,49 @@ export const sessionsRepo = {
     })
   },
 
+  /**
+   * The most recent completed actuals per template entry, keyed
+   * workout_entry_id → set_index → { weightLb, reps } — the builder's
+   * PREVIOUS column. Looks back over the last 30 completed sessions.
+   */
+  async lastActuals(
+    workoutEntryIds: string[],
+  ): Promise<Record<string, Record<number, { weightLb: number | null; reps: number | null }>>> {
+    if (workoutEntryIds.length === 0) return {}
+    const recent = await this.recent(30)
+    if (recent.length === 0) return {}
+    const sessionIds = recent.map((s) => s.id)
+    const sessionRank = new Map(sessionIds.map((sid, i) => [sid, i])) // 0 = newest
+    const ses = await onlineDataClient.list<SessionEntry>('session_entries', {
+      filters: [
+        { column: 'session_id', op: 'in', value: sessionIds },
+        { column: 'workout_entry_id', op: 'in', value: workoutEntryIds },
+      ],
+    })
+    const newestByWe = new Map<string, SessionEntry>()
+    for (const e of ses) {
+      if (!e.workout_entry_id) continue
+      const cur = newestByWe.get(e.workout_entry_id)
+      if (
+        !cur ||
+        (sessionRank.get(e.session_id) ?? Infinity) < (sessionRank.get(cur.session_id) ?? Infinity)
+      ) {
+        newestByWe.set(e.workout_entry_id, e)
+      }
+    }
+    if (newestByWe.size === 0) return {}
+    const weBySessionEntry = new Map([...newestByWe.entries()].map(([we, e]) => [e.id, we]))
+    const logs = await this.listSetLogs([...weBySessionEntry.keys()])
+    const out: Record<string, Record<number, { weightLb: number | null; reps: number | null }>> = {}
+    for (const l of logs) {
+      if (l.is_warmup || !l.is_completed) continue
+      const we = weBySessionEntry.get(l.session_entry_id)
+      if (!we) continue
+      ;(out[we] ??= {})[l.set_index] = { weightLb: l.actual_weight, reps: l.actual_reps }
+    }
+    return out
+  },
+
   listSetLogs(entryIds: string[]): Promise<SetLog[]> {
     if (entryIds.length === 0) return Promise.resolve([])
     return onlineDataClient.list<SetLog>('set_logs', {
@@ -268,7 +316,7 @@ export const sessionsRepo = {
     })
     const session = rows[0]
     if (!session) throw new Error('Session insert returned no row')
-    const perSetByEntry = await ladderSetsByEntry(entries)
+    const perSetByEntry = await entrySetsByEntry(entries)
     let position = 0
     for (const e of entries) {
       const perSet = perSetByEntry.get(e.id)
@@ -318,7 +366,7 @@ export const sessionsRepo = {
     let position = 0
     for (const d of day) {
       const entries = await workoutsRepo.listEntries(d.workoutId)
-      const perSetByEntry = await ladderSetsByEntry(entries)
+      const perSetByEntry = await entrySetsByEntry(entries)
       for (const e of entries) {
         const perSet = perSetByEntry.get(e.id)
         if (perSet?.length) {

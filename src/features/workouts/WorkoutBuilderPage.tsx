@@ -1,13 +1,13 @@
 /**
- * Workout builder (BUILD_PLAN M3). Edit a workout's ordered exercise list — each
- * an exercise + its prescription (sets, rep scheme, rest, AMRAP, optional
- * starting weight — the seed until progression state exists). The picker can
- * create a custom exercise inline when the library has no match. Validation
- * blocks invalid rep-scheme combos before save (straight needs a rep target;
- * double needs low ≤ high).
+ * Workout builder (BUILD_PLAN M3, reworked to the set-table layout). Every
+ * exercise shows an always-editable per-set table — SET | PREVIOUS | LB |
+ * REPS — with the last completed session's actuals alongside, the sticky note
+ * as a banner, rest dividers between sets, and ADD SET inline. Edits save on
+ * the fly (blur / add / remove). The gear panel behind the pencil holds the
+ * sticky note, rest, AMRAP and the overload mode (engine vs rep ladder).
  */
 import { useMemo, useState, type FormEvent } from 'react'
-import { ChevronDown, ChevronLeft, ChevronUp, Pencil, Plus, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronUp, Minus, Pencil, Plus, X } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import {
   Banner,
@@ -22,6 +22,8 @@ import {
 import { useCreateCustomExercise, useExercises, useMuscleGroups } from '../exercises/useExercises'
 import { MOVEMENTS, MOVEMENT_DEFAULTS } from '../exercises/exerciseMeta'
 import { useDebounced } from '../../hooks/useDebounced'
+import { useToast } from '../../hooks/useToast'
+import { usePreviousActuals } from '../session/useSession'
 import {
   useAddEntry,
   useEntrySets,
@@ -33,7 +35,15 @@ import {
   useWorkout,
   useWorkoutEntries,
 } from './useWorkouts'
-import type { MovementType, OverloadMode, RepScheme, WorkoutEntry, WorkoutEntrySet } from '../../data/types'
+import type {
+  MovementType,
+  OverloadMode,
+  RepScheme,
+  WorkoutEntry,
+  WorkoutEntrySet,
+} from '../../data/types'
+
+type PreviousBySet = Record<number, { weightLb: number | null; reps: number | null }>
 
 export function WorkoutBuilderPage() {
   const { id = '' } = useParams()
@@ -45,6 +55,8 @@ export function WorkoutBuilderPage() {
     () => new Map((exercises ?? []).map((e) => [e.id, e.name])),
     [exercises],
   )
+  const entryIds = useMemo(() => (entries ?? []).map((e) => e.id), [entries])
+  const { data: previous } = usePreviousActuals(entryIds)
   const remove = useRemoveEntry(id)
   const move = useMoveEntry(id)
   const [openEntry, setOpenEntry] = useState<string | null>(null)
@@ -54,33 +66,25 @@ export function WorkoutBuilderPage() {
 
   return (
     <div className="page">
-      <Card title={workout.name} subtitle="Exercises in this workout" actions={<Link className="linkbtn" to="/workouts"><ChevronLeft size={18} aria-hidden="true" />All</Link>}>
+      <Card
+        title={workout.name}
+        subtitle="Exercises in this workout — edits save as you go"
+        actions={<Link className="linkbtn" to="/workouts"><ChevronLeft size={18} aria-hidden="true" />All</Link>}
+      >
         {entries && entries.length > 0 ? (
-          <ul className="list">
+          <div className="exblocks">
             {entries.map((e, i) => (
-              <li key={e.id} className="list__row list__row--stack">
-                <div className="list__rowmain">
-                  <span>
-                    <span className="workout-link__name">{nameById.get(e.exercise_id) ?? '…'}</span>
-                    <br />
-                    <span className="mono">
-                      {e.overload_mode === 'rep_ladder' ? `${e.sets} sets` : prescriptionMain(e)}
-                    </span>
-                    {e.overload_mode === 'rep_ladder' ? (
-                      <span className="muted"> · rep ladder</span>
-                    ) : e.starting_weight != null ? (
-                      <span className="muted"> · starts at <span className="mono">{e.starting_weight}</span> lb</span>
-                    ) : null}
-                    {e.rest_seconds ? (
-                      <span className="muted"> · rest <span className="mono">{e.rest_seconds}</span>s</span>
-                    ) : null}
-                    {e.last_set_amrap ? <span className="muted"> · last set AMRAP</span> : null}
-                  </span>
+              <div key={e.id} className="exblock">
+                <div className="exblock__head">
+                  <span className="exblock__name">{nameById.get(e.exercise_id) ?? '…'}</span>
+                  {e.overload_mode === 'rep_ladder' ? (
+                    <span className="badge">ladder</span>
+                  ) : null}
                   <span className="rowactions">
                     <button
                       type="button"
                       className="reorderbtn"
-                      aria-label={`Edit ${nameById.get(e.exercise_id) ?? 'exercise'} sets, overload and notes`}
+                      aria-label={`Settings for ${nameById.get(e.exercise_id) ?? 'exercise'} — note, rest, overload`}
                       aria-expanded={openEntry === e.id}
                       onClick={() => setOpenEntry((cur) => (cur === e.id ? null : e.id))}
                     >
@@ -114,17 +118,26 @@ export function WorkoutBuilderPage() {
                     >
                       <ChevronDown size={18} aria-hidden="true" />
                     </button>
-                    <Button variant="ghost" onClick={() => remove.mutate(e.id)} aria-label="Remove">
+                    <Button
+                      variant="ghost"
+                      onClick={() => remove.mutate(e.id)}
+                      aria-label={`Remove ${nameById.get(e.exercise_id) ?? 'exercise'}`}
+                    >
                       <X size={18} aria-hidden="true" />
                     </Button>
                   </span>
                 </div>
+
+                {e.notes ? <div className="stickybanner">{e.notes}</div> : null}
+
                 {openEntry === e.id ? (
-                  <EntryEditor workoutId={id} entry={e} onDone={() => setOpenEntry(null)} />
+                  <EntrySettings workoutId={id} entry={e} onDone={() => setOpenEntry(null)} />
                 ) : null}
-              </li>
+
+                <SetTable workoutId={id} entry={e} previous={previous?.[e.id]} />
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
           <Banner kind="info">No exercises yet — add your first below.</Banner>
         )}
@@ -135,14 +148,172 @@ export function WorkoutBuilderPage() {
   )
 }
 
+function restLabel(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
 /**
- * Drop-down editor for one entry: the sticky note (shows every workout), the
- * overload mode, and — for the rep ladder — per-set weight × rep targets plus
- * the ladder knobs (rep cap, weight increment, reps after increment). The
- * ladder advances these targets after every completed session, and whatever
- * it (or you) set is what the next session prescribes.
+ * The always-editable per-set table: SET | PREVIOUS | LB | REPS | remove.
+ * Edits persist on blur (and immediately on add/remove) to
+ * `workout_entry_sets` — the same rows the session snapshot plans from and
+ * the rep ladder advances. Rows scaffold from the entry's uniform
+ * prescription the first time and only persist once actually edited.
  */
-function EntryEditor({
+function SetTable({
+  workoutId,
+  entry,
+  previous,
+}: {
+  workoutId: string
+  entry: WorkoutEntry
+  previous?: PreviousBySet
+}) {
+  const { data: savedSets } = useEntrySets(entry.id)
+  const saveSets = useSaveEntrySets(workoutId, entry.id)
+  const updateEntry = useUpdateEntry(workoutId)
+  const { toast } = useToast()
+  const [rows, setRows] = useState<{ weight: string; reps: string }[] | null>(null)
+  const [dirty, setDirty] = useState(false)
+  const [invalid, setInvalid] = useState(false)
+
+  const current =
+    rows ??
+    (savedSets
+      ? savedSets.length > 0
+        ? savedSets.map((s: WorkoutEntrySet) => ({
+            weight: s.target_weight != null ? String(s.target_weight) : '',
+            reps: String(s.target_reps),
+          }))
+        : Array.from({ length: Math.max(1, entry.sets) }, () => ({
+            weight: entry.starting_weight != null ? String(entry.starting_weight) : '',
+            reps: String(entry.rep_target ?? entry.rep_range_low ?? 8),
+          }))
+      : null)
+
+  function parse(next: { weight: string; reps: string }[]) {
+    const parsed = next.map((r) => ({
+      targetReps: Number(r.reps),
+      targetWeight: r.weight.trim() ? Number(r.weight) : null,
+    }))
+    const ok = parsed.every(
+      (p) =>
+        Number.isInteger(p.targetReps) &&
+        p.targetReps >= 1 &&
+        (p.targetWeight == null || p.targetWeight > 0),
+    )
+    return { parsed, ok }
+  }
+
+  function persist(next: { weight: string; reps: string }[]) {
+    const { parsed, ok } = parse(next)
+    setInvalid(!ok)
+    if (!ok) return
+    saveSets.mutate(parsed, {
+      onError: () => toast("Those sets didn't save — check your connection.", 'err'),
+    })
+    if (parsed.length !== entry.sets) {
+      updateEntry.mutate({ entryId: entry.id, patch: { sets: parsed.length } })
+    }
+    setDirty(false)
+  }
+
+  function setRow(i: number, patch: Partial<{ weight: string; reps: string }>) {
+    if (!current) return
+    setRows(current.map((r, j) => (j === i ? { ...r, ...patch } : r)))
+    setDirty(true)
+  }
+
+  if (!current) return <SkeletonList rows={1} />
+
+  return (
+    <div className="settable" onBlur={() => dirty && persist(current)}>
+      <div className="settable__row settable__head" aria-hidden="true">
+        <span>Set</span>
+        <span>Previous</span>
+        <span>lb</span>
+        <span>Reps</span>
+        <span />
+      </div>
+      {current.map((r, i) => {
+        const prev = previous?.[i + 1]
+        return (
+          <div key={i}>
+            {i > 0 && entry.rest_seconds ? (
+              <div className="restdivider" aria-label={`Rest ${restLabel(entry.rest_seconds)}`}>
+                <span className="restdivider__line" />
+                <span className="restdivider__time mono">{restLabel(entry.rest_seconds)}</span>
+                <span className="restdivider__line" />
+              </div>
+            ) : null}
+            <div className="settable__row">
+              <span className="settable__n mono">{i + 1}</span>
+              <span className="settable__prev mono">
+                {prev && (prev.weightLb != null || prev.reps != null)
+                  ? `${prev.weightLb ?? '—'} lb × ${prev.reps ?? '—'}`
+                  : '—'}
+              </span>
+              <TextInput
+                type="number"
+                min="0"
+                step="any"
+                inputMode="decimal"
+                aria-label={`Set ${i + 1} weight in pounds`}
+                value={r.weight}
+                onChange={(e) => setRow(i, { weight: e.target.value })}
+              />
+              <TextInput
+                type="number"
+                min="1"
+                inputMode="numeric"
+                aria-label={`Set ${i + 1} target reps`}
+                value={r.reps}
+                onChange={(e) => setRow(i, { reps: e.target.value })}
+              />
+              <button
+                type="button"
+                className="reorderbtn"
+                aria-label={`Remove set ${i + 1}`}
+                disabled={current.length <= 1}
+                onClick={() => {
+                  const next = current.filter((_, j) => j !== i)
+                  setRows(next)
+                  persist(next)
+                }}
+              >
+                <Minus size={16} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        )
+      })}
+      {invalid ? (
+        <p className="settable__err">Reps must be at least 1; weights positive or blank.</p>
+      ) : null}
+      <div className="settable__foot">
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={() => {
+            const next = [...current, { ...(current[current.length - 1] ?? { weight: '', reps: '8' }) }]
+            setRows(next)
+            persist(next)
+          }}
+        >
+          <Plus size={16} aria-hidden="true" /> Add set
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Gear panel for one entry: sticky note (shows every workout), rest, last-set
+ * AMRAP, and the overload mode — engine (routine-driven) or rep ladder with
+ * its cap / increment / post-increment floor.
+ */
+function EntrySettings({
   workoutId,
   entry,
   onDone,
@@ -151,10 +322,10 @@ function EntryEditor({
   entry: WorkoutEntry
   onDone: () => void
 }) {
-  const { data: savedSets } = useEntrySets(entry.id)
   const updateEntry = useUpdateEntry(workoutId)
-  const saveSets = useSaveEntrySets(workoutId, entry.id)
   const [note, setNote] = useState(entry.notes ?? '')
+  const [rest, setRest] = useState(entry.rest_seconds != null ? String(entry.rest_seconds) : '')
+  const [amrap, setAmrap] = useState(entry.last_set_amrap)
   const [mode, setMode] = useState<OverloadMode>(entry.overload_mode)
   const [repCap, setRepCap] = useState(entry.rep_cap != null ? String(entry.rep_cap) : '10')
   const [increment, setIncrement] = useState(
@@ -163,58 +334,31 @@ function EntryEditor({
   const [repsAfter, setRepsAfter] = useState(
     entry.reps_after_increment != null ? String(entry.reps_after_increment) : '',
   )
-  const [rows, setRows] = useState<{ reps: string; weight: string }[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const pending = updateEntry.isPending || saveSets.isPending
-
-  // Draft rows: saved per-set targets once loaded, else scaffold from the
-  // entry's uniform prescription. Local edits take over from first keystroke.
-  const current =
-    rows ??
-    (savedSets
-      ? savedSets.length > 0
-        ? savedSets.map((s: WorkoutEntrySet) => ({
-            reps: String(s.target_reps),
-            weight: s.target_weight != null ? String(s.target_weight) : '',
-          }))
-        : Array.from({ length: Math.max(1, entry.sets) }, () => ({
-            reps: String(entry.rep_target ?? entry.rep_range_low ?? 8),
-            weight: entry.starting_weight != null ? String(entry.starting_weight) : '',
-          }))
-      : null)
-
-  function setRow(i: number, patch: Partial<{ reps: string; weight: string }>) {
-    if (!current) return
-    setRows(current.map((r, j) => (j === i ? { ...r, ...patch } : r)))
-  }
 
   async function onSave() {
     setError(null)
-    const patch: Partial<WorkoutEntry> = { notes: note.trim() || null, overload_mode: mode }
+    const patch: Partial<WorkoutEntry> = {
+      notes: note.trim() || null,
+      overload_mode: mode,
+      last_set_amrap: amrap,
+      rest_seconds: rest.trim() ? Number(rest) : null,
+    }
+    if (patch.rest_seconds != null && !(patch.rest_seconds >= 0))
+      return setError('Rest must be zero or more seconds.')
+    if (mode === 'rep_ladder') {
+      const cap = Number(repCap)
+      const inc = Number(increment)
+      const after = Number(repsAfter)
+      if (!Number.isInteger(cap) || cap < 1) return setError('Rep cap must be at least 1.')
+      if (!(inc > 0)) return setError('Weight increment must be positive.')
+      if (!Number.isInteger(after) || after < 1)
+        return setError('Reps after increment must be at least 1 (e.g. 7).')
+      patch.rep_cap = cap
+      patch.increment_lb = inc
+      patch.reps_after_increment = after
+    }
     try {
-      if (mode === 'rep_ladder') {
-        if (!current || current.length === 0) return setError('Add at least one set.')
-        const parsed = current.map((r) => ({
-          targetReps: Number(r.reps),
-          targetWeight: r.weight.trim() ? Number(r.weight) : null,
-        }))
-        if (parsed.some((p) => !Number.isInteger(p.targetReps) || p.targetReps < 1))
-          return setError('Every set needs a rep target of at least 1.')
-        if (parsed.some((p) => p.targetWeight != null && !(p.targetWeight > 0)))
-          return setError('Weights must be positive (or blank for bodyweight).')
-        const cap = Number(repCap)
-        const inc = Number(increment)
-        const after = Number(repsAfter)
-        if (!Number.isInteger(cap) || cap < 1) return setError('Rep cap must be at least 1.')
-        if (!(inc > 0)) return setError('Weight increment must be positive.')
-        if (!Number.isInteger(after) || after < 1)
-          return setError('Reps after increment must be at least 1 (e.g. 7).')
-        patch.rep_cap = cap
-        patch.increment_lb = inc
-        patch.reps_after_increment = after
-        patch.sets = parsed.length
-        await saveSets.mutateAsync(parsed)
-      }
       await updateEntry.mutateAsync({ entryId: entry.id, patch })
       onDone()
     } catch (err) {
@@ -237,6 +381,22 @@ function EntryEditor({
         />
       </Field>
 
+      <div className="grid2">
+        <Field label="Rest (seconds)" htmlFor={`rest_${entry.id}`}>
+          <TextInput
+            id={`rest_${entry.id}`}
+            type="number"
+            min="0"
+            value={rest}
+            onChange={(e) => setRest(e.target.value)}
+          />
+        </Field>
+        <label className="toggle toggle--field">
+          <input type="checkbox" checked={amrap} onChange={(e) => setAmrap(e.target.checked)} />
+          <span>Last set AMRAP</span>
+        </label>
+      </div>
+
       <Field label="Overload" htmlFor={`mode_${entry.id}`}>
         <Select
           id={`mode_${entry.id}`}
@@ -249,128 +409,70 @@ function EntryEditor({
       </Field>
 
       {mode === 'rep_ladder' ? (
-        !current ? (
-          <SkeletonList rows={1} />
-        ) : (
-          <>
-            <div>
-              <p className="field__label">Sets — weight × target reps</p>
-              {current.map((r, i) => (
-                <div key={i} className="setedit">
-                  <span className="setedit__n mono">Set {i + 1}</span>
-                  <TextInput
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="lb"
-                    aria-label={`Set ${i + 1} weight in pounds`}
-                    value={r.weight}
-                    onChange={(e) => setRow(i, { weight: e.target.value })}
-                  />
-                  <TextInput
-                    type="number"
-                    min="1"
-                    placeholder="reps"
-                    aria-label={`Set ${i + 1} target reps`}
-                    value={r.reps}
-                    onChange={(e) => setRow(i, { reps: e.target.value })}
-                  />
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    aria-label={`Remove set ${i + 1}`}
-                    disabled={current.length <= 1}
-                    onClick={() => setRows(current.filter((_, j) => j !== i))}
-                  >
-                    <X size={16} aria-hidden="true" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={() =>
-                  setRows([...current, { ...(current[current.length - 1] ?? { reps: '8', weight: '' }) }])
-                }
-              >
-                <Plus size={16} aria-hidden="true" /> Add set
-              </Button>
-            </div>
-
-            <div className="grid2">
-              <Field
-                label="Rep cap"
-                htmlFor={`cap_${entry.id}`}
-                hint="Weight steps up once every set hits this."
-              >
-                <TextInput
-                  id={`cap_${entry.id}`}
-                  type="number"
-                  min="1"
-                  value={repCap}
-                  onChange={(e) => setRepCap(e.target.value)}
-                />
-              </Field>
-              <Field label="Weight increment (lb)" htmlFor={`inc_${entry.id}`}>
-                <TextInput
-                  id={`inc_${entry.id}`}
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={increment}
-                  onChange={(e) => setIncrement(e.target.value)}
-                />
-              </Field>
-            </div>
+        <>
+          <div className="grid2">
             <Field
-              label="Reps after increment"
-              htmlFor={`after_${entry.id}`}
-              hint="Every set resets to this when the weight steps up."
+              label="Rep cap"
+              htmlFor={`cap_${entry.id}`}
+              hint="Weight steps up once every set hits this."
             >
               <TextInput
-                id={`after_${entry.id}`}
+                id={`cap_${entry.id}`}
                 type="number"
                 min="1"
-                placeholder="e.g. 7"
-                value={repsAfter}
-                onChange={(e) => setRepsAfter(e.target.value)}
+                value={repCap}
+                onChange={(e) => setRepCap(e.target.value)}
               />
             </Field>
-            <p className="muted">
-              Each set that hits its target gains a rep next time; a failed set holds. This
-              ladder is unique to this workout — the routine engine leaves it alone.
-            </p>
-          </>
-        )
+            <Field label="Weight increment (lb)" htmlFor={`inc_${entry.id}`}>
+              <TextInput
+                id={`inc_${entry.id}`}
+                type="number"
+                min="0"
+                step="any"
+                value={increment}
+                onChange={(e) => setIncrement(e.target.value)}
+              />
+            </Field>
+          </div>
+          <Field
+            label="Reps after increment"
+            htmlFor={`after_${entry.id}`}
+            hint="Every set resets to this when the weight steps up."
+          >
+            <TextInput
+              id={`after_${entry.id}`}
+              type="number"
+              min="1"
+              placeholder="e.g. 7"
+              value={repsAfter}
+              onChange={(e) => setRepsAfter(e.target.value)}
+            />
+          </Field>
+          <p className="muted">
+            Each set that hits its target gains a rep next time; a failed set holds. When every
+            set conquers the cap, the weight steps and reps reset. Unique to this workout.
+          </p>
+        </>
       ) : (
         <p className="muted">
-          Weight and reps are prescribed by the routine engine (or the starting weight for the
-          first session). Switch to a rep ladder for per-set targets unique to this workout.
+          Weight and reps come from the routine engine (or your typed set targets below — typed
+          targets stay fixed until you change them).
         </p>
       )}
 
       {error ? <Banner kind="err">{error}</Banner> : null}
 
       <div className="row-actions">
-        <Button type="button" onClick={() => void onSave()} disabled={pending}>
-          {pending ? 'Saving…' : 'Save'}
+        <Button type="button" onClick={() => void onSave()} disabled={updateEntry.isPending}>
+          {updateEntry.isPending ? 'Saving…' : 'Save'}
         </Button>
-        <Button variant="ghost" type="button" onClick={onDone} disabled={pending}>
+        <Button variant="ghost" type="button" onClick={onDone} disabled={updateEntry.isPending}>
           Cancel
         </Button>
       </div>
     </div>
   )
-}
-
-/** Numeric prescription core ("sets × reps") — the hero figures. Rest/AMRAP
- * qualifiers are rendered as muted text alongside this in the row. */
-function prescriptionMain(e: WorkoutEntry): string {
-  let reps: string
-  if (e.rep_scheme === 'double') reps = `${e.rep_range_low ?? '?'}–${e.rep_range_high ?? '?'}`
-  else if (e.rep_scheme === 'rpe') reps = `RPE ${e.target_rpe ?? '?'}`
-  else reps = `${e.rep_target ?? '?'}`
-  return `${e.sets} × ${reps}`
 }
 
 function AddEntryForm({ workoutId }: { workoutId: string }) {
