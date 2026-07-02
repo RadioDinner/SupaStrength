@@ -11,12 +11,22 @@ import { subDays } from 'date-fns'
 import { onlineDataClient } from '../online/supabaseDataClient'
 import type {
   ChartPreferences,
+  Exercise,
+  ExerciseE1rm,
   FrequencyRow,
+  LiftKey,
   MuscleStrength,
   MuscleVolumeWeekly,
   StrengthVsStandards,
   TimeWindow,
 } from '../types'
+
+/** Best e1RM per main lift — the Strength-analysis page's raw input. */
+export interface LiftE1rm {
+  lift_key: LiftKey
+  best_e1rm_lb: number
+  last_loaded_on: string | null
+}
 
 /** Aggregated radar input: one entry per muscle group for the chosen window. */
 export interface MuscleVolume {
@@ -102,6 +112,39 @@ export const analyticsRepo = {
 
   strengthVsStandards(): Promise<StrengthVsStandards[]> {
     return onlineDataClient.list<StrengthVsStandards>('v_strength_vs_standards', {})
+  },
+
+  /**
+   * Best all-time e1RM per main lift (squat/bench/deadlift/ohp/row), joined
+   * client-side from the lift-tagged exercises × `v_exercise_e1rm`. Unlike
+   * `v_strength_vs_standards` this needs no standards seed, bodyweight, or
+   * sex to resolve — the class ladder math happens in `engine/strengthClasses`.
+   */
+  async liftE1rms(): Promise<LiftE1rm[]> {
+    const tagged = await onlineDataClient.list<Exercise>('exercises', {
+      filters: [
+        { column: 'lift_key', op: 'in', value: ['squat', 'bench', 'deadlift', 'ohp', 'row'] },
+      ],
+    })
+    if (tagged.length === 0) return []
+    const e1rms = await onlineDataClient.list<ExerciseE1rm>('v_exercise_e1rm', {
+      filters: [{ column: 'exercise_id', op: 'in', value: tagged.map((e) => e.id) }],
+    })
+    const liftByExercise = new Map(tagged.map((e) => [e.id, e.lift_key!]))
+    const best = new Map<LiftKey, LiftE1rm>()
+    for (const row of e1rms) {
+      const lift = liftByExercise.get(row.exercise_id)
+      if (!lift || !row.best_e1rm_lb) continue
+      const cur = best.get(lift)
+      if (!cur || Number(row.best_e1rm_lb) > cur.best_e1rm_lb) {
+        best.set(lift, {
+          lift_key: lift,
+          best_e1rm_lb: Number(row.best_e1rm_lb),
+          last_loaded_on: row.last_loaded_on ?? null,
+        })
+      }
+    }
+    return [...best.values()]
   },
 
   frequency(window: TimeWindow): Promise<FrequencyRow[]> {

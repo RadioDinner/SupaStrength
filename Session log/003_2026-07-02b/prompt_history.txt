@@ -1,0 +1,14 @@
+--- 2026-07-02 14:01 ---
+I want to build out a new feature and make changes to the web display of muscle groups. I'm going to upload an image of what I want as a finished result. I want it to be a dynamic, clickable image that loads the different muscle groups. You'll understand when I upload the images.
+
+I also want to be able to drag a slider and see how my lifts compare to other lifters
+[Attached: two mobile screenshots of the "Strength analysis" screen showing front/back muscle anatomy diagrams colored by strength level, with a Subpar→World class legend and Strongest/Weakest muscle group lists]
+--- 2026-07-02 14:04 ---
+Here are a few of the strength compairison images/charts
+[Attached: three more mobile screenshots of the reference app's "Strength analysis" screen: (1) "Estimated one-rep maxes" list with per-lift level labels (Subpar/Untrained); (2) "Lifts versus average" horizontal bar chart of You vs Average lifter at your strength level; (3) "Relative strengths" diverging bar chart (% vs your total strength score) with green/red bars]
+--- 2026-07-02 14:08 ---
+Here are the first five "classes" that I want on the slider
+[Attached: five Symmetric Strength screenshots — per-class lift tables (Untrained score 30, Novice 45, Intermediate 60, Proficient 75, Advanced 90) each listing expected 1RMs for Back squat, Front squat, Deadlift, Sumo deadlift, Power clean, Bench press, Incline bench, Dip, OHP, Push press, Snatch press, Chin-up, Pull-up, Pendlay row, plus a class description blurb]
+--- 2026-07-02 14:11 ---
+Here are the other 2
+[Attached: two more Symmetric Strength class tables — Elite (strength score 112.5) and World class — same per-lift 1RM layout]

@@ -11,11 +11,14 @@
  * recomputed from the `v_*` views per window — no stored aggregates.
  */
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import {
+  ArrowRight,
   BarChart3,
   BicepsFlexed,
   ClipboardList,
   Dumbbell,
+  PersonStanding,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -209,6 +212,15 @@ export function AnalyticsPage() {
           </label>
         ) : null}
       </Card>
+
+      <Link to="/analytics/strength" className="featlink">
+        <PersonStanding size={22} aria-hidden="true" />
+        <span className="featlink__text">
+          <span className="featlink__title">Strength analysis</span>
+          <span className="featlink__sub">Muscle map + how your lifts compare to other lifters</span>
+        </span>
+        <ArrowRight size={18} aria-hidden="true" />
+      </Link>
 
       {!hasData ? (
         <EmptyState

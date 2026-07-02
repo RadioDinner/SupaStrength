@@ -29,6 +29,7 @@ const RoutinesPage = lazy(() => import('../features/routines/RoutinesPage').then
 const RoutineBuilderPage = lazy(() => import('../features/routines/RoutineBuilderPage').then((m) => ({ default: m.RoutineBuilderPage })))
 const SessionPage = lazy(() => import('../features/session/SessionPage').then((m) => ({ default: m.SessionPage })))
 const AnalyticsPage = lazy(() => import('../features/analytics/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })))
+const StrengthAnalysisPage = lazy(() => import('../features/analytics/StrengthAnalysisPage').then((m) => ({ default: m.StrengthAnalysisPage })))
 const ProgressPage = lazy(() => import('../features/progress/ProgressPage').then((m) => ({ default: m.ProgressPage })))
 const HistoryPage = lazy(() => import('../features/history/HistoryPage').then((m) => ({ default: m.HistoryPage })))
 const ExercisesPage = lazy(() => import('../features/exercises/ExercisesPage').then((m) => ({ default: m.ExercisesPage })))
@@ -78,6 +79,7 @@ export function AppShell() {
           <Route path="/routines/:id" element={<RoutineBuilderPage />} />
           <Route path="/session/:id" element={<SessionPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/analytics/strength" element={<StrengthAnalysisPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/progress" element={<ProgressPage />} />
           <Route path="/exercises" element={<ExercisesPage />} />

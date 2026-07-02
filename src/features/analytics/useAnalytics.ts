@@ -50,6 +50,13 @@ export function useMuscleStrength() {
   })
 }
 
+export function useLiftE1rms() {
+  return useQuery({
+    queryKey: ['analytics', 'lift_e1rms'],
+    queryFn: () => analyticsRepo.liftE1rms(),
+  })
+}
+
 export function useStrengthVsStandards() {
   return useQuery({
     queryKey: ['analytics', 'standards'],

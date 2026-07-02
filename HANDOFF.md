@@ -7,6 +7,26 @@
 
 **🎉 PHASE 1 COMPLETE — M1–M8 all DONE. Design system — v2 ("calibrated instrument"). Per-set training control (session 003) live in prod.**
 
+> **Session 003b (2026-07-02, remote Claude session, branch
+> `claude/muscle-groups-lift-comparison-50qojl` — NOT yet on main):
+> Strength-analysis page** (user request, Symmetric-Strength-style reference
+> screenshots): `/analytics/strength` linked from Stats — interactive
+> front/back **body map** (12 groups colored by strength band, tappable,
+> male/female per profile; MIT-vendored paths in
+> `features/analytics/bodyPaths.ts`), strongest/weakest lists, per-lift e1RM
+> list, and a **7-stop class slider** (Untrained 30 → World class 125, the
+> user's tables) comparing your e1RMs vs the expected 1RMs at that class for
+> YOUR bodyweight/sex. Pure engine `src/engine/strengthClasses.ts` (ratio-form
+> thresholds; male pinned to the reference tables at 200 lb by test; female =
+> house F/M proportions; lift→muscle editorial weights; calves unrankable) —
+> 15 tests; `analyticsRepo.liftE1rms()`. **No new migrations/seeds.** New
+> ordinal ramp tokens `--class-0..7` (single blued-steel hue, dataviz-ordinal
+> validated both themes); amber stays selection-only. 108 tests green;
+> screenshots verified 390px both themes + 320px empty state.
+> **Open:** "Exceptional" class omitted (user sent no table); symmetry score +
+> relative-strengths chart from the reference not built; merge to main pending
+> user review. Detail: `Session log/003_2026-07-02b/session_log.md`.
+
 > **Session 003 (2026-07-02) — deletion, per-set training control, notes,
 > backfill; 5 new migrations ALL APPLIED by the user** (direct-to-main
 > authorized for the whole session; detail in
