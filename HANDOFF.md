@@ -442,6 +442,11 @@ screen's "vs standards" bands resolve off the strength_standards seed.
    the 30-day video / 1-year photo retention — a deploy step, not code.
 3. **Phase 2**: offline/local-first (implement the `DataClient` seam against a
    local store) → Android (Capacitor). Or more `$impeccable` polish per screen.
+4. **Design (post-v2):** re-run `/impeccable audit` + `critique` against the
+   **v2 "calibrated instrument"** system — the recorded 15/20 audit and 31/40
+   critique scores graded v1 and are void. Then work the remaining P2 backlog
+   (see the design-backlog block above) under v2's rules: amber = live/selected
+   only, data marks in ink, radius 0, hairlines, mono numerals.
 
 Engine reuse: M4/M5 should import `src/engine` and follow the "Engine encoding
 notes" above — the pure functions are done and tested; the remaining work is the

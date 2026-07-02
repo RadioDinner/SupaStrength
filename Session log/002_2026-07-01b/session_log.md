@@ -6,13 +6,15 @@ session-002 audit/critique re-runs.
 
 ## What shipped
 
-All on branch `claude/supastrength-kickoff-veem2a` (remote sessions push to
-their designated `claude/*` branch; merge to `main` when ready).
+Developed on `claude/supastrength-kickoff-veem2a`; **everything merged to
+`main`** during the session (fast-forwards, user-directed).
 
 - `5b03ef1` Session 002b: kickoff — session folder + prompt log
-- (this session's main code commit — hash in `git log`) Completion payoff sheet,
-  onComplete error handling, review hardening, audit P1s, migration 9997
-- (close-out commit) HANDOFF + session log
+- `67c49a5` Completion payoff sheet + hardened finish, audit P1s, 9997 view fix
+- `8acc963` Close out part 1 — HANDOFF + session log
+- `8c01885` Prompt log — merge request (first merge to main landed here)
+- `fbd775c` **Design system v2: full visual teardown — "calibrated instrument"**
+- (wrap commit) final handoff + session log
 
 ### Backlog items 1–6 — all DONE
 
@@ -93,9 +95,9 @@ majority rules). 6 confirmed, 1 empirically refuted. Fixed all confirmed:
 3. **Decide:** should `v_muscle_volume_weekly` also exclude un-completed sets'
    tonnage/reps (same phantom family)? Deliberate analytics-semantics change —
    left untouched.
-4. Merge `claude/supastrength-kickoff-veem2a` → `main` when the user is happy
-   (house rule says work lands on `main`; remote sessions can't push there
-   directly).
+4. ~~Merge `claude/supastrength-kickoff-veem2a` → `main`~~ — DONE during the
+   session (user authorized direct pushes to `main`; branch and `main` are in
+   sync at wrap).
 
 ## Project notes for future sessions
 
