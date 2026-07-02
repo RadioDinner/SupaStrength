@@ -112,7 +112,7 @@ export const workoutsRepo = {
    */
   async saveEntrySets(
     entryId: string,
-    rows: { targetReps: number; targetWeight: number | null }[],
+    rows: { targetReps: number; targetWeight: number | null; restSeconds?: number | null }[],
   ): Promise<void> {
     if (rows.length > 0) {
       await onlineDataClient.upsert<WorkoutEntrySet>(
@@ -122,6 +122,7 @@ export const workoutsRepo = {
           set_index: i + 1,
           target_reps: r.targetReps,
           target_weight: r.targetWeight,
+          rest_seconds: r.restSeconds ?? null,
         })),
         'workout_entry_id,set_index',
       )

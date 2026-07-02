@@ -1737,8 +1737,11 @@ h3,
 }
 .settable__foot {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   padding-top: var(--s-1);
+}
+.settable__foot .linkbtn {
+  font-size: var(--fs-sm);
 }
 .restdivider {
   display: flex;
@@ -1754,6 +1757,24 @@ h3,
 .restdivider__time {
   color: var(--accent);
   font-size: var(--fs-sm);
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.restdivider__time:hover {
+  background: color-mix(in oklch, var(--accent) 12%, transparent);
+}
+.restdivider__input {
+  width: 5.5rem;
+  padding: 2px 8px;
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--ink);
+  background: var(--inset);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
 }
 /* ── per-entry settings panel (gear drop-down) ───────────────────────────── */
 .entryeditor {

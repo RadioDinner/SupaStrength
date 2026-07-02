@@ -116,6 +116,7 @@ async function snapshotEntry(
         is_completed: false,
         planned_reps: t.target_reps,
         planned_weight: t.target_weight,
+        planned_rest_seconds: t.rest_seconds ?? e.rest_seconds,
         is_amrap: e.last_set_amrap && i === perSet.length - 1,
       }))
     : Array.from({ length: Math.max(1, resolved.plannedSets) }, (_, i) => ({
@@ -125,6 +126,7 @@ async function snapshotEntry(
         is_completed: false,
         planned_reps: resolved.plannedReps,
         planned_weight: resolved.plannedWeight,
+        planned_rest_seconds: e.rest_seconds,
         is_amrap: e.last_set_amrap && i === resolved.plannedSets - 1,
       }))
   await onlineDataClient.insert<SetLog>('set_logs', setRows)

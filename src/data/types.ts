@@ -186,6 +186,8 @@ export interface WorkoutEntrySet {
   set_index: number
   target_reps: number
   target_weight: number | null
+  /** Rest AFTER this set (9992); null → entry-level rest_seconds. */
+  rest_seconds: number | null
   created_at: string
   updated_at: string
 }
@@ -244,6 +246,8 @@ export interface SetLog {
   rpe: number | null
   completed_at: string | null
   video_id: string | null
+  /** Per-set planned rest snapshot (9992); null → the entry's rest. */
+  planned_rest_seconds: number | null
   created_at: string
   updated_at: string
 }

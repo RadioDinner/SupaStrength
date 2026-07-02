@@ -20,3 +20,18 @@ Back to the set builder, on the Lateral Raise (Dumbbell) example, I have 15lbs f
 --- 2026-07-02 13:20 ---
 [Screenshot of old tracking app: Edit workout template — per-exercise set tables with SET/PREVIOUS/LB/REPS columns, sticky note banner, rest timers between sets, ADD SET]
 I want it to look like this. You see how you can edit the workout exercises per set?
+
+--- 2026-07-02 13:45 ---
+I want the same screen on adding exercises as editing. I want to be able to set up the reps and sets with weights and rests and everything from the start
+
+--- 2026-07-02 13:47 ---
+Also, I can't edit the rest time between sets
+
+--- 2026-07-02 13:50 ---
+I got "new row violates row-level security policy for table "exercises" when I stried to save a new exercise
+
+--- 2026-07-02 13:55 ---
+In the exercise editor and builder, I want the "add set" button to be smaller and less pronounced, maybe off to the side somewhere.
+
+--- 2026-07-02 14:05 ---
+I want to be able to add a workout to history. I want to be able to click the workout and fill out the sets and edit the time and stuff

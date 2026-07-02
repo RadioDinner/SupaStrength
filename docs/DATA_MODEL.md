@@ -123,7 +123,7 @@ all users; non-null = a user's custom exercise. ~800 seed rows are loaded
 | column | type | notes |
 |---|---|---|
 | `id` | `uuid` PK `default gen_random_uuid()` | |
-| `user_id` | `uuid` null `references auth.users(id) on delete cascade` | null = global seed |
+| `user_id` | `uuid` null `default auth.uid()` `references auth.users(id) on delete cascade` | null = global seed; default added in 9992 so client inserts pass the RLS `with check` (seeds run where auth.uid() is null, so they stay global) |
 | `slug` | `text not null` | stable import key / dedupe |
 | `name` | `text not null` | |
 | `movement_type` | `text not null` check in (barbell, dumbbell, machine, cable, bodyweight, weighted_bodyweight, assisted, timed_cardio) | §5 |
@@ -376,6 +376,7 @@ engine line.
 | `set_index` | `integer not null` check `> 0` | `unique (workout_entry_id, set_index)` |
 | `target_reps` | `integer not null` check `> 0` | |
 | `target_weight` | `numeric` null check `> 0` | null → bodyweight/unloaded |
+| `rest_seconds` | `integer` null check `>= 0` | rest AFTER this set (9992); null → entry rest |
 | `created_at`/`updated_at` | `timestamptz` | |
 
 ### 3.4 Schedule (user-owned)
@@ -705,6 +706,7 @@ The views read `set_logs` joined to `session_entries.exercise_id` and
 | `rpe` | `numeric(3,1)` | |
 | `completed_at` | `timestamptz` | |
 | `video_id` | `uuid` null `references videos(id) on delete set null` | form-video link |
+| `planned_rest_seconds` | `integer` null check `>= 0` | per-set rest snapshot (9992); the in-gym timer counts this |
 | `created_at`/`updated_at` | `timestamptz` | |
 
 - Constraints: `unique (session_entry_id, set_index)`.

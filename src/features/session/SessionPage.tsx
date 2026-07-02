@@ -93,6 +93,8 @@ export function SessionPage() {
   const [doneSet, setDoneSet] = useState<Record<string, boolean>>({})
   const [loggedWeights, setLoggedWeights] = useState<Record<string, number>>({})
   const [restSignal, setRestSignal] = useState(0)
+  // The rest belonging to the set just logged (per-set rest, 9992).
+  const [lastRest, setLastRest] = useState<number | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const [confirming, setConfirming] = useState(false)
   const [summary, setSummary] = useState<SessionSummary | null>(null)
@@ -156,6 +158,7 @@ export function SessionPage() {
     // off rest — only when logging, not when undoing.
     if (next) {
       if (w) setLoggedWeights((m) => ({ ...m, [s.id]: Number(w) }))
+      setLastRest(s.planned_rest_seconds ?? entry.planned_rest_seconds ?? null)
       setRestSignal((n) => n + 1)
     } else {
       setLoggedWeights((m) => {
@@ -261,6 +264,7 @@ export function SessionPage() {
           onVideo={(s) => setVideoSet(s)}
           loggedWeights={loggedWeights}
           restSignal={restSignal}
+          lastRest={lastRest}
           bar={equipment?.bar ?? null}
           plates={equipment?.plates ?? []}
           prefs={equipment?.prefs ?? null}
@@ -392,6 +396,7 @@ function ActiveExercise({
   onVideo,
   loggedWeights,
   restSignal,
+  lastRest,
   bar,
   plates,
   prefs,
@@ -417,6 +422,7 @@ function ActiveExercise({
   onVideo: (s: SetLog) => void
   loggedWeights: Record<string, number>
   restSignal: number
+  lastRest: number | null
   bar: Barbell | null
   plates: PlateInventory[]
   prefs: EquipmentPreferences | null
@@ -627,9 +633,15 @@ function ActiveExercise({
         })}
       </ul>
 
-      {entry.planned_rest_seconds ? (
-        <RestTimer seconds={entry.planned_rest_seconds} autoStartSignal={restSignal} />
-      ) : null}
+      {(() => {
+        // The countdown length: the just-logged set's own rest, else the next
+        // pending set's, else the entry default.
+        const restSeconds =
+          lastRest ??
+          sets.find((s) => !isDone(s))?.planned_rest_seconds ??
+          entry.planned_rest_seconds
+        return restSeconds ? <RestTimer seconds={restSeconds} autoStartSignal={restSignal} /> : null
+      })()}
 
       <div className="sessionnote">
         <TextArea

@@ -154,12 +154,15 @@ function restLabel(seconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
+type SetRow = { weight: string; reps: string; rest: string }
+
 /**
- * The always-editable per-set table: SET | PREVIOUS | LB | REPS | remove.
- * Edits persist on blur (and immediately on add/remove) to
- * `workout_entry_sets` — the same rows the session snapshot plans from and
- * the rep ladder advances. Rows scaffold from the entry's uniform
- * prescription the first time and only persist once actually edited.
+ * The always-editable per-set table: SET | PREVIOUS | LB | REPS | remove,
+ * with the rest AFTER each set editable at the divider between rows (per-set
+ * rest, 9992; blank inherits the entry default). Edits persist on blur (and
+ * immediately on add/remove) to `workout_entry_sets` — the same rows the
+ * session snapshot plans from and the rep ladder advances. Rows scaffold from
+ * the entry's uniform prescription and only persist once actually edited.
  */
 function SetTable({
   workoutId,
@@ -174,9 +177,10 @@ function SetTable({
   const saveSets = useSaveEntrySets(workoutId, entry.id)
   const updateEntry = useUpdateEntry(workoutId)
   const { toast } = useToast()
-  const [rows, setRows] = useState<{ weight: string; reps: string }[] | null>(null)
+  const [rows, setRows] = useState<SetRow[] | null>(null)
   const [dirty, setDirty] = useState(false)
   const [invalid, setInvalid] = useState(false)
+  const [editingRest, setEditingRest] = useState<number | null>(null)
 
   const current =
     rows ??
@@ -185,28 +189,32 @@ function SetTable({
         ? savedSets.map((s: WorkoutEntrySet) => ({
             weight: s.target_weight != null ? String(s.target_weight) : '',
             reps: String(s.target_reps),
+            rest: s.rest_seconds != null ? String(s.rest_seconds) : '',
           }))
         : Array.from({ length: Math.max(1, entry.sets) }, () => ({
             weight: entry.starting_weight != null ? String(entry.starting_weight) : '',
             reps: String(entry.rep_target ?? entry.rep_range_low ?? 8),
+            rest: '',
           }))
       : null)
 
-  function parse(next: { weight: string; reps: string }[]) {
+  function parse(next: SetRow[]) {
     const parsed = next.map((r) => ({
       targetReps: Number(r.reps),
       targetWeight: r.weight.trim() ? Number(r.weight) : null,
+      restSeconds: r.rest.trim() ? Number(r.rest) : null,
     }))
     const ok = parsed.every(
       (p) =>
         Number.isInteger(p.targetReps) &&
         p.targetReps >= 1 &&
-        (p.targetWeight == null || p.targetWeight > 0),
+        (p.targetWeight == null || p.targetWeight > 0) &&
+        (p.restSeconds == null || (Number.isInteger(p.restSeconds) && p.restSeconds >= 0)),
     )
     return { parsed, ok }
   }
 
-  function persist(next: { weight: string; reps: string }[]) {
+  function persist(next: SetRow[]) {
     const { parsed, ok } = parse(next)
     setInvalid(!ok)
     if (!ok) return
@@ -219,7 +227,7 @@ function SetTable({
     setDirty(false)
   }
 
-  function setRow(i: number, patch: Partial<{ weight: string; reps: string }>) {
+  function setRow(i: number, patch: Partial<SetRow>) {
     if (!current) return
     setRows(current.map((r, j) => (j === i ? { ...r, ...patch } : r)))
     setDirty(true)
@@ -238,12 +246,43 @@ function SetTable({
       </div>
       {current.map((r, i) => {
         const prev = previous?.[i + 1]
+        // The divider ABOVE row i shows (and edits) the rest AFTER set i-1.
+        const gapRest = i > 0 ? current[i - 1]!.rest : ''
+        const gapSeconds = gapRest.trim() ? Number(gapRest) : entry.rest_seconds
         return (
           <div key={i}>
-            {i > 0 && entry.rest_seconds ? (
-              <div className="restdivider" aria-label={`Rest ${restLabel(entry.rest_seconds)}`}>
+            {i > 0 ? (
+              <div className="restdivider">
                 <span className="restdivider__line" />
-                <span className="restdivider__time mono">{restLabel(entry.rest_seconds)}</span>
+                {editingRest === i - 1 ? (
+                  <input
+                    className="restdivider__input mono"
+                    type="number"
+                    min="0"
+                    inputMode="numeric"
+                    autoFocus
+                    aria-label={`Rest after set ${i} in seconds`}
+                    value={gapRest}
+                    placeholder={entry.rest_seconds != null ? String(entry.rest_seconds) : 's'}
+                    onChange={(e) => setRow(i - 1, { rest: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === 'Escape') {
+                        e.preventDefault()
+                        setEditingRest(null)
+                      }
+                    }}
+                    onBlur={() => setEditingRest(null)}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className="restdivider__time mono"
+                    aria-label={`Edit rest after set ${i}${gapSeconds != null ? `, currently ${restLabel(gapSeconds)}` : ''}`}
+                    onClick={() => setEditingRest(i - 1)}
+                  >
+                    {gapSeconds != null ? restLabel(gapSeconds) : '+ rest'}
+                  </button>
+                )}
                 <span className="restdivider__line" />
               </div>
             ) : null}
@@ -289,20 +328,22 @@ function SetTable({
         )
       })}
       {invalid ? (
-        <p className="settable__err">Reps must be at least 1; weights positive or blank.</p>
+        <p className="settable__err">
+          Reps must be at least 1; weights positive or blank; rest zero or more seconds.
+        </p>
       ) : null}
       <div className="settable__foot">
-        <Button
-          variant="ghost"
+        <button
           type="button"
+          className="linkbtn"
           onClick={() => {
-            const next = [...current, { ...(current[current.length - 1] ?? { weight: '', reps: '8' }) }]
+            const next = [...current, { ...(current[current.length - 1] ?? { weight: '', reps: '8', rest: '' }) }]
             setRows(next)
             persist(next)
           }}
         >
-          <Plus size={16} aria-hidden="true" /> Add set
-        </Button>
+          <Plus size={14} aria-hidden="true" /> Add set
+        </button>
       </div>
     </div>
   )
@@ -327,6 +368,14 @@ function EntrySettings({
   const [rest, setRest] = useState(entry.rest_seconds != null ? String(entry.rest_seconds) : '')
   const [amrap, setAmrap] = useState(entry.last_set_amrap)
   const [mode, setMode] = useState<OverloadMode>(entry.overload_mode)
+  const [scheme, setScheme] = useState<RepScheme>(entry.rep_scheme)
+  const [repTarget, setRepTarget] = useState(
+    entry.rep_target != null ? String(entry.rep_target) : '8',
+  )
+  const [low, setLow] = useState(entry.rep_range_low != null ? String(entry.rep_range_low) : '8')
+  const [high, setHigh] = useState(
+    entry.rep_range_high != null ? String(entry.rep_range_high) : '12',
+  )
   const [repCap, setRepCap] = useState(entry.rep_cap != null ? String(entry.rep_cap) : '10')
   const [increment, setIncrement] = useState(
     entry.increment_lb != null ? String(entry.increment_lb) : '5',
@@ -357,6 +406,23 @@ function EntrySettings({
       patch.rep_cap = cap
       patch.increment_lb = inc
       patch.reps_after_increment = after
+    } else if (scheme !== 'rpe') {
+      // Engine mode: the rep scheme feeds the routine engine's pipeline.
+      if (scheme === 'straight') {
+        if (!repTarget || Number(repTarget) < 1)
+          return setError('Straight sets need a rep target.')
+        patch.rep_scheme = 'straight'
+        patch.rep_target = Number(repTarget)
+        patch.rep_range_low = null
+        patch.rep_range_high = null
+      } else {
+        if (!low || !high) return setError('Double progression needs a low and high rep range.')
+        if (Number(high) < Number(low)) return setError('Rep range high must be ≥ low.')
+        patch.rep_scheme = 'double'
+        patch.rep_target = null
+        patch.rep_range_low = Number(low)
+        patch.rep_range_high = Number(high)
+      }
     }
     try {
       await updateEntry.mutateAsync({ entryId: entry.id, patch })
@@ -455,10 +521,57 @@ function EntrySettings({
           </p>
         </>
       ) : (
-        <p className="muted">
-          Weight and reps come from the routine engine (or your typed set targets below — typed
-          targets stay fixed until you change them).
-        </p>
+        <>
+          <div className="grid2">
+            <Field label="Rep scheme" htmlFor={`scheme_${entry.id}`}>
+              <Select
+                id={`scheme_${entry.id}`}
+                value={scheme}
+                onChange={(e) => setScheme(e.target.value as RepScheme)}
+              >
+                <option value="straight">Straight (sets × reps)</option>
+                <option value="double">Double progression (rep range)</option>
+                {entry.rep_scheme === 'rpe' ? <option value="rpe">RPE</option> : null}
+              </Select>
+            </Field>
+            {scheme === 'straight' ? (
+              <Field label="Reps per set" htmlFor={`target_${entry.id}`}>
+                <TextInput
+                  id={`target_${entry.id}`}
+                  type="number"
+                  min="1"
+                  value={repTarget}
+                  onChange={(e) => setRepTarget(e.target.value)}
+                />
+              </Field>
+            ) : scheme === 'double' ? (
+              <div className="grid2">
+                <Field label="Low" htmlFor={`low_${entry.id}`}>
+                  <TextInput
+                    id={`low_${entry.id}`}
+                    type="number"
+                    min="1"
+                    value={low}
+                    onChange={(e) => setLow(e.target.value)}
+                  />
+                </Field>
+                <Field label="High" htmlFor={`high_${entry.id}`}>
+                  <TextInput
+                    id={`high_${entry.id}`}
+                    type="number"
+                    min="1"
+                    value={high}
+                    onChange={(e) => setHigh(e.target.value)}
+                  />
+                </Field>
+              </div>
+            ) : null}
+          </div>
+          <p className="muted">
+            Weight and reps come from the routine engine (or your typed set targets below — typed
+            targets stay fixed until you change them).
+          </p>
+        </>
       )}
 
       {error ? <Banner kind="err">{error}</Banner> : null}
@@ -475,133 +588,41 @@ function EntrySettings({
   )
 }
 
+/**
+ * Adding is picking: choose (or create) an exercise and it lands in the
+ * workout immediately with a default prescription (3 × 8, rest 3:00). The new
+ * block's set table is the SAME editing surface as every other exercise — set
+ * up weights, reps and rests right there.
+ */
 function AddEntryForm({ workoutId }: { workoutId: string }) {
   const add = useAddEntry(workoutId)
-  const [exerciseId, setExerciseId] = useState<string | null>(null)
-  const [exerciseName, setExerciseName] = useState('')
-  const [sets, setSets] = useState('3')
-  const [scheme, setScheme] = useState<RepScheme>('straight')
-  const [repTarget, setRepTarget] = useState('5')
-  const [low, setLow] = useState('8')
-  const [high, setHigh] = useState('12')
-  const [rest, setRest] = useState('180')
-  const [amrap, setAmrap] = useState(false)
-  const [startWeight, setStartWeight] = useState('')
+  const { toast } = useToast()
   const [error, setError] = useState<string | null>(null)
 
-  function reset() {
-    setExerciseId(null)
-    setExerciseName('')
+  async function onPick(exerciseId: string, name: string) {
     setError(null)
-  }
-
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    if (!exerciseId) return setError('Pick an exercise.')
-    const setCount = Number(sets)
-    if (!setCount || setCount < 1) return setError('Sets must be at least 1.')
-    if (scheme === 'straight' && (!repTarget || Number(repTarget) < 1))
-      return setError('Straight sets need a rep target.')
-    if (scheme === 'double') {
-      if (!low || !high) return setError('Double progression needs a low and high rep range.')
-      if (Number(high) < Number(low)) return setError('Rep range high must be ≥ low.')
-    }
-    const startingWeight = startWeight.trim() ? Number(startWeight) : null
-    if (startingWeight != null && (!Number.isFinite(startingWeight) || startingWeight <= 0))
-      return setError('Starting weight must be a positive number (or leave it blank).')
     try {
       await add.mutateAsync({
         exerciseId,
-        sets: setCount,
-        repScheme: scheme,
-        repTarget: scheme === 'straight' ? Number(repTarget) : null,
-        repRangeLow: scheme === 'double' ? Number(low) : null,
-        repRangeHigh: scheme === 'double' ? Number(high) : null,
-        restSeconds: rest ? Number(rest) : null,
-        lastSetAmrap: amrap,
-        startingWeight,
+        sets: 3,
+        repScheme: 'straight',
+        repTarget: 8,
+        restSeconds: 180,
+        lastSetAmrap: false,
+        startingWeight: null,
       })
-      setStartWeight('')
-      reset()
+      toast(`${name} added — set it up above.`, 'ok')
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     }
   }
 
   return (
-    <Card title="Add exercise">
-      <form className="form" onSubmit={onSubmit}>
-        {exerciseId ? (
-          <div className="picked">
-            <span className="workout-link__name">{exerciseName}</span>
-            <Button variant="ghost" type="button" onClick={reset}>
-              Change
-            </Button>
-          </div>
-        ) : (
-          <ExercisePicker
-            onPick={(pickId, picked) => {
-              setExerciseId(pickId)
-              setExerciseName(picked)
-            }}
-          />
-        )}
-
-        <div className="grid2">
-          <Field label="Sets" htmlFor="sets">
-            <TextInput id="sets" type="number" min="1" value={sets} onChange={(e) => setSets(e.target.value)} />
-          </Field>
-          <Field label="Rep scheme" htmlFor="scheme">
-            <Select id="scheme" value={scheme} onChange={(e) => setScheme(e.target.value as RepScheme)}>
-              <option value="straight">Straight (sets × reps)</option>
-              <option value="double">Double progression (rep range)</option>
-            </Select>
-          </Field>
-        </div>
-
-        {scheme === 'straight' ? (
-          <Field label="Reps per set" htmlFor="reps">
-            <TextInput id="reps" type="number" min="1" value={repTarget} onChange={(e) => setRepTarget(e.target.value)} />
-          </Field>
-        ) : (
-          <div className="grid2">
-            <Field label="Rep range low" htmlFor="low">
-              <TextInput id="low" type="number" min="1" value={low} onChange={(e) => setLow(e.target.value)} />
-            </Field>
-            <Field label="Rep range high" htmlFor="high">
-              <TextInput id="high" type="number" min="1" value={high} onChange={(e) => setHigh(e.target.value)} />
-            </Field>
-          </div>
-        )}
-
-        <div className="grid2">
-          <Field label="Rest (seconds)" htmlFor="rest">
-            <TextInput id="rest" type="number" min="0" value={rest} onChange={(e) => setRest(e.target.value)} />
-          </Field>
-          <Field label="Starting weight (lb, optional)" htmlFor="start_weight">
-            <TextInput
-              id="start_weight"
-              type="number"
-              min="0"
-              step="any"
-              placeholder="e.g. 135"
-              value={startWeight}
-              onChange={(e) => setStartWeight(e.target.value)}
-            />
-          </Field>
-        </div>
-
-        <label className="toggle toggle--field">
-          <input type="checkbox" checked={amrap} onChange={(e) => setAmrap(e.target.checked)} />
-          <span>Last set AMRAP</span>
-        </label>
-
+    <Card title="Add exercise" subtitle="Pick one and edit its sets right in the list above.">
+      <form className="form" onSubmit={(e: FormEvent) => e.preventDefault()}>
+        <ExercisePicker onPick={(id, name) => void onPick(id, name)} />
+        {add.isPending ? <p className="muted">Adding…</p> : null}
         {error ? <Banner kind="err">{error}</Banner> : null}
-
-        <Button type="submit" disabled={add.isPending}>
-          {add.isPending ? 'Adding…' : 'Add to workout'}
-        </Button>
       </form>
     </Card>
   )
