@@ -35,3 +35,6 @@ In the exercise editor and builder, I want the "add set" button to be smaller an
 
 --- 2026-07-02 14:05 ---
 I want to be able to add a workout to history. I want to be able to click the workout and fill out the sets and edit the time and stuff
+
+--- 2026-07-02 14:30 ---
+I ran all migrations

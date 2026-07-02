@@ -47,7 +47,7 @@ Running log; updated as the session progresses. All work committed directly to
   NOT advance progression/ladders/rotations. Partial-failure cleanup deletes
   the orphan session so it can't hijack Resume.
 
-## Migrations pending user paste (descending order)
+## Migrations — ALL APPLIED by the user (confirmed 2026-07-02)
 
 `9998` (re-paste the fix) → `9996` → `9995` → `9994` → `9993` → `9992`.
 All re-runnable; all verified on a local Postgres 16 with Supabase shims

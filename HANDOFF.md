@@ -5,7 +5,48 @@
 
 ## Where the project is
 
-**🎉 PHASE 1 COMPLETE — M1–M8 all DONE. Design system — v2 ("calibrated instrument").**
+**🎉 PHASE 1 COMPLETE — M1–M8 all DONE. Design system — v2 ("calibrated instrument"). Per-set training control (session 003) live in prod.**
+
+> **Session 003 (2026-07-02) — deletion, per-set training control, notes,
+> backfill; 5 new migrations ALL APPLIED by the user** (direct-to-main
+> authorized for the whole session; detail in
+> `Session log/003_2026-07-02/session_log.md`):
+> - **DB state:** user confirmed running every pending migration — the live
+>   schema now includes `9996` (owner hard-delete of completed sessions;
+>   audit_log lets FK set-null cascades through), `9995` (child immutability
+>   triggers allow reference-detach writes — un-broke `purge_expired_media()`,
+>   which aborted on any expired clip attached to completed history), `9994`
+>   (`workout_entries.starting_weight`), `9993` (`workout_entry_sets` per-set
+>   targets, rep-ladder overload columns, `session_entries.notes`), `9992`
+>   (per-set `rest_seconds`, `set_logs.planned_rest_seconds`, and the
+>   `exercises.user_id default auth.uid()` RLS fix), plus the fixed `9998`
+>   (named `cron.schedule()` upsert instead of DML on `cron.job` — 42501).
+> - **History:** delete completed sessions (confirmed dialog; eager form-video
+>   cleanup; progression NOT rolled back) and **"Log past session"** backfill
+>   (date/time/duration + fill sets; lands completed; deliberately does NOT
+>   advance progression/ladders/rotations).
+> - **Builder = set-table layout** (per the user's old-tracker screenshot):
+>   per-exercise SET | PREVIOUS | LB | REPS grid, always editable, saves on
+>   the fly; PREVIOUS = newest completed actuals (`sessionsRepo.lastActuals`);
+>   per-set rest editable at the divider between rows; quiet "Add set" link;
+>   adding an exercise drops it in instantly (3×8, rest 3:00) — same surface.
+> - **Overload per entry:** `overload_mode='rep_ladder'` — each set that hits
+>   its target climbs a rep (failed sets HOLD, independently — inferred from
+>   the user's 9/8/5 example); all-at-cap → weight +increment, reps reset to
+>   floor; advanced targets write back to `workout_entry_sets` (builder shows
+>   live state); excluded from the shared engine line; runs for routine AND
+>   single-workout sessions. Pure module `engine/repLadder.ts` (10 tests).
+>   Typed per-set targets on ENGINE entries = fixed manual targets.
+> - **Notes:** sticky per-exercise (`workout_entries.notes`, banner in builder
+>   + pinned line in session) and per-occurrence (`session_entries.notes`,
+>   "note for today" in session, shown in History detail).
+> - Routine **rename**; exercise picker **creates custom exercises inline**
+>   (the RLS bug that broke ALL custom-exercise creation is fixed in 9992).
+> - **93 tests green**; every migration verified re-runnable on a scratch
+>   Postgres 16 with Supabase shims (incl. RLS check under `authenticated`).
+> - **Known issues:** `auth.users → audit_log` cascade still blocks full
+>   account deletion (pre-existing); payoff sheet shows no "Next time" line
+>   for ladder entries; UI not click-tested from this env (no Supabase creds).
 
 > **Session 002b (later, same session) — FULL VISUAL TEARDOWN → v2 "calibrated
 > instrument"** (user directive: tear the visual design down, rebuild clean /
