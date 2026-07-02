@@ -23,9 +23,10 @@
 > ordinal ramp tokens `--class-0..7` (single blued-steel hue, dataviz-ordinal
 > validated both themes); amber stays selection-only. 108 tests green;
 > screenshots verified 390px both themes + 320px empty state.
+> **MERGED TO MAIN** same session on the user's instruction.
 > **Open:** "Exceptional" class omitted (user sent no table); symmetry score +
-> relative-strengths chart from the reference not built; merge to main pending
-> user review. Detail: `Session log/003_2026-07-02b/session_log.md`.
+> relative-strengths chart from the reference not built.
+> Detail: `Session log/003_2026-07-02b/session_log.md`.
 
 > **Session 003 (2026-07-02) — deletion, per-set training control, notes,
 > backfill; 5 new migrations ALL APPLIED by the user** (direct-to-main

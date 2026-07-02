@@ -12,3 +12,5 @@ Here are the first five "classes" that I want on the slider
 --- 2026-07-02 14:11 ---
 Here are the other 2
 [Attached: two more Symmetric Strength class tables — Elite (strength score 112.5) and World class — same per-lift 1RM layout]
+--- 2026-07-02 14:44 ---
+merge to main immediately
