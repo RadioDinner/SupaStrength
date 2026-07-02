@@ -102,6 +102,21 @@ export function useUpdateSessionEntryNotes() {
   })
 }
 
+export function useBackfillSession() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: Parameters<typeof sessionsRepo.backfill>[0]) =>
+      sessionsRepo.backfill(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['recent_sessions'] })
+      qc.invalidateQueries({ queryKey: ['sessions'] })
+      qc.invalidateQueries({ queryKey: ['analytics'] })
+      // The builder's PREVIOUS column reads history too.
+      qc.invalidateQueries({ queryKey: ['previous_actuals'] })
+    },
+  })
+}
+
 export function useDeleteSession() {
   const qc = useQueryClient()
   return useMutation({

@@ -6,8 +6,9 @@
  */
 import { useMemo, useRef, useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { ChevronDown, ChevronRight, NotebookText, Trash2 } from 'lucide-react'
+import { CalendarPlus, ChevronDown, ChevronRight, NotebookText, Trash2 } from 'lucide-react'
 import { Button, Card, ConfirmDialog, EmptyState, Skeleton, SkeletonList } from '../../components/ui'
+import { BackfillForm } from './BackfillForm'
 import {
   useDeleteSession,
   useRecentSessions,
@@ -47,6 +48,7 @@ export function HistoryPage() {
   const remove = useDeleteSession()
   const { toast } = useToast()
   const [deleting, setDeleting] = useState<Session | null>(null)
+  const [backfilling, setBackfilling] = useState(false)
   // Post-delete focus target: the dialog restores focus to the row's Delete
   // button, but a successful delete unmounts that row — land on the page
   // instead so keyboard/SR users keep their place.
@@ -54,7 +56,17 @@ export function HistoryPage() {
 
   return (
     <div className="page" ref={pageRef} tabIndex={-1}>
-      <Card title="History" subtitle="Your completed sessions" />
+      <Card
+        title="History"
+        subtitle="Your completed sessions"
+        actions={
+          <Button variant="ghost" onClick={() => setBackfilling((b) => !b)}>
+            <CalendarPlus size={16} aria-hidden="true" /> Log past session
+          </Button>
+        }
+      />
+
+      {backfilling ? <BackfillForm onDone={() => setBackfilling(false)} /> : null}
       {isLoading ? (
         <SkeletonList rows={4} />
       ) : !sessions || sessions.length === 0 ? (

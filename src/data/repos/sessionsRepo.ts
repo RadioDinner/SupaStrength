@@ -515,6 +515,89 @@ export const sessionsRepo = {
   },
 
   /**
+   * Backfill a past session (History → Log past session): create it with the
+   * chosen date/times, write the filled sets as both plan and actuals, then
+   * flip straight to completed. Deliberately does NOT advance progression,
+   * rep ladders or rotation pointers — it repairs history, it doesn't move
+   * today's training state. Analytics pick it up through the views.
+   *
+   * On a mid-write failure the partial session is deleted (an orphaned
+   * in_progress row would hijack the "Resume session" flow).
+   */
+  async backfill(input: {
+    performedOn: string // YYYY-MM-DD
+    startedAt: string // ISO
+    completedAt: string // ISO
+    entries: {
+      entry: WorkoutEntry
+      sets: { weightLb: number | null; reps: number | null; done: boolean }[]
+    }[]
+  }): Promise<string> {
+    const rows = await onlineDataClient.insert<Session>('sessions', {
+      status: 'in_progress',
+      performed_on: input.performedOn,
+      started_at: input.startedAt,
+      location_id: null,
+    })
+    const session = rows[0]
+    if (!session) throw new Error('Session insert returned no row')
+
+    try {
+      let position = 0
+      for (const item of input.entries) {
+        const e = item.entry
+        if (item.sets.length === 0) continue
+        const seRows = await onlineDataClient.insert<SessionEntry>('session_entries', {
+          session_id: session.id,
+          workout_id: e.workout_id,
+          workout_entry_id: e.id,
+          exercise_id: e.exercise_id,
+          position: position++,
+          planned_sets: item.sets.length,
+          planned_rep_scheme: e.rep_scheme,
+          planned_rep_target: e.rep_target,
+          planned_rep_low: e.rep_range_low,
+          planned_rep_high: e.rep_range_high,
+          planned_weight: item.sets[0]!.weightLb,
+          planned_rest_seconds: e.rest_seconds,
+          last_set_amrap: e.last_set_amrap,
+        })
+        const se = seRows[0]
+        if (!se) throw new Error('Session entry insert returned no row')
+        await onlineDataClient.insert<SetLog>(
+          'set_logs',
+          item.sets.map((s, i) => ({
+            session_entry_id: se.id,
+            set_index: i + 1,
+            is_warmup: false,
+            is_completed: s.done,
+            planned_reps: s.reps,
+            planned_weight: s.weightLb,
+            planned_rest_seconds: e.rest_seconds,
+            actual_reps: s.done ? s.reps : null,
+            actual_weight: s.done ? s.weightLb : null,
+            completed_at: s.done ? input.completedAt : null,
+          })),
+        )
+      }
+      await onlineDataClient.update<Session>(
+        'sessions',
+        { status: 'completed', completed_at: input.completedAt },
+        [
+          { column: 'id', op: 'eq', value: session.id },
+          { column: 'status', op: 'eq', value: 'in_progress' },
+        ],
+      )
+      return session.id
+    } catch (err) {
+      await onlineDataClient
+        .remove('sessions', [{ column: 'id', op: 'eq', value: session.id }])
+        .catch(() => {})
+      throw err
+    }
+  },
+
+  /**
    * Hard-delete a session (History → Delete). The DB cascade removes its
    * entries and set logs (migration 9996 allows owner deletes of completed
    * sessions); progression already applied by the session is NOT rolled back.

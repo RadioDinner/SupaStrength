@@ -1735,6 +1735,16 @@ h3,
   font-size: var(--fs-sm);
   margin: var(--s-1) 0 0;
 }
+/* Backfill variant: SET | LB | REPS | DONE | remove (no PREVIOUS column). */
+.settable__row--fill {
+  grid-template-columns: 2.25rem 1fr 1fr 3rem 2.75rem;
+}
+.settable__done {
+  width: 20px;
+  height: 20px;
+  justify-self: center;
+  accent-color: var(--accent);
+}
 .settable__foot {
   display: flex;
   justify-content: flex-end;
